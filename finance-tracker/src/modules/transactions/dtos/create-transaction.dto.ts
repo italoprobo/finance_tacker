@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString, IsEnum, IsDateString, IsUUID } from "class-validator";
+import { IsNotEmpty, IsNumber, IsString, IsEnum, IsDateString, IsUUID, IsBoolean, IsOptional } from "class-validator";
 
 export class CreateTransactionDto {
     @IsNotEmpty()
@@ -20,6 +20,10 @@ export class CreateTransactionDto {
     @IsNotEmpty()
     @IsUUID()
     userId: string;
+
+    @IsOptional()
+    @IsBoolean()
+    isRecurring?: boolean;
 
     @IsNotEmpty()
     @IsUUID()

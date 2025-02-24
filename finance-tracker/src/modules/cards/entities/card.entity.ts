@@ -21,6 +21,9 @@ export class Card {
     @Column({ type: 'date' })
     dueDate: Date; 
 
+    @Column()
+    lastDigits: string;
+
     @ManyToOne(() => User, (user) => user.transactions)
     @JoinColumn({ name: 'user_id' })
     user: User;
