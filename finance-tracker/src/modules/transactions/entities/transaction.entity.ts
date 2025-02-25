@@ -23,7 +23,7 @@ export class Transaction {
     @JoinColumn({ name: 'user_id' })
     user: User;
 
-    @Column({ type: 'boolean' })
+    @Column({ type: 'boolean', default: false  })
     isRecurring: boolean;
 
     @ManyToOne(() => Category, (category) => category.transactions)

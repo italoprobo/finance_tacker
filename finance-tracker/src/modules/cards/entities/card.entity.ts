@@ -9,16 +9,19 @@ export class Card {
     @Column()
     name: string;
 
-    @Column('decimal', { precision: 10, scale: 2 })
+    @Column({ type: 'simple-array' }) 
+    cardType: string[]; // ["credito"], ["debito"] ou ["credito", "debito"]
+
+    @Column('decimal', { precision: 10, scale: 2 , nullable: true})
     limit: number;
 
     @Column('decimal', { precision: 10, scale: 2 })
     current_balance: number;
 
-    @Column({ type: 'date' })
+    @Column({ type: 'date' , nullable: true })
     closingDate: Date; 
 
-    @Column({ type: 'date' })
+    @Column({ type: 'date' , nullable: true })
     dueDate: Date; 
 
     @Column()
