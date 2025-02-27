@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../application/auth_cubit.dart';
 import '../infrastructure/auth_repository.dart';
 
@@ -67,7 +68,7 @@ class RegisterScreen extends StatelessWidget {
                     ),
                     TextButton(
                       onPressed: () {
-                        Navigator.pop(context);
+                        context.goNamed('/login');
                       },
                       child: const Text('Já tem conta? Faça login'),
                     )

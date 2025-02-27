@@ -1,6 +1,7 @@
 // lib/features/auth/presentation/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../application/auth_cubit.dart';
 import '../infrastructure/auth_repository.dart';
 
@@ -54,7 +55,7 @@ class LoginScreen extends StatelessWidget {
                   ),
                   TextButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/register');
+                      context.goNamed('/register');
                     },
                     child: const Text('Não tem conta? Registre-se'),
                   )
