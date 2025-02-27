@@ -7,4 +7,6 @@ class AppColors {
   static const Color purple = Color(0xFF611BF8);
   static const List<Color> gradient = [purpleligth, purple];
   static const Color white = Color(0xFFFFFFFF);
+  static const Color icewhite = Color(0xFFEEF8F7);
+  static const Color grey = Color(0xFF444444);
 }

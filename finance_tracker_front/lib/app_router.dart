@@ -6,7 +6,7 @@ import 'features/splash/splash_page.dart';
 import 'features/onboarding/onboarding_page.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/login',
+  initialLocation: '/onboarding',
   routes: [
     GoRoute(
       name: '/login',

@@ -1,0 +1,1 @@
+C:\finance_tacker\finance_tracker_front\build\app\intermediates\cxx\Debug\1t334y6p\obj\arm64-v8a

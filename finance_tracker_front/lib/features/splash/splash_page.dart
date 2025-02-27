@@ -9,7 +9,7 @@ class SplashPage extends StatelessWidget {
     return Scaffold(
       body: Container(
         alignment: Alignment.center,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -18,7 +18,7 @@ class SplashPage extends StatelessWidget {
         ),
         child: Text(
         'Finance AI', 
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 45.0,
           fontWeight: FontWeight.w700).copyWith(color: AppColors.white),
       ),
