@@ -17,7 +17,7 @@ class SplashPage extends StatelessWidget {
           ),
         ),
         child: Text(
-        'Finance AI', 
+        'finance ai', 
         style: const TextStyle(
           fontSize: 45.0,
           fontWeight: FontWeight.w700).copyWith(color: AppColors.white),
