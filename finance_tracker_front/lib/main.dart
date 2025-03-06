@@ -1,3 +1,4 @@
+import 'package:finance_tracker_front/common/themes/default_theme.dart';
 import 'package:flutter/material.dart';
 import 'app_router.dart';
 
@@ -14,6 +15,7 @@ class MyApp extends StatelessWidget {
       title: 'Finance AI',
       routerConfig: appRouter,
       debugShowCheckedModeBanner: false,
+      //theme: defaultTheme
     );
   }
 }

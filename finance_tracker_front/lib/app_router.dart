@@ -4,9 +4,10 @@ import 'features/auth/presentation/register_screen.dart';
 import 'features/transactions/presentation/home_screen.dart';
 import 'features/splash/splash_page.dart';
 import 'features/onboarding/onboarding_page.dart';
+import 'features/singup/sing_up_page.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/onboarding',
+  initialLocation: '/sing-up',
   routes: [
     GoRoute(
       name: '/login',
@@ -32,6 +33,11 @@ final GoRouter appRouter = GoRouter(
       name: '/onboarding',
       path: '/onboarding',
       builder: (context, state) => const OnboardingPage(),
+    ),
+    GoRoute(
+      name: '/sing-up',
+      path: '/sing-up',
+      builder: (context, state) => const SingUpPage(),
     ),
   ],
 );
