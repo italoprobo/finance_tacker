@@ -1,9 +1,12 @@
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
 import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
+import 'package:finance_tracker_front/widgets/custom_text_form_field.dart';
+import 'package:finance_tracker_front/widgets/password_form_field.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../common/utils/uppercase_text_formatter.dart';
 import '../../widgets/primary_button.dart';
 
 class SingUpPage extends StatelessWidget {
@@ -20,12 +23,30 @@ class SingUpPage extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.center, 
               children: [
-                Text('Ganhe Controle', style: AppTextStyles.mediumText.copyWith(color: AppColors.purple)),
-                Text('Planeje Melhor', style: AppTextStyles.mediumText.copyWith(color: AppColors.purple)),
+                Text('Guarde Seu', style: AppTextStyles.mediumText.copyWith(color: AppColors.purple)),
+                Text('Dinheiro!', style: AppTextStyles.mediumText.copyWith(color: AppColors.purple)),
                 Image.asset('assets/images/singuppageimg.png'),
                 Form(child: Column(
                   children: [
-                    CustomTextFormField(),
+                    CustomTextFormField(
+                      labelText: "seu nome",
+                      hintText: "ÍTALO PROBO",
+                      inputFormatters: [
+                        UpperCaseTextInputFormatter(),
+                      ],
+                    ),
+                    const CustomTextFormField(
+                      labelText: "seu email",
+                      hintText: "italoprobo@gmail.com",
+                    ),
+                    const PasswordFormField(
+                      labelText: "escolha sua senha",
+                      hintText: "********",
+                    ),
+                    const PasswordFormField(
+                      labelText: "confirme sua senha",
+                      hintText: "********",
+                    ),
                   ],
                 )),
                 Padding(
@@ -57,35 +78,6 @@ class SingUpPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class CustomTextFormField extends StatefulWidget {
-  const CustomTextFormField({
-    super.key,
-  });
-
-  @override
-  State<CustomTextFormField> createState() => _CustomTextFormFieldState();
-}
-
-class _CustomTextFormFieldState extends State<CustomTextFormField> {
-
-  final defaultBorder = const OutlineInputBorder();
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      decoration: InputDecoration(
-        labelText: 'Nome',
-        border: defaultBorder,
-        focusedBorder: defaultBorder.copyWith(borderSide: BorderSide(color: Colors.red)),
-        errorBorder: defaultBorder,
-        focusedErrorBorder: defaultBorder,
-        enabledBorder: defaultBorder,
-        disabledBorder: defaultBorder,
       ),
     );
   }
