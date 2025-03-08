@@ -16,10 +16,11 @@ class CustomTextFormField extends StatefulWidget {
   final bool? obscureText;
   final List<TextInputFormatter>? inputFormatters;
   final FormFieldValidator<String>? validator;
+  final String? helperText;
 
   const CustomTextFormField({
     super.key,
-    this.padding, this.hintText, this.labelText, this.textCapitalization, this.controller, this.keyboardType, this.maxLength, this.textInputAction, this.suffixIcon, this.obscureText, this.inputFormatters, this.validator,
+    this.padding, this.hintText, this.labelText, this.textCapitalization, this.controller, this.keyboardType, this.maxLength, this.textInputAction, this.suffixIcon, this.obscureText, this.inputFormatters, this.validator, this.helperText,
   });
 
   @override
@@ -32,11 +33,30 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
     borderSide: BorderSide(color: AppColors.purple),
   );
 
+  String? _helperText;
+
+  @override
+  void initState() {
+    super.initState();
+    _helperText = widget.helperText;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: widget.padding ?? const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
       child: TextFormField(
+        onChanged: (value) {
+          if(value.length == 1){
+            setState(() {
+              _helperText = null;
+            });
+          } else if(value.isEmpty) {
+            setState(() {
+              _helperText = widget.helperText;
+            });
+          }
+        },
         validator: widget.validator,
         style: AppTextStyles.smalltext.copyWith(color: AppColors.purpleligth),
         inputFormatters: widget.inputFormatters,
@@ -47,6 +67,8 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
         textCapitalization: widget.textCapitalization ?? TextCapitalization.none,
         controller: widget.controller,
         decoration: InputDecoration(
+          helperText: _helperText,
+          helperMaxLines: 2,
           suffixIcon: widget.suffixIcon,
           hintText: widget.hintText,
           hintStyle: AppTextStyles.smalltext.copyWith(color: AppColors.purpleligth),

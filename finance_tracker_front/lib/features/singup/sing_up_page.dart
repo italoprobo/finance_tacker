@@ -1,5 +1,8 @@
+import 'dart:math';
+
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
 import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
+import 'package:finance_tracker_front/common/utils/validator.dart';
 import 'package:finance_tracker_front/widgets/custom_text_form_field.dart';
 import 'package:finance_tracker_front/widgets/password_form_field.dart';
 import 'package:flutter/gestures.dart';
@@ -9,8 +12,17 @@ import 'package:go_router/go_router.dart';
 import '../../common/utils/uppercase_text_formatter.dart';
 import '../../widgets/primary_button.dart';
 
-class SingUpPage extends StatelessWidget {
+class SingUpPage extends StatefulWidget {
   const SingUpPage({super.key});
+
+  @override
+  State<SingUpPage> createState() => _SingUpPageState();
+}
+
+class _SingUpPageState extends State<SingUpPage> {
+
+  final GlobalKey<FormState> _formKey = GlobalKey();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -23,10 +35,13 @@ class SingUpPage extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.center, 
               children: [
+                const SizedBox(height: 32.0),
                 Text('Guarde Seu', style: AppTextStyles.mediumText.copyWith(color: AppColors.purple)),
                 Text('Dinheiro!', style: AppTextStyles.mediumText.copyWith(color: AppColors.purple)),
                 Image.asset('assets/images/singuppageimg.png'),
-                Form(child: Column(
+                Form(
+                  key: _formKey,
+                  child: Column(
                   children: [
                     CustomTextFormField(
                       labelText: "seu nome",
@@ -34,18 +49,23 @@ class SingUpPage extends StatelessWidget {
                       inputFormatters: [
                         UpperCaseTextInputFormatter(),
                       ],
+                      validator: Validator.validateName,
                     ),
                     const CustomTextFormField(
                       labelText: "seu email",
                       hintText: "italoprobo@gmail.com",
+                      validator: Validator.validateEmail,
                     ),
-                    const PasswordFormField(
+                    PasswordFormField(
                       labelText: "escolha sua senha",
                       hintText: "********",
+                      controller: _passwordController,
+                      validator: Validator.validatePassword,
                     ),
-                    const PasswordFormField(
+                    PasswordFormField(
                       labelText: "confirme sua senha",
                       hintText: "********",
+                      validator: (value) => Validator.confirmPassword(value, _passwordController.text),
                     ),
                   ],
                 )),
@@ -59,7 +79,12 @@ class SingUpPage extends StatelessWidget {
                   child: PrimaryButton(
                     key: const Key('onboardingGetStartedButton'),
                     text: 'Registrar',
-                    onPressed: () => context.goNamed('/register'),
+                    onPressed: () {
+                      final valid = _formKey.currentState!.validate();
+                      if(valid){
+                        log("Continuar lógica de login" as num);
+                      }
+                    },
                   ),
                 ),
                 RichText(
