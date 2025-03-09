@@ -14,4 +14,6 @@ class AppColors {
   static const Color icewhite = Color(0xFFEEF8F7);
   static const Color grey = Color(0xFF444444);
   static const Color inputcolor = Color(0xFF666666);
+  static const Color error = Color(0xFFF44336);
+  static const Color notification = Color(0xFFFFAB7B);
 }

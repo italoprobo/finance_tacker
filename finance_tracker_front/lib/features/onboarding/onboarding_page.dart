@@ -1,6 +1,6 @@
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
 import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
-import 'package:finance_tracker_front/widgets/primary_button.dart';
+import 'package:finance_tracker_front/common/widgets/primary_button.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -32,7 +32,7 @@ class OnboardingPage extends StatelessWidget {
               key: const Key('onboardingGetStartedButton'),
               text: 'Começar',
               onPressed: () => {
-                context.goNamed('/register')
+                context.goNamed('sign-up')
               },
             ),
           ),

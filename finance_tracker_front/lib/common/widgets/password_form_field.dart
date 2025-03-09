@@ -1,6 +1,6 @@
 import 'dart:developer';
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
-import 'package:finance_tracker_front/widgets/custom_text_form_field.dart';
+import 'package:finance_tracker_front/common/widgets/custom_text_form_field.dart';
 import 'package:flutter/material.dart';
 
 class PasswordFormField extends StatefulWidget {
@@ -19,7 +19,7 @@ class PasswordFormField extends StatefulWidget {
 
 class _PasswordFormFieldState extends State<PasswordFormField> {
 
-  bool isHidden = false; 
+  bool isHidden = true; 
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +39,7 @@ class _PasswordFormFieldState extends State<PasswordFormField> {
           });
         },
         child: Icon(
-          isHidden ? Icons.visibility : Icons.visibility_off, color: AppColors.purple,),
+          isHidden ? Icons.visibility_off : Icons.visibility, color: AppColors.purple,),
           ),
     );
   }

@@ -6,7 +6,7 @@ class ApiClient {
   ApiClient({Dio? dio})
       : dio = dio ??
           Dio(BaseOptions(
-            baseUrl: 'http://localhost:3000', 
+            baseUrl: 'http://192.168.0.11:3000', 
             connectTimeout: const Duration(milliseconds: 5000),
             receiveTimeout: const Duration(milliseconds: 3000),
           ));

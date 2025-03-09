@@ -1,31 +1,50 @@
+import 'package:bloc/bloc.dart';
+import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../infrastructure/auth_repository.dart';
 
-part 'auth_state.dart';
+// Estados 
+abstract class AuthState extends Equatable {
+  @override
+  List<Object> get props => [];
+}
 
+class AuthInitial extends AuthState {}
+
+class AuthLoading extends AuthState {}
+
+class AuthSuccess extends AuthState {}
+
+class AuthFailure extends AuthState {
+  final String message;
+  AuthFailure(this.message);
+
+  @override
+  List<Object> get props => [message];
+}
+
+//Autenticação
 class AuthCubit extends Cubit<AuthState> {
-  final AuthRepository authRepository;
-  
-  AuthCubit({required this.authRepository}) : super(AuthInitial());
-  
+  final Dio dio;
+
+  AuthCubit(this.dio) : super(AuthInitial());
+
   Future<void> register(String name, String email, String password, String confirmPassword) async {
     emit(AuthLoading());
     try {
-      final token = await authRepository.register(name, email, password, confirmPassword);
-      emit(AuthSuccess(token));
+      final response = await dio.post('/auth/register', data: {
+        "name": name,
+        "email": email,
+        "password": password,
+        "confirmPassword": confirmPassword,
+      });
+
+      if (response.statusCode == 201) {
+        emit(AuthSuccess());
+      } else {
+        emit(AuthFailure("Erro no cadastro:"));
+      }
     } catch (e) {
-      emit(AuthFailure(e.toString()));
-    }
-  }
-  
-  Future<void> login(String email, String password) async {
-    emit(AuthLoading());
-    try {
-      final token = await authRepository.login(email, password);
-      emit(AuthSuccess(token));
-    } catch (e) {
-      emit(AuthFailure(e.toString()));
+      emit(AuthFailure("Falha na conexão com o servidor"));
     }
   }
 }
