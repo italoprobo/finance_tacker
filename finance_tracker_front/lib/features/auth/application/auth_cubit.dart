@@ -39,11 +39,33 @@ class AuthCubit extends Cubit<AuthState> {
       });
 
       if (response.statusCode == 201) {
+        print('Resposta do servidor: ${response.toString()}');
         emit(AuthSuccess());
       } else {
-        emit(AuthFailure("Erro no cadastro:"));
+        emit(AuthFailure("Erro no cadastro"));
       }
     } catch (e) {
+      print('Erro no cadastro: $e');
+      emit(AuthFailure("Falha na conexão com o servidor"));
+    }
+  }
+
+  Future<void> login(String email, String password) async {
+    emit(AuthLoading());
+    try {
+      final response = await dio.post('/auth/login', data: {
+        "email": email,
+        "password": password,
+      });
+
+      if (response.statusCode == 201) {
+        emit(AuthSuccess());
+      } else {
+        print('Resposta do servidor: ${response.toString()}');
+        emit(AuthFailure("Erro no login"));
+      }
+    } catch (e) {
+      print('Erro no cadastro: $e');
       emit(AuthFailure("Falha na conexão com o servidor"));
     }
   }

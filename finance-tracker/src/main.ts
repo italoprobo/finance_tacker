@@ -9,22 +9,22 @@ dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
-
+  
   app.enableCors({
     origin: '*', 
     methods: 'GET,HEAD,POST,PUT,DELETE,PATCH,OPTIONS', 
     allowedHeaders: ['Content-Type', 'Authorization'], 
     credentials: true, 
   });
-
+  
   app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Methods", "GET,PUT,PATCH,POST,DELETE");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
   });
-
+  
+  await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
 

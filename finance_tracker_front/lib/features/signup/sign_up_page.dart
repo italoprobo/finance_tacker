@@ -32,7 +32,7 @@ class _SignUpPageState extends State<SignUpPage> {
     return Scaffold(
       backgroundColor: AppColors.icewhite,
       body: Align(
-        alignment: Alignment.topCenter,
+        alignment: Alignment.center,
         child: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
             if (state is AuthLoading) {
@@ -42,7 +42,7 @@ class _SignUpPageState extends State<SignUpPage> {
             }
             if (state is AuthSuccess) {
               DialogsHelper.showSuccessBottomSheet(context);
-              context.goNamed('/login');
+              context.goNamed('login');
               // ver com o chat como posso fazer para ele poder ir e voltar no app
               // com essa opção gonamed quando eu clico no botao de voltar no celular ele sai do app
             } else if (state is AuthFailure) {
@@ -56,10 +56,11 @@ class _SignUpPageState extends State<SignUpPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 32.0),
                     Text('Guarde Seu', textAlign: TextAlign.center, style: AppTextStyles.mediumText.copyWith(color: AppColors.purple)),
                     Text('Dinheiro!',  textAlign: TextAlign.center, style: AppTextStyles.mediumText.copyWith(color: AppColors.purple)),
+                    const SizedBox(height: 14.0),
                     Image.asset('assets/images/singuppageimg.png'),
+                    const SizedBox(height: 22.0),
                     Form(
                       key: _formKey,
                       child: Column(
@@ -75,7 +76,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           ),
                           CustomTextFormField(
                             labelText: "Seu Email",
-                            hintText: "italoprobo@gmail.com",
+                            hintText: "italo@gmail.com",
                             controller: _emailController,
                             validator: Validator.validateEmail,
                           ),
@@ -122,7 +123,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           TextSpan(
                             text: 'Faça Login',
                             style: AppTextStyles.smalltext.copyWith(color: AppColors.purpleligth),
-                            recognizer: TapGestureRecognizer()..onTap = () => context.goNamed('/login'),
+                            recognizer: TapGestureRecognizer()..onTap = () => context.goNamed('login'),
                           ),
                         ],
                       ),

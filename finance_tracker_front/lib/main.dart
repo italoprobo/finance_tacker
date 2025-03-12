@@ -1,3 +1,4 @@
+import 'package:finance_tracker_front/features/home/application/home_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/api_cliente.dart';
@@ -6,7 +7,11 @@ import 'app_router.dart';
 
 void main() {
   final apiClient = ApiClient(); 
-  runApp(MyApp(apiClient: apiClient));
+  runApp(
+    MultiBlocProvider(providers: [
+      BlocProvider(create: (context) => AuthCubit(apiClient.dio)),
+      BlocProvider(create: (context) => HomeCubit()),
+    ], child: MyApp(apiClient: apiClient)),);
 }
 
 class MyApp extends StatelessWidget {
@@ -16,8 +21,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => AuthCubit(apiClient.dio), 
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => AuthCubit(apiClient.dio)),
+        BlocProvider(create: (context) => HomeCubit()),
+      ],
       child: MaterialApp.router(
         title: 'Finance AI',
         routerConfig: appRouter,

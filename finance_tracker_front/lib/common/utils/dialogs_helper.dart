@@ -23,7 +23,7 @@ class DialogsHelper {
   }
 
   static Future<Future<void>?> showSuccessBottomSheet(
-      BuildContext context) async {
+    BuildContext context) async {
     final state = context.findAncestorStateOfType<CustomModalSheetMixin>();
     if (state != null) {
       return state.showCustomModalBottomSheet(
@@ -32,7 +32,7 @@ class DialogsHelper {
         buttonText: "OK",
         onPressed: () {
           Navigator.of(context).pop();
-          Navigator.of(context).pushNamed('/login');
+          Navigator.of(context).pushNamed('login');
         },
       );
     } else {

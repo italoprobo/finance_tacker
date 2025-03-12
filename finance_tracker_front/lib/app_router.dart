@@ -1,4 +1,9 @@
+import 'package:finance_tracker_front/features/home/home_page.dart';
+import 'package:finance_tracker_front/features/login/login.dart';
+import 'package:finance_tracker_front/features/profile/profile_page.dart';
+import 'package:finance_tracker_front/features/reports/reports_page.dart';
 import 'package:finance_tracker_front/features/signup/sign_up_page.dart';
+import 'package:finance_tracker_front/features/wallet/wallet_page.dart';
 import 'package:go_router/go_router.dart';
 import 'features/splash/splash_page.dart';
 import 'features/onboarding/onboarding_page.dart'; 
@@ -25,7 +30,27 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       name: 'login', 
       path: '/login',
-      builder: (context, state) => const SignUpPage(),
+      builder: (context, state) => const LoginPage(),
+    ),
+    GoRoute(
+      name: 'home', 
+      path: '/home',
+      builder: (context, state) => const HomePage(),
+    ),
+    GoRoute(
+      name: 'reports', 
+      path: '/reports',
+      builder: (context, state) => const ReportsPage(),
+    ),
+    GoRoute(
+      name: 'wallet', 
+      path: '/wallet',
+      builder: (context, state) => const WalletPage(),
+    ),
+    GoRoute(
+      name: 'profile', 
+      path: '/profile',
+      builder: (context, state) => const ProfilePage(),
     ),
   ],
 );

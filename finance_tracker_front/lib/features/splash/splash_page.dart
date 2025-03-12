@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
 import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
+import 'package:finance_tracker_front/common/extensions/sizes.dart';
 import 'package:finance_tracker_front/common/widgets/custom_circular_progress_indicator.dart';
 import 'package:finance_tracker_front/features/onboarding/onboarding_page.dart';
 import 'package:flutter/material.dart';
@@ -17,11 +18,12 @@ class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => Sizes.init(context));
     init();
   }
 
   Timer init(){
-    return Timer(const Duration(seconds: 2), 
+    return Timer(const Duration(seconds: 3), 
     navigateToOnBoarding);
   }
 
