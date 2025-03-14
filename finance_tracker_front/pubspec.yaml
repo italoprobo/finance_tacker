@@ -113,6 +113,12 @@ flutter:
           weight: 800
         - asset: assets/fonts/Inter_28pt-ExtraBold.ttf
           weight: 800
+        - asset: assets/fonts/Inter_18pt-ExtraBold.ttf
+          weight: 400
+        - asset: assets/fonts/Inter_24pt-ExtraBold.ttf
+          weight: 400
+        - asset: assets/fonts/Inter_28pt-ExtraBold.ttf
+          weight: 400
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

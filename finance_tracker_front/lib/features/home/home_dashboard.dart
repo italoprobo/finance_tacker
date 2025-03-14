@@ -3,7 +3,11 @@ import 'dart:developer';
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
 import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
 import 'package:finance_tracker_front/common/extensions/sizes.dart';
+import 'package:finance_tracker_front/common/widgets/greetings.dart';
+import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart';
+import 'package:finance_tracker_front/models/card_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HomeDashboard extends StatefulWidget {
   const HomeDashboard({super.key});
@@ -15,10 +19,40 @@ class HomeDashboard extends StatefulWidget {
 class _HomeDashboardState extends State<HomeDashboard> {
   double get textScaleFactor => MediaQuery.of(context).size.width < 360 ? 0.7 : 1.0;
   double get iconSize => MediaQuery.of(context).size.width < 360 ? 16.0 : 24.0;
+  
+  @override
+  void initState(){
+    super.initState();
+    final authState = context.read<AuthCubit>().state;
+    final cardCubit = context.read<CardCubit>();
+
+    if (authState is AuthSuccess){
+      print("Token do usuário: ${authState.accessToken}");
+      cardCubit.fetchUserCards(authState.accessToken);
+    } else {
+      print("Erro: Usuário não autenticado!");
+    }
+  }
+  
+  
   @override
   Widget build(BuildContext context) {
+  Sizes.init(context);
     return Scaffold(
-      body: Stack(
+      body: BlocBuilder<CardCubit, CardState>(
+        builder: (context, state) {
+          if (state is CardLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state is CardFailure) {
+            return Center(child: Text(state.message));
+          }
+
+          if (state is CardSuccess) {
+            double totalBalance = state.cards.fold(0, (sum, card) => sum + card.currentBalance);
+
+            return Stack(
         children: [
           Positioned(
             left: 0,
@@ -45,27 +79,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Boa noite,',
-                      // ignore: deprecated_member_use
-                      textScaleFactor: textScaleFactor,
-                      style: AppTextStyles.smalltext.copyWith(
-                        color: AppColors.white,),
-                      ),
-                      Text(
-                        'Ítalo Probo',
-                        // ignore: deprecated_member_use
-                        textScaleFactor: textScaleFactor,
-                        style: AppTextStyles.mediumText20.copyWith(
-                          color: AppColors.white,
-                        ),
-                      )
-                    ],
-                  ),
-                ),
+                const GreetingsWidget(),
                 Container(
                   padding: EdgeInsets.symmetric(
                     vertical: 8.h,
@@ -100,7 +114,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
           ),
           Positioned(
             left: 24.w,
-            right: 24.w,
+            right: 25.w,
             top: 140.h,
             child: Container(
               padding: EdgeInsets.symmetric(
@@ -126,12 +140,12 @@ class _HomeDashboardState extends State<HomeDashboard> {
                             Text(
                               'Saldo Total',
                               textScaleFactor: textScaleFactor,
-                              style: AppTextStyles.mediumText.apply(color: AppColors.white),
+                              style: AppTextStyles.mediumText28.apply(color: AppColors.white),
                             ),
                             Text(
-                              'R\$ 1,500.00',
+                              'R\$ ${totalBalance.toStringAsFixed(2)}',
                               textScaleFactor: textScaleFactor,
-                              style: AppTextStyles.mediumText30.apply(color: AppColors.white),
+                              style: AppTextStyles.mediumText22.apply(color: AppColors.white),
                             )
                           ],
                         ),
@@ -169,7 +183,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                               )
                             ),
                             child: Icon(
-                              Icons.arrow_downward,
+                              Icons.arrow_upward,
                               color: AppColors.white,
                               size: iconSize,
                             ),
@@ -186,7 +200,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                               Text(
                                 "R\$ 1,840.00",
                                 textScaleFactor: textScaleFactor,
-                                style: AppTextStyles.mediumText20.apply(color: AppColors.white),
+                                style: AppTextStyles.mediumText18.apply(color: AppColors.white),
                               )
                             ],
                           )
@@ -203,7 +217,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                               )
                             ),
                             child: Icon(
-                              Icons.arrow_upward,
+                              Icons.arrow_downward,
                               color: AppColors.white,
                               size: iconSize,
                             ),
@@ -220,7 +234,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                               Text(
                                 "R\$ 240.00",
                                 textScaleFactor: textScaleFactor,
-                                style: AppTextStyles.mediumText20.apply(color: AppColors.white),
+                                style: AppTextStyles.mediumText18.apply(color: AppColors.white),
                               )
                             ],
                           )
@@ -299,7 +313,11 @@ class _HomeDashboardState extends State<HomeDashboard> {
             ),
           )
         ],
-      ),
+      );
+      }
+      return const Center(child: Text("Erro desconhecido"),);
+      },
+      )
     );
   }
 }

@@ -42,7 +42,7 @@ class OnboardingPage extends StatelessWidget {
               TextSpan(
                 text: 'Faça Login',
                 style: AppTextStyles.smalltext.copyWith(color: AppColors.purpleligth),
-                recognizer: TapGestureRecognizer()..onTap = () => context.goNamed('/login'),
+                recognizer: TapGestureRecognizer()..onTap = () => context.goNamed('login'),
               ),
             ],
             ),),
