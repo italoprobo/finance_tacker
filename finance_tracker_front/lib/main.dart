@@ -1,5 +1,6 @@
 import 'package:finance_tracker_front/features/home/application/home_cubit.dart';
 import 'package:finance_tracker_front/models/card_cubit.dart';
+import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/api_cliente.dart';
@@ -13,6 +14,7 @@ void main() {
       BlocProvider(create: (context) => AuthCubit(apiClient.dio)),
       BlocProvider(create: (context) => HomeCubit()),
       BlocProvider(create: (context) => CardCubit(apiClient.dio)),
+      BlocProvider(create: (context) => TransactionCubit(apiClient.dio)),
     ], child: MyApp(apiClient: apiClient)),);
 }
 
@@ -28,6 +30,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (context) => AuthCubit(apiClient.dio)),
         BlocProvider(create: (context) => HomeCubit()),
         BlocProvider(create: (context) => CardCubit(apiClient.dio)),
+        BlocProvider(create: (context) => TransactionCubit(apiClient.dio)),
       ],
       child: MaterialApp.router(
         title: 'Finance AI',
