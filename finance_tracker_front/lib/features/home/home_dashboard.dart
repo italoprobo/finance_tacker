@@ -9,6 +9,7 @@ import 'package:finance_tracker_front/models/card_cubit.dart';
 import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeDashboard extends StatefulWidget {
   const HomeDashboard({super.key});
@@ -25,14 +26,25 @@ class _HomeDashboardState extends State<HomeDashboard> {
   @override
   void initState() {
     super.initState();
-    final authState = context.read<AuthCubit>().state;
-    final cardCubit = context.read<CardCubit>();
-    final transactionCubit = context.read<TransactionCubit>();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authState = context.read<AuthCubit>().state;
+      final cardCubit = context.read<CardCubit>();
+      final transactionCubit = context.read<TransactionCubit>();
 
-    if (authState is AuthSuccess) {
-      cardCubit.fetchUserCards(authState.accessToken);
-      transactionCubit.fetchUserTransactions(authState.accessToken);
-    }
+      log('🔄 Iniciando HomeDashboard...');
+
+      if (authState is AuthSuccess) {
+        log('✅ Usuário autenticado! Token: ${authState.accessToken}');
+
+        log('📡 Buscando cartões...');
+        cardCubit.fetchUserCards(authState.accessToken);
+
+        log('📡 Buscando transações...');
+        transactionCubit.fetchUserTransactions(authState.accessToken);
+      } else {
+        log('⚠️ Token não encontrado, usuário precisa estar autenticado.');
+      }
+    });
   }
 
   @override
@@ -40,17 +52,21 @@ class _HomeDashboardState extends State<HomeDashboard> {
     Sizes.init(context);
     return Scaffold(body: BlocBuilder<CardCubit, CardState>(
       builder: (context, state) {
+        print('🔎 Estado do CardCubit: ${state.runtimeType}');
         if (state is CardLoading) {
+          print('⏳ Carregando cartões...');
           return const Center(child: CircularProgressIndicator());
         }
 
         if (state is CardFailure) {
+          print('❌ Erro ao buscar cartões: ${state.message}');
           return Center(child: Text(state.message));
         }
 
         if (state is CardSuccess) {
+          print('✅ Cartões carregados com sucesso! Quantidade: ${state.cards.length}');
           double totalBalance =
-              state.cards.fold(0, (sum, card) => sum + card.currentBalance);
+              state.cards.fold(0, (sum, card) => sum + (card.currentBalance));
 
           return Stack(
             children: [
@@ -246,15 +262,21 @@ class _HomeDashboardState extends State<HomeDashboard> {
                   bottom: 0,
                   child: BlocBuilder<TransactionCubit, TransactionState>(
                     builder: (context, state) {
+                      print('🔎 Estado do TransactionCubit: ${state.runtimeType}');
+
                       if (state is TransactionsLoading) {
+                        print('⏳ Carregando transações...');
                         return const Center(child: CircularProgressIndicator());
                       }
 
                       if (state is TransactionsFailure) {
+                        print('❌ Erro ao buscar transações: ${state.message}');
                         return Center(child: Text(state.message));
                       }
 
-                      if (state is TransactionsSuccess) {
+                      if (state is TransactionsSuccess &&
+                          state.transactions.isNotEmpty) {
+                      print('✅ Transações carregadas! Quantidade: ${state.transactions.length}');
                         return Column(
                           children: [
                             Padding(
@@ -268,10 +290,15 @@ class _HomeDashboardState extends State<HomeDashboard> {
                                     style: AppTextStyles.buttontext
                                         .apply(color: AppColors.black),
                                   ),
-                                  Text(
-                                    "Ver todas",
-                                    style: AppTextStyles.smalltextw400
-                                        .apply(color: AppColors.inputcolor),
+                                  GestureDetector(
+                                    onTap: () {
+                                      context.goNamed('transactions');
+                                    },
+                                    child: Text(
+                                      "Ver todas",
+                                      style: AppTextStyles.smalltextw400
+                                          .apply(color: AppColors.inputcolor),
+                                    ),
                                   )
                                 ],
                               ),
@@ -280,7 +307,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                               child: ListView.builder(
                                 physics: const BouncingScrollPhysics(),
                                 padding: EdgeInsets.zero,
-                                itemCount: 10,
+                                itemCount: state.transactions.length,
                                 itemBuilder: (context, index) {
                                   final transaction = state.transactions[index];
                                   final bool isIncome = transaction.type == 'entrada';
@@ -323,16 +350,18 @@ class _HomeDashboardState extends State<HomeDashboard> {
                           ],
                         );
                       }
+                      print('⚠️ Estado desconhecido no CardCubit');
                       return const Center(
-                        child: Text("Erro desconhecido"),
+                        child: Text("Erro desconhecido card"),
                       );
                     },
                   ))
             ],
           );
         }
+        print('⚠️ Estado desconhecido no TransactionCubit');
         return const Center(
-          child: Text("Erro desconhecido"),
+          child: Text("Erro desconhecido transaction"),
         );
       },
     ));

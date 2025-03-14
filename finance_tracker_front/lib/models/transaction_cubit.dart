@@ -1,6 +1,6 @@
 import 'package:bloc/bloc.dart';
-import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
+import 'package:finance_tracker_front/features/transactions/data/transactions_repository.dart';
 
 class TransactionState extends Equatable {
   @override
@@ -57,27 +57,25 @@ class TransactionModel extends Equatable {
 }
 
 class TransactionCubit extends Cubit<TransactionState> {
-  final Dio dio;
-  TransactionCubit(this.dio) : super(TransactionsInitial());
+  final TransactionsRepository transactionsRepository;
+  TransactionCubit(this.transactionsRepository) : super(TransactionsInitial());
 
   Future<void> fetchUserTransactions(String token) async {
     emit(TransactionsLoading());
     try {
-      final response = await dio.get(
-        '/transactions', 
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = response.data;
-        List<TransactionModel> transactions =
-            data.map((e) => TransactionModel.fromJson(e)).toList();
-        emit(TransactionsSuccess(transactions: transactions));
-      } else {
-        emit(TransactionsFailure("Erro ao buscar transações"));
-      }
+      final transactions = await transactionsRepository.fetchUserTransactions(token);
+      emit(TransactionsSuccess(transactions: transactions));
     } catch (e) {
-      emit(TransactionsFailure("Falha na conexão com o servidor"));
+      emit(TransactionsFailure(e.toString()));
+    }
+  }
+
+    Future<void> addTransaction(String token, Map<String, dynamic> transactionData) async {
+    try {
+      await transactionsRepository.addTransaction(token, transactionData);
+      fetchUserTransactions(token);
+    } catch (e) {
+      emit(TransactionsFailure(e.toString()));
     }
   }
 }
