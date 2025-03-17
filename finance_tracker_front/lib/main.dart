@@ -5,10 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/api_cliente.dart';
 import 'features/auth/application/auth_cubit.dart';
-import 'features/transactions/data/transactions_repository.dart'; // ✅ Importa o TransactionsRepository
+import 'features/transactions/data/transactions_repository.dart'; 
 import 'app_router.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   final apiClient = ApiClient(); 
   final transactionsRepository = TransactionsRepository(apiClient.dio); 
 
@@ -18,7 +19,14 @@ void main() {
         BlocProvider(create: (context) => AuthCubit(apiClient.dio)),
         BlocProvider(create: (context) => HomeCubit()),
         BlocProvider(create: (context) => CardCubit(apiClient.dio)),
-        BlocProvider(create: (context) => TransactionCubit(transactionsRepository)), 
+        BlocProvider<TransactionCubit>(
+          create: (context) {
+            final cubit = TransactionCubit(transactionsRepository);
+            print("✅ TransactionCubit foi criado!");
+            return cubit;
+          },
+        lazy: false, 
+      ), 
       ],
       child: MyApp(apiClient: apiClient, transactionsRepository: transactionsRepository),
     ),

@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:finance_tracker_front/features/transactions/data/transactions_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TransactionState extends Equatable {
   @override
@@ -58,24 +59,59 @@ class TransactionModel extends Equatable {
 
 class TransactionCubit extends Cubit<TransactionState> {
   final TransactionsRepository transactionsRepository;
-  TransactionCubit(this.transactionsRepository) : super(TransactionsInitial());
+
+  TransactionCubit(this.transactionsRepository) : super(TransactionsInitial()) {
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    print("🛠 Iniciando TransactionCubit...");
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('accessToken');
+
+    if (token == null || token.isEmpty) {
+      print("⚠️ Nenhum token encontrado. Não carregando transações.");
+      emit(TransactionsFailure("Nenhum token salvo. Faça login novamente."));
+      return;
+    }
+
+    print("✅ Token carregado: $token");
+    
+    fetchUserTransactions(token);
+  }
 
   Future<void> fetchUserTransactions(String token) async {
+    print("📡 Buscando transações do usuário...");
     emit(TransactionsLoading());
+
     try {
       final transactions = await transactionsRepository.fetchUserTransactions(token);
+      
+      if (transactions.isEmpty) {
+        print("⚠️ Nenhuma transação encontrada.");
+      } else {
+        print("✅ Transações carregadas! Quantidade: ${transactions.length}");
+      }
+
       emit(TransactionsSuccess(transactions: transactions));
     } catch (e) {
+      print("❌ Erro ao buscar transações: $e");
       emit(TransactionsFailure(e.toString()));
     }
   }
 
-    Future<void> addTransaction(String token, Map<String, dynamic> transactionData) async {
+  Future<void> addTransaction(String token, Map<String, dynamic> transactionData) async {
     try {
+      print("📝 Adicionando nova transação...");
       await transactionsRepository.addTransaction(token, transactionData);
+      
+      print("🔄 Recarregando transações após adição...");
       fetchUserTransactions(token);
     } catch (e) {
+      print("❌ Falha ao adicionar transação: $e");
       emit(TransactionsFailure(e.toString()));
     }
   }
 }
+

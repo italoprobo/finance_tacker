@@ -10,42 +10,42 @@ class TransactionsRepository {
 
   Future<List<TransactionModel>> fetchUserTransactions(String token) async {
     try {
-      log('📡 Buscando transações do usuário...');
-      log('🔑 Token enviado: $token');
+      print('📡 Buscando transações do usuário...');
+      print('🔑 Token enviado: $token');
 
       final response = await dio.get(
         '/transactions',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
-      log('📩 Resposta do servidor: ${response.statusCode}');
-      log('📊 Dados recebidos: ${response.data}');
+      print('📩 Resposta do servidor: ${response.statusCode}');
+      print('📊 Dados recebidos: ${response.data}');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
 
         if (data.isEmpty) {
-          log('⚠️ Nenhuma transação encontrada.');
+          print('⚠️ Nenhuma transação encontrada.');
           return [];
         }
 
         List<TransactionModel> transactions =
             data.map((e) => TransactionModel.fromJson(e)).toList();
-        log('✅ Transações carregadas com sucesso!');
+        print('✅ Transações carregadas com sucesso!');
         return transactions;
       } else {
-        log('❌ Erro ao buscar transações. Status code: ${response.statusCode}');
+        print('❌ Erro ao buscar transações. Status code: ${response.statusCode}');
         throw Exception("Erro ao buscar transações");
       }
     } catch (e) {
-      log('❌ Falha na conexão com o servidor: $e');
+      print('❌ Falha na conexão com o servidor: $e');
       throw Exception("Falha na conexão com o servidor");
     }
   }
 
   Future<void> addTransaction(
       String token, Map<String, dynamic> transactionData) async {
-    try {
+    try { 
       log('📝 Adicionando nova transação...');
       log('🔑 Token enviado: $token');
       log('📊 Dados enviados: $transactionData');

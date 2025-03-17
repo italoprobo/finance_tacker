@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Estados 
 abstract class AuthState extends Equatable {
@@ -33,7 +34,19 @@ class AuthFailure extends AuthState {
 class AuthCubit extends Cubit<AuthState> {
   final Dio dio;
 
-  AuthCubit(this.dio) : super(AuthInitial());
+  AuthCubit(this.dio) : super(AuthInitial()) {
+    _loadToken();
+  }
+
+    Future<void> _loadToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('accessToken');
+    final name = prefs.getString('name') ?? '';
+
+    if (accessToken != null && accessToken.isNotEmpty) {
+      emit(AuthSuccess(accessToken: accessToken, name: name));
+    }
+  }
 
   Future<void> register(String name, String email, String password, String confirmPassword) async {
     emit(AuthLoading());
@@ -47,8 +60,8 @@ class AuthCubit extends Cubit<AuthState> {
 
       if (response.statusCode == 201) {
         print('Resposta do servidor: ${response.toString()}');
-        // Aqui, o mais correto seria redirecionar o usuário para login ao invés de emitir um AuthSuccess
-        emit(AuthSuccess(accessToken: "", name: name)); // <-- Ajustado
+        // o mais correto seria redirecionar o usuário para login ao invés de emitir um AuthSuccess
+        emit(AuthSuccess(accessToken: "", name: name)); 
       } else {
         emit(AuthFailure("Erro no cadastro"));
       }
@@ -70,6 +83,10 @@ Future<void> login(String email, String password) async {
         final data = response.data;
         final String accessToken = data['accessToken']; 
         final String name = data['name']; 
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('accessToken', accessToken);
+        await prefs.setString('name', name);
 
         emit(AuthSuccess(accessToken: accessToken, name: name)); 
       } else {

@@ -31,16 +31,14 @@ class _HomeDashboardState extends State<HomeDashboard> {
       final cardCubit = context.read<CardCubit>();
       final transactionCubit = context.read<TransactionCubit>();
 
-      log('🔄 Iniciando HomeDashboard...');
+      log("🔍 Estado inicial do TransactionCubit: ${transactionCubit.state}");
 
-      if (authState is AuthSuccess) {
+      if (authState is AuthSuccess && authState.accessToken.isNotEmpty) {
         log('✅ Usuário autenticado! Token: ${authState.accessToken}');
-
         log('📡 Buscando cartões...');
         cardCubit.fetchUserCards(authState.accessToken);
-
-        log('📡 Buscando transações...');
         transactionCubit.fetchUserTransactions(authState.accessToken);
+        log('📡 Buscando transações...');
       } else {
         log('⚠️ Token não encontrado, usuário precisa estar autenticado.');
       }
