@@ -28,7 +28,6 @@ class _HomeDashboardState extends State<HomeDashboard> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authState = context.read<AuthCubit>().state;
-      final cardCubit = context.read<CardCubit>();
       final transactionCubit = context.read<TransactionCubit>();
 
       log("🔍 Estado inicial do TransactionCubit: ${transactionCubit.state}");
@@ -36,7 +35,6 @@ class _HomeDashboardState extends State<HomeDashboard> {
       if (authState is AuthSuccess && authState.accessToken.isNotEmpty) {
         log('✅ Usuário autenticado! Token: ${authState.accessToken}');
         log('📡 Buscando cartões...');
-        cardCubit.fetchUserCards(authState.accessToken);
         transactionCubit.fetchUserTransactions(authState.accessToken);
         log('📡 Buscando transações...');
       } else {
@@ -51,7 +49,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
     return Scaffold(body: BlocBuilder<CardCubit, CardState>(
       builder: (context, state) {
         print('🔎 Estado do CardCubit: ${state.runtimeType}');
-        if (state is CardLoading) {
+        if (state is CardLoading || state is CardInitial) {
           print('⏳ Carregando cartões...');
           return const Center(child: CircularProgressIndicator());
         }
@@ -62,9 +60,12 @@ class _HomeDashboardState extends State<HomeDashboard> {
         }
 
         if (state is CardSuccess) {
-          print('✅ Cartões carregados com sucesso! Quantidade: ${state.cards.length}');
-          double totalBalance =
-              state.cards.fold(0, (sum, card) => sum + (card.currentBalance));
+        if (state.cards.isEmpty){
+          return const Center(child: Text("Nenhum cartão encontrado"));
+        } else {
+        print('✅ Cartões carregados com sucesso! Quantidade: ${state.cards.length}');
+        double totalBalance =
+            state.cards.fold(0, (sum, card) => sum + (card.currentBalance));
 
           return Stack(
             children: [
@@ -357,11 +358,9 @@ class _HomeDashboardState extends State<HomeDashboard> {
             ],
           );
         }
-        print('⚠️ Estado desconhecido no CartõesCubit');
-        return const Center(
-          child: Text("Erro desconhecido cartoes"),
-        );
-      },
+      }
+    return const Center(child: Text("Erro desconhecido card"));
+    }
     ));
   }
 }

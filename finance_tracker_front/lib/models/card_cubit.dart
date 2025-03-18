@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class CardState extends Equatable {
   @override
@@ -67,7 +68,30 @@ class CardModel {
 class CardCubit extends Cubit<CardState> {
   final Dio dio;
 
-  CardCubit(this.dio) : super(CardInitial());
+  CardCubit(this.dio) : super(CardInitial()) {
+    _initialize();
+  }
+
+    Future<void> _initialize() async {
+    print("🛠 Iniciando CardCubit...");
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('accessToken');
+
+      if (token == null || token.isEmpty) {
+        print("⚠️ Nenhum token encontrado. Esperando autenticação...");
+        emit(CardFailure("Nenhum token salvo. Faça login novamente."));
+        return;
+      }
+
+      print("✅ Token carregado: $token");
+      fetchUserCards(token);
+    } catch (e) {
+      print("❌ Erro ao carregar o token: $e");
+      emit(CardFailure("Erro ao recuperar token"));
+    }
+  }
 
   Future<void> fetchUserCards(String token) async {
     emit(CardLoading());
