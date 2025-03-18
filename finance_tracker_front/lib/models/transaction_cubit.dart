@@ -67,18 +67,22 @@ class TransactionCubit extends Cubit<TransactionState> {
   Future<void> _initialize() async {
     print("🛠 Iniciando TransactionCubit...");
 
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('accessToken');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('accessToken');
 
-    if (token == null || token.isEmpty) {
-      print("⚠️ Nenhum token encontrado. Não carregando transações.");
-      emit(TransactionsFailure("Nenhum token salvo. Faça login novamente."));
-      return;
+      if (token == null || token.isEmpty) {
+        print("⚠️ Nenhum token encontrado. Esperando autenticação...");
+        emit(TransactionsFailure("Nenhum token salvo. Faça login novamente."));
+        return;
+      }
+
+      print("✅ Token carregado: $token");
+      fetchUserTransactions(token);
+    } catch (e) {
+      print("❌ Erro ao carregar o token: $e");
+      emit(TransactionsFailure("Erro ao recuperar token"));
     }
-
-    print("✅ Token carregado: $token");
-    
-    fetchUserTransactions(token);
   }
 
   Future<void> fetchUserTransactions(String token) async {
@@ -87,7 +91,7 @@ class TransactionCubit extends Cubit<TransactionState> {
 
     try {
       final transactions = await transactionsRepository.fetchUserTransactions(token);
-      
+
       if (transactions.isEmpty) {
         print("⚠️ Nenhuma transação encontrada.");
       } else {
@@ -97,7 +101,7 @@ class TransactionCubit extends Cubit<TransactionState> {
       emit(TransactionsSuccess(transactions: transactions));
     } catch (e) {
       print("❌ Erro ao buscar transações: $e");
-      emit(TransactionsFailure(e.toString()));
+      emit(TransactionsFailure("Erro ao buscar transações"));
     }
   }
 

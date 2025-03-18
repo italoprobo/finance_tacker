@@ -262,8 +262,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                     builder: (context, state) {
                       print('🔎 Estado do TransactionCubit: ${state.runtimeType}');
 
-                      if (state is TransactionsLoading) {
-                        print('⏳ Carregando transações...');
+                      if (state is TransactionsInitial || state is TransactionsLoading) {
                         return const Center(child: CircularProgressIndicator());
                       }
 
@@ -272,8 +271,11 @@ class _HomeDashboardState extends State<HomeDashboard> {
                         return Center(child: Text(state.message));
                       }
 
-                      if (state is TransactionsSuccess &&
-                          state.transactions.isNotEmpty) {
+                      if (state is TransactionsSuccess) {
+                      if (state.transactions.isEmpty) {
+                        print('⚠️ Nenhuma transação encontrada.');
+                        return const Center(child: Text("Nenhuma transação encontrada."));
+                      } else {
                       print('✅ Transações carregadas! Quantidade: ${state.transactions.length}');
                         return Column(
                           children: [
@@ -348,18 +350,16 @@ class _HomeDashboardState extends State<HomeDashboard> {
                           ],
                         );
                       }
-                      print('⚠️ Estado desconhecido no CardCubit');
-                      return const Center(
-                        child: Text("Erro desconhecido card"),
-                      );
+                      }
+                    return const Center(child: Text("Erro desconhecido transaction"));
                     },
                   ))
             ],
           );
         }
-        print('⚠️ Estado desconhecido no TransactionCubit');
+        print('⚠️ Estado desconhecido no CartõesCubit');
         return const Center(
-          child: Text("Erro desconhecido transaction"),
+          child: Text("Erro desconhecido cartoes"),
         );
       },
     ));

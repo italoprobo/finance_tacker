@@ -3,15 +3,19 @@ import 'package:finance_tracker_front/models/card_cubit.dart';
 import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/api_cliente.dart';
 import 'features/auth/application/auth_cubit.dart';
 import 'features/transactions/data/transactions_repository.dart'; 
 import 'app_router.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final apiClient = ApiClient(); 
   final transactionsRepository = TransactionsRepository(apiClient.dio); 
+
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('accessToken') ?? "";
 
   runApp(
     MultiBlocProvider(
