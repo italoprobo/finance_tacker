@@ -60,7 +60,6 @@ class AuthCubit extends Cubit<AuthState> {
 
       if (response.statusCode == 201) {
         print('Resposta do servidor: ${response.toString()}');
-        // o mais correto seria redirecionar o usuário para login ao invés de emitir um AuthSuccess
         emit(AuthSuccess(accessToken: "", name: name)); 
       } else {
         emit(AuthFailure("Erro no cadastro"));
@@ -90,7 +89,6 @@ Future<void> login(String email, String password) async {
 
         emit(AuthSuccess(accessToken: accessToken, name: name)); 
       } else {
-        print('Resposta do servidor: ${response.toString()}');
         emit(AuthFailure("Erro no login"));
       }
     } catch (e) {

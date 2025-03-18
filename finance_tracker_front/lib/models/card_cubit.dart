@@ -73,22 +73,16 @@ class CardCubit extends Cubit<CardState> {
   }
 
     Future<void> _initialize() async {
-    print("🛠 Iniciando CardCubit...");
-
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('accessToken');
 
       if (token == null || token.isEmpty) {
-        print("⚠️ Nenhum token encontrado. Esperando autenticação...");
         emit(CardFailure("Nenhum token salvo. Faça login novamente."));
         return;
       }
-
-      print("✅ Token carregado: $token");
       fetchUserCards(token);
     } catch (e) {
-      print("❌ Erro ao carregar o token: $e");
       emit(CardFailure("Erro ao recuperar token"));
     }
   }
@@ -106,11 +100,9 @@ class CardCubit extends Cubit<CardState> {
         List<CardModel> cards = data.map((e) => CardModel.fromJson(e)).toList();
         emit(CardSuccess(cards: cards));
       } else {
-        print("Erro no servidor: ${response.statusCode} - ${response.data}");
         emit(CardFailure("Erro ao buscar cartões"));
       }
     } catch (e) {
-      print("Erro ao conectar: $e");
       emit(CardFailure("Falha ao conectar com o servidor"));
     }
   }

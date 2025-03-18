@@ -30,15 +30,8 @@ class _HomeDashboardState extends State<HomeDashboard> {
       final authState = context.read<AuthCubit>().state;
       final transactionCubit = context.read<TransactionCubit>();
 
-      log("🔍 Estado inicial do TransactionCubit: ${transactionCubit.state}");
-
       if (authState is AuthSuccess && authState.accessToken.isNotEmpty) {
-        log('✅ Usuário autenticado! Token: ${authState.accessToken}');
-        log('📡 Buscando cartões...');
         transactionCubit.fetchUserTransactions(authState.accessToken);
-        log('📡 Buscando transações...');
-      } else {
-        log('⚠️ Token não encontrado, usuário precisa estar autenticado.');
       }
     });
   }
@@ -48,14 +41,11 @@ class _HomeDashboardState extends State<HomeDashboard> {
     Sizes.init(context);
     return Scaffold(body: BlocBuilder<CardCubit, CardState>(
       builder: (context, state) {
-        print('🔎 Estado do CardCubit: ${state.runtimeType}');
         if (state is CardLoading || state is CardInitial) {
-          print('⏳ Carregando cartões...');
           return const Center(child: CircularProgressIndicator());
         }
 
         if (state is CardFailure) {
-          print('❌ Erro ao buscar cartões: ${state.message}');
           return Center(child: Text(state.message));
         }
 
@@ -63,10 +53,8 @@ class _HomeDashboardState extends State<HomeDashboard> {
         if (state.cards.isEmpty){
           return const Center(child: Text("Nenhum cartão encontrado"));
         } else {
-        print('✅ Cartões carregados com sucesso! Quantidade: ${state.cards.length}');
         double totalBalance =
             state.cards.fold(0, (sum, card) => sum + (card.currentBalance));
-
           return Stack(
             children: [
               Positioned(
@@ -261,23 +249,18 @@ class _HomeDashboardState extends State<HomeDashboard> {
                   bottom: 0,
                   child: BlocBuilder<TransactionCubit, TransactionState>(
                     builder: (context, state) {
-                      print('🔎 Estado do TransactionCubit: ${state.runtimeType}');
-
                       if (state is TransactionsInitial || state is TransactionsLoading) {
                         return const Center(child: CircularProgressIndicator());
                       }
 
                       if (state is TransactionsFailure) {
-                        print('❌ Erro ao buscar transações: ${state.message}');
                         return Center(child: Text(state.message));
                       }
 
                       if (state is TransactionsSuccess) {
                       if (state.transactions.isEmpty) {
-                        print('⚠️ Nenhuma transação encontrada.');
                         return const Center(child: Text("Nenhuma transação encontrada."));
                       } else {
-                      print('✅ Transações carregadas! Quantidade: ${state.transactions.length}');
                         return Column(
                           children: [
                             Padding(
