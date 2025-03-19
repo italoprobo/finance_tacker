@@ -22,13 +22,17 @@ class _CustomBottomAppBarState extends State<CustomBottomAppBar> {
   @override
   void initState() {
     super.initState();
-
     widget.controller.addListener(_handlePageChange);
+
+    if(widget.controller.selectedBottomAppBarItemIndex < 0 || 
+    widget.controller.selectedBottomAppBarItemIndex >= widget.children.length){
+      widget.controller.setBottomAppBarItemIndex = 0;      
+    }
   }
 
   @override
   void dispose() {
-    widget.controller.dispose();
+    widget.controller.removeListener(_handlePageChange);
     super.dispose();
   }
 

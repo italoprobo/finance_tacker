@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'dart:developer';
 
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
@@ -91,7 +92,6 @@ class _HomeDashboardState extends State<HomeDashboard> {
                       decoration: BoxDecoration(
                           borderRadius:
                               const BorderRadius.all(Radius.circular(4.0)),
-                          // ignore: deprecated_member_use
                           color: AppColors.white.withOpacity(0.06)),
                       child: Stack(
                         alignment: const AlignmentDirectional(0.5, -0.5),
@@ -121,7 +121,22 @@ class _HomeDashboardState extends State<HomeDashboard> {
                   decoration: const BoxDecoration(
                       color: AppColors.purple,
                       borderRadius: BorderRadius.all(Radius.circular(16.0))),
-                  child: Column(
+                  child: 
+                  BlocBuilder<TransactionCubit, TransactionState>(
+                    builder: (context, state) {
+                      double totalIncome = 0;
+                      double totalExpense = 0;
+
+                      if (state is TransactionsSuccess) {
+                        totalIncome = state.transactions
+                            .where((t) => t.type == 'entrada')
+                            .fold(0, (sum, t) => sum + t.amount);
+
+                        totalExpense = state.transactions
+                            .where((t) => t.type == 'saida')
+                            .fold(0, (sum, t) => sum + t.amount);
+                    } 
+                    return Column(
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -193,7 +208,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                                         color: AppColors.incomesndexpenses),
                                   ),
                                   Text(
-                                    "R\$ 1,840.00",
+                                    "R\$ ${totalIncome.toStringAsFixed(2)}",
                                     textScaleFactor: textScaleFactor,
                                     style: AppTextStyles.mediumText18
                                         .apply(color: AppColors.white),
@@ -227,7 +242,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
                                         color: AppColors.incomesndexpenses),
                                   ),
                                   Text(
-                                    "R\$ 240.00",
+                                    "R\$ ${totalExpense.toStringAsFixed(2)}",
                                     textScaleFactor: textScaleFactor,
                                     style: AppTextStyles.mediumText18
                                         .apply(color: AppColors.white),
@@ -239,8 +254,10 @@ class _HomeDashboardState extends State<HomeDashboard> {
                         ],
                       )
                     ],
-                  ),
+                  );
+                  }
                 ),
+              ),
               ),
               Positioned(
                   top: 420.h,

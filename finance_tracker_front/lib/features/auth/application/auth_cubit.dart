@@ -70,7 +70,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-Future<void> login(String email, String password) async {
+  Future<void> login(String email, String password) async {
     emit(AuthLoading());
     try {
       final response = await dio.post('/auth/login', data: {
@@ -94,6 +94,20 @@ Future<void> login(String email, String password) async {
     } catch (e) {
       print('Erro no login: $e');
       emit(AuthFailure("Falha na conexão com o servidor"));
+    }
+  }
+
+  Future<void> logout() async {
+    emit(AuthLoading());
+
+    try{
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('accessToken');
+      await prefs.remove('name');
+      emit(AuthInitial());
+    } catch (e) {
+      print("Erro ao fazer logout: $e");
+      emit(AuthFailure("Erro ao fazer logout"));
     }
   }
 
