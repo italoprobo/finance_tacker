@@ -1,6 +1,5 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:developer';
-
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
 import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
 import 'package:finance_tracker_front/common/extensions/sizes.dart';
@@ -58,24 +57,6 @@ class _HomeDashboardState extends State<HomeDashboard> {
             state.cards.fold(0, (sum, card) => sum + (card.currentBalance));
           return Stack(
             children: [
-              Positioned(
-                left: 0,
-                right: 0,
-                child: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: AppColors.gradient,
-                    ),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.elliptical(500, 30),
-                      bottomRight: Radius.elliptical(500, 30),
-                    ),
-                  ),
-                  height: 300.h,
-                ),
-              ),
               Positioned(
                 left: 24.0,
                 right: 24.0,
@@ -260,7 +241,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
               ),
               ),
               Positioned(
-                  top: 420.h,
+                  top: 400.h,
                   left: 0,
                   right: 0,
                   bottom: 0,
