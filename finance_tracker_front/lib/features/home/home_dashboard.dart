@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
 import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
 import 'package:finance_tracker_front/common/extensions/sizes.dart';
-import 'package:finance_tracker_front/common/widgets/greetings.dart';
+import 'package:finance_tracker_front/common/widgets/app_header.dart';
 import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart';
 import 'package:finance_tracker_front/models/card_cubit.dart';
 import 'package:finance_tracker_front/models/transaction_cubit.dart';
@@ -57,45 +57,11 @@ class _HomeDashboardState extends State<HomeDashboard> {
             state.cards.fold(0, (sum, card) => sum + (card.currentBalance));
           return Stack(
             children: [
-              Positioned(
-                left: 24.0,
-                right: 24.0,
-                top: 60.h,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const GreetingsWidget(),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 8.h,
-                        horizontal: 8.h,
-                      ),
-                      decoration: BoxDecoration(
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(4.0)),
-                          color: AppColors.white.withOpacity(0.06)),
-                      child: Stack(
-                        alignment: const AlignmentDirectional(0.5, -0.5),
-                        children: [
-                          const Icon(
-                            Icons.notifications_none_outlined,
-                            color: AppColors.white,
-                          ),
-                          Container(
-                            decoration: BoxDecoration(
-                                color: AppColors.notification,
-                                borderRadius: BorderRadius.circular(4.0)),
-                          )
-                        ],
-                      ),
-                    )
-                  ],
-                ),
-              ),
+              const AppHeader(),
               Positioned(
                 left: 24.w,
                 right: 25.w,
-                top: 140.h,
+                top: 145.h,
                 child: Container(
                   padding:
                       EdgeInsets.symmetric(horizontal: 23.w, vertical: 32.h),
@@ -241,7 +207,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
               ),
               ),
               Positioned(
-                  top: 400.h,
+                  top: 410.h,
                   left: 0,
                   right: 0,
                   bottom: 0,

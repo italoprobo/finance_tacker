@@ -18,16 +18,15 @@ class GreetingsWidget extends StatelessWidget {
     }
   }
 
-  /// Função para formatar o nome corretamente (primeiro e último nome)
+  /// função para formatar o nome corretamente (primeiro e último nome)
   String formatName(String name) {
-    List<String> words = name.toLowerCase().split(' '); // Divide o nome em palavras
+    List<String> words = name.toLowerCase().split(' ');
     
-    if (words.length == 1) return words[0][0].toUpperCase() + words[0].substring(1); // Se for um nome só
+    if (words.length == 1) return words[0][0].toUpperCase() + words[0].substring(1); // se for um nome só
 
-    String firstName = words.first; // Primeiro nome
-    String lastName = words.last; // Último nome
+    String firstName = words.first;
+    String lastName = words.last;
 
-    // Capitaliza a primeira letra de cada nome
     firstName = firstName[0].toUpperCase() + firstName.substring(1);
     lastName = lastName[0].toUpperCase() + lastName.substring(1);
 
@@ -40,7 +39,7 @@ class GreetingsWidget extends StatelessWidget {
 
     String userName = '';
     if (authState is AuthSuccess) {
-      userName = formatName(authState.name); // Aplica a formatação correta
+      userName = formatName(authState.name); 
     }
 
     double textScaleFactor = MediaQuery.of(context).size.width < 360 ? 0.7 : 1.0;
