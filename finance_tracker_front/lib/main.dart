@@ -7,6 +7,7 @@ import 'core/api_cliente.dart';
 import 'features/auth/application/auth_cubit.dart';
 import 'features/transactions/data/transactions_repository.dart'; 
 import 'app_router.dart';
+import 'features/categories/application/categories_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,7 +26,10 @@ Future<void> main() async {
             return cubit;
           },
         lazy: false, 
-      ), 
+        ),
+        BlocProvider(
+          create: (context) => CategoriesCubit(apiClient.dio),
+        ),
       ],
       child: MyApp(apiClient: apiClient, transactionsRepository: transactionsRepository),
     ),

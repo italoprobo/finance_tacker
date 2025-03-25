@@ -2,6 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 // Estados 
 abstract class AuthState extends Equatable {
@@ -17,9 +18,16 @@ class AuthLoading extends AuthState {}
 class AuthSuccess extends AuthState {
   final String accessToken;
   final String name;
-  AuthSuccess({required this.accessToken, required this.name});
+  final String id;
+
+  AuthSuccess({
+    required this.accessToken,
+    required this.name,
+    required this.id,
+  });
+
   @override
-  List<Object> get props => [accessToken, name];
+  List<Object> get props => [accessToken, name, id];
 }
 
 class AuthFailure extends AuthState {
@@ -42,9 +50,10 @@ class AuthCubit extends Cubit<AuthState> {
     final prefs = await SharedPreferences.getInstance();
     final accessToken = prefs.getString('accessToken');
     final name = prefs.getString('name') ?? '';
+    final id = prefs.getString('userId') ?? '';
 
     if (accessToken != null && accessToken.isNotEmpty) {
-      emit(AuthSuccess(accessToken: accessToken, name: name));
+      emit(AuthSuccess(accessToken: accessToken, name: name, id: id));
     }
   }
 
@@ -59,8 +68,41 @@ class AuthCubit extends Cubit<AuthState> {
       });
 
       if (response.statusCode == 201) {
-        print('Resposta do servidor: ${response.toString()}');
-        emit(AuthSuccess(accessToken: "", name: name)); 
+        final data = response.data;
+        print('Register Response: $data'); // Debug log
+
+        final String accessToken = data['accessToken'];
+        
+        // Decodificar o token JWT para pegar o ID do usuário
+        final String token = accessToken;
+        final parts = token.split('.');
+        if (parts.length != 3) {
+          emit(AuthFailure("Token inválido"));
+          return;
+        }
+
+        // Decodificar a parte do payload do token
+        final payload = parts[1];
+        final normalized = base64Url.normalize(payload);
+        final decoded = utf8.decode(base64Url.decode(normalized));
+        final payloadMap = json.decode(decoded);
+        
+        final String userId = payloadMap['id'] ?? '';
+
+        print('Token: $accessToken'); // Debug log
+        print('ID from token: $userId'); // Debug log
+
+        if (userId.isEmpty) {
+          emit(AuthFailure("ID do usuário não encontrado"));
+          return;
+        }
+        
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('accessToken', accessToken);
+        await prefs.setString('name', name);
+        await prefs.setString('userId', userId);
+
+        emit(AuthSuccess(accessToken: accessToken, name: name, id: userId));
       } else {
         emit(AuthFailure("Erro no cadastro"));
       }
@@ -80,14 +122,42 @@ class AuthCubit extends Cubit<AuthState> {
 
       if (response.statusCode == 201) {
         final data = response.data;
-        final String accessToken = data['accessToken']; 
-        final String name = data['name']; 
+        print('Login Response: $data'); // Debug log
+
+        final String accessToken = data['accessToken'];
+        final String name = data['name'];
+        
+        // Decodificar o token JWT para pegar o ID do usuário
+        final String token = accessToken;
+        final parts = token.split('.');
+        if (parts.length != 3) {
+          emit(AuthFailure("Token inválido"));
+          return;
+        }
+
+        // Decodificar a parte do payload do token
+        final payload = parts[1];
+        final normalized = base64Url.normalize(payload);
+        final decoded = utf8.decode(base64Url.decode(normalized));
+        final payloadMap = json.decode(decoded);
+        
+        final String id = payloadMap['id'] ?? '';
+        
+        print('Token: $accessToken'); // Debug log
+        print('Name: $name'); // Debug log
+        print('ID from token: $id'); // Debug log
+
+        if (id.isEmpty) {
+          emit(AuthFailure("ID do usuário não encontrado"));
+          return;
+        }
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('accessToken', accessToken);
         await prefs.setString('name', name);
+        await prefs.setString('userId', id);
 
-        emit(AuthSuccess(accessToken: accessToken, name: name)); 
+        emit(AuthSuccess(accessToken: accessToken, name: name, id: id));
       } else {
         emit(AuthFailure("Erro no login"));
       }
@@ -104,6 +174,7 @@ class AuthCubit extends Cubit<AuthState> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('accessToken');
       await prefs.remove('name');
+      await prefs.remove('userId');
       emit(AuthInitial());
     } catch (e) {
       print("Erro ao fazer logout: $e");

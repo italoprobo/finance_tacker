@@ -9,6 +9,7 @@ import 'package:finance_tracker_front/features/reports/reports_page.dart';
 import 'package:finance_tracker_front/features/wallet/wallet_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -31,7 +32,7 @@ class HomePage extends StatelessWidget {
       floatingActionButton: SizedBox(
         width: 70,
         height: 70,
-        child: FloatingActionButton(onPressed: () {} ,
+        child: FloatingActionButton(onPressed: () => context.pushNamed('add-transaction') ,
         backgroundColor: AppColors.purple,
         shape: const CircleBorder(),
         

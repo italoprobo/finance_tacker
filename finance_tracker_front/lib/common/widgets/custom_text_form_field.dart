@@ -14,13 +14,29 @@ class CustomTextFormField extends StatefulWidget {
   final TextInputAction? textInputAction;
   final Widget? suffixIcon;
   final bool? obscureText;
+  final bool? readOnly;
+  final VoidCallback? onTap;
   final List<TextInputFormatter>? inputFormatters;
   final FormFieldValidator<String>? validator;
   final String? helperText;
 
   const CustomTextFormField({
     super.key,
-    this.padding, this.hintText, this.labelText, this.textCapitalization, this.controller, this.keyboardType, this.maxLength, this.textInputAction, this.suffixIcon, this.obscureText, this.inputFormatters, this.validator, this.helperText,
+    this.padding,
+    this.hintText,
+    this.labelText,
+    this.textCapitalization,
+    this.controller,
+    this.keyboardType,
+    this.maxLength,
+    this.textInputAction,
+    this.suffixIcon,
+    this.obscureText,
+    this.readOnly,
+    this.onTap,
+    this.inputFormatters,
+    this.validator,
+    this.helperText,
   });
 
   @override
@@ -57,6 +73,8 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
             });
           }
         },
+        onTap: widget.onTap,
+        readOnly: widget.readOnly ?? false,
         validator: widget.validator,
         style: AppTextStyles.smalltext.copyWith(color: AppColors.purpleligth),
         inputFormatters: widget.inputFormatters,
