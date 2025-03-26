@@ -1,9 +1,10 @@
 // ignore_for_file: deprecated_member_use
-import 'dart:developer';
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
 import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
 import 'package:finance_tracker_front/common/extensions/sizes.dart';
 import 'package:finance_tracker_front/common/widgets/app_header.dart';
+import 'package:finance_tracker_front/common/widgets/primary_button.dart';
+import 'package:finance_tracker_front/common/widgets/custom_bottom_sheet.dart';
 import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart';
 import 'package:finance_tracker_front/features/home/widget/balance_card.dart';
 import 'package:finance_tracker_front/models/card_cubit.dart';
@@ -19,7 +20,7 @@ class HomeDashboard extends StatefulWidget {
   State<HomeDashboard> createState() => _HomeDashboardState();
 }
 
-class _HomeDashboardState extends State<HomeDashboard> {
+class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixin {
   double get textScaleFactor =>
       MediaQuery.of(context).size.width < 360 ? 0.7 : 1.0;
   double get iconSize => MediaQuery.of(context).size.width < 360 ? 16.0 : 24.0;
@@ -54,8 +55,7 @@ class _HomeDashboardState extends State<HomeDashboard> {
         if (state.cards.isEmpty){
           return const Center(child: Text("Nenhum cartão encontrado"));
         } else {
-        double totalBalance =
-            state.cards.fold(0, (sum, card) => sum + (card.currentBalance));
+        //double totalBalance = state.cards.fold(0, (sum, card) => sum + (card.currentBalance));
           return Stack(
             children: [
               const AppHeader(),
@@ -151,6 +151,119 @@ class _HomeDashboardState extends State<HomeDashboard> {
                                   return ListTile(
                                     contentPadding: const EdgeInsets.symmetric(
                                         horizontal: 8.0),
+                                    onLongPress: () {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        shape: const RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.only(
+                                            topLeft: Radius.circular(24.0),
+                                            topRight: Radius.circular(24.0),
+                                          ),
+                                        ),
+                                        builder: (context) => Container(
+                                          padding: const EdgeInsets.all(24.0),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                'O que deseja fazer?',
+                                                style: AppTextStyles.mediumText20.copyWith(
+                                                  color: AppColors.purple,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 20),
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                children: [
+                                                  GestureDetector(
+                                                    onTap: () {
+                                                      context.pop();
+                                                      context.pushNamed('edit-transaction', extra: transaction);
+                                                    },
+                                                    child: Column(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        Container(
+                                                          padding: const EdgeInsets.all(12),
+                                                          decoration: BoxDecoration(
+                                                            color: AppColors.iceWhite,
+                                                            borderRadius: BorderRadius.circular(12),
+                                                          ),
+                                                          child: const Icon(
+                                                            Icons.edit,
+                                                            color: AppColors.purple,
+                                                            size: 24,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(height: 8),
+                                                        Text(
+                                                          'Editar',
+                                                          style: AppTextStyles.smalltextw400.copyWith(
+                                                            color: AppColors.purple,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  GestureDetector(
+                                                    onTap: () {
+                                                      context.pop();
+                                                      showCustomModalBottomSheet(
+                                                        context: context,
+                                                        content: 'Deseja realmente excluir esta transação?',
+                                                        actions: [
+                                                          PrimaryButton(
+                                                            text: 'Cancelar',
+                                                            onPressed: () => context.pop(),
+                                                          ),
+                                                          PrimaryButton(
+                                                            text: 'Excluir',
+                                                            onPressed: () {
+                                                              final authState = context.read<AuthCubit>().state;
+                                                              if (authState is AuthSuccess) {
+                                                                context.read<TransactionCubit>().deleteTransaction(
+                                                                  transaction.id,
+                                                                  authState.accessToken,
+                                                                );
+                                                              }
+                                                              context.pop();
+                                                            },
+                                                          ),
+                                                        ],
+                                                      );
+                                                    },
+                                                    child: Column(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        Container(
+                                                          padding: const EdgeInsets.all(12),
+                                                          decoration: BoxDecoration(
+                                                            color: AppColors.iceWhite,
+                                                            borderRadius: BorderRadius.circular(12),
+                                                          ),
+                                                          child: const Icon(
+                                                            Icons.delete,
+                                                            color: AppColors.error,
+                                                            size: 24,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(height: 8),
+                                                        Text(
+                                                          'Excluir',
+                                                          style: AppTextStyles.smalltextw400.copyWith(
+                                                            color: AppColors.error,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
                                     leading: Container(
                                       decoration: const BoxDecoration(
                                         color: AppColors.antiFlashWhite,

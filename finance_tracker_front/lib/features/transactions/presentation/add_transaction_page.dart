@@ -10,9 +10,7 @@ import 'package:finance_tracker_front/common/widgets/custom_text_form_field.dart
 import 'package:finance_tracker_front/common/widgets/category_form_field.dart';
 import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart';
 import 'package:finance_tracker_front/models/transaction_cubit.dart';
-import 'package:finance_tracker_front/features/transactions/data/transactions_repository.dart';
 import 'package:finance_tracker_front/features/categories/application/categories_cubit.dart';
-import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:go_router/go_router.dart';
 
 class MoneyInputFormatter extends TextInputFormatter {

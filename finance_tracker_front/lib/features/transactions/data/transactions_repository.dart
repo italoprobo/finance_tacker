@@ -48,4 +48,19 @@ class TransactionsRepository {
       throw Exception("Erro ao adicionar transação");
     }
   }
+
+  Future<void> deleteTransaction(String transactionId, String token) async {
+    try {
+      await dio.delete(
+        '/transactions/$transactionId',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+    } catch (e) {
+      throw Exception('Erro ao excluir transação');
+    }
+  }
 }
