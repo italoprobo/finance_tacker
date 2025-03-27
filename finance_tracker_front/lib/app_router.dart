@@ -6,6 +6,8 @@ import 'package:finance_tracker_front/features/signup/sign_up_page.dart';
 import 'package:finance_tracker_front/features/transactions/transactions_page.dart';
 import 'package:finance_tracker_front/features/wallet/wallet_page.dart';
 import 'package:finance_tracker_front/features/transactions/presentation/add_transaction_page.dart';
+import 'package:finance_tracker_front/features/transactions/presentation/edit_transaction_page.dart';
+import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:go_router/go_router.dart';
 import 'features/splash/splash_page.dart';
 import 'features/onboarding/onboarding_page.dart'; 
@@ -63,6 +65,13 @@ final GoRouter appRouter = GoRouter(
       name: 'add-transaction', 
       path: '/add-transaction',
       builder: (context, state) => const AddTransactionPage(),
+    ),
+    GoRoute(
+      name: 'edit-transaction',
+      path: '/edit-transaction',
+      builder: (context, state) => EditTransactionPage(
+        transaction: state.extra as TransactionModel,
+      ),
     ),
   ],
 );

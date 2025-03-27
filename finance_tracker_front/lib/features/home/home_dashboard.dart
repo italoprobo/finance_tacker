@@ -3,7 +3,6 @@ import 'package:finance_tracker_front/common/constants/app_colors.dart';
 import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
 import 'package:finance_tracker_front/common/extensions/sizes.dart';
 import 'package:finance_tracker_front/common/widgets/app_header.dart';
-import 'package:finance_tracker_front/common/widgets/primary_button.dart';
 import 'package:finance_tracker_front/common/widgets/custom_bottom_sheet.dart';
 import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart';
 import 'package:finance_tracker_front/features/home/widget/balance_card.dart';
@@ -12,6 +11,7 @@ import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:finance_tracker_front/features/home/application/home_cubit.dart';
 
 class HomeDashboard extends StatefulWidget {
   const HomeDashboard({super.key});
@@ -123,7 +123,7 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
                                   ),
                                   GestureDetector(
                                     onTap: () {
-                                      context.goNamed('transactions');
+                                      context.read<HomeCubit>().changePage(2);
                                     },
                                     child: Text(
                                       "Ver todas",
@@ -178,7 +178,10 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
                                                   GestureDetector(
                                                     onTap: () {
                                                       context.pop();
-                                                      context.pushNamed('edit-transaction', extra: transaction);
+                                                      context.pushNamed(
+                                                        'edit-transaction',
+                                                        extra: transaction,
+                                                      );
                                                     },
                                                     child: Column(
                                                       mainAxisSize: MainAxisSize.min,
@@ -207,29 +210,27 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
                                                   ),
                                                   GestureDetector(
                                                     onTap: () {
-                                                      context.pop();
+                                                      final authState = context.read<AuthCubit>().state;
+                                                      final transactionId = transaction.id;
+                                                      final token = authState is AuthSuccess ? authState.accessToken : '';
+                                                      final transactionCubit = context.read<TransactionCubit>();
+                                                      
                                                       showCustomModalBottomSheet(
                                                         context: context,
                                                         content: 'Deseja realmente excluir esta transação?',
-                                                        actions: [
-                                                          PrimaryButton(
-                                                            text: 'Cancelar',
-                                                            onPressed: () => context.pop(),
-                                                          ),
-                                                          PrimaryButton(
-                                                            text: 'Excluir',
-                                                            onPressed: () {
-                                                              final authState = context.read<AuthCubit>().state;
-                                                              if (authState is AuthSuccess) {
-                                                                context.read<TransactionCubit>().deleteTransaction(
-                                                                  transaction.id,
-                                                                  authState.accessToken,
-                                                                );
-                                                              }
-                                                              context.pop();
-                                                            },
-                                                          ),
-                                                        ],
+                                                        buttonText: 'Excluir',
+                                                        onPressed: () async {
+                                                          if (authState is AuthSuccess) {
+                                                            await transactionCubit.deleteTransaction(
+                                                              transactionId,
+                                                              token,
+                                                            );
+                                                          }
+                                                          if (context.mounted) {
+                                                            Navigator.pop(context);
+                                                            Navigator.pop(context);
+                                                          }
+                                                        },
                                                       );
                                                     },
                                                     child: Column(

@@ -63,4 +63,27 @@ class TransactionsRepository {
       throw Exception('Erro ao excluir transação');
     }
   }
+
+  Future<void> updateTransaction(String transactionId, String token, Map<String, dynamic> transactionData) async {
+    try {
+      final response = await dio.patch(
+        '/transactions/$transactionId',
+        data: transactionData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception(response.data['message'] ?? 'Erro ao atualizar transação');
+      }
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception(e.response?.data['message'] ?? 'Erro ao atualizar transação');
+      }
+      throw Exception('Erro ao atualizar transação');
+    }
+  }
 }

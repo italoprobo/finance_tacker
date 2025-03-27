@@ -34,6 +34,7 @@ class TransactionModel extends Equatable {
   final double amount;
   final String type; 
   final DateTime date;
+  final String? categoryId;
 
   const TransactionModel({
     required this.id,
@@ -41,6 +42,7 @@ class TransactionModel extends Equatable {
     required this.amount,
     required this.type,
     required this.date,
+    this.categoryId,
   });
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
@@ -50,11 +52,12 @@ class TransactionModel extends Equatable {
       amount: double.tryParse(json['amount'].toString()) ?? 0.0,
       type: json['type'],
       date: DateTime.parse(json['date']),
+      categoryId: json['categoryId'],
     );
   }
 
   @override
-  List<Object> get props => [id, description, amount, type, date];
+  List<Object?> get props => [id, description, amount, type, date, categoryId];
 }
 
 class TransactionCubit extends Cubit<TransactionState> {
@@ -106,6 +109,15 @@ class TransactionCubit extends Cubit<TransactionState> {
       await fetchUserTransactions(token);
     } catch (e) {
       emit(TransactionsFailure("Erro ao excluir transação"));
+    }
+  }
+
+  Future<void> updateTransaction(String transactionId, String token, Map<String, dynamic> transactionData) async {
+    try {
+      await transactionsRepository.updateTransaction(transactionId, token, transactionData);
+      await fetchUserTransactions(token);
+    } catch (e) {
+      emit(TransactionsFailure("Erro ao atualizar transação"));
     }
   }
 }

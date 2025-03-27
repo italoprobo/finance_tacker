@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
-import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
 import 'package:finance_tracker_front/common/extensions/sizes.dart';
 import 'package:finance_tracker_front/common/widgets/app_header.dart';
 import 'package:finance_tracker_front/common/widgets/primary_button.dart';
@@ -13,7 +12,7 @@ import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:finance_tracker_front/features/categories/application/categories_cubit.dart';
 import 'package:go_router/go_router.dart';
 
-class MoneyInputFormatter extends TextInputFormatter {
+class EditMoneyInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
     if (newValue.text.isEmpty) {
@@ -46,14 +45,19 @@ class MoneyInputFormatter extends TextInputFormatter {
   }
 }
 
-class AddTransactionPage extends StatefulWidget {
-  const AddTransactionPage({super.key});
+class EditTransactionPage extends StatefulWidget {
+  final TransactionModel transaction;
+
+  const EditTransactionPage({
+    super.key,
+    required this.transaction,
+  });
 
   @override
-  State<AddTransactionPage> createState() => _AddTransactionPageState();
+  State<EditTransactionPage> createState() => _EditTransactionPageState();
 }
 
-class _AddTransactionPageState extends State<AddTransactionPage> with SingleTickerProviderStateMixin {
+class _EditTransactionPageState extends State<EditTransactionPage> {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
@@ -61,24 +65,40 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
   final _categoryController = TextEditingController();
   
   DateTime? _selectedDate;
-  late TabController _tabController;
-  String _selectedCategoryId = '';
+  String? _selectedCategoryId;
   bool _isLoading = false;
+  double? _originalAmount;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(() {
-      setState(() {
-        _selectedCategoryId = '';
-      });
+    final transaction = widget.transaction;
+    _descriptionController.text = transaction.description;
+    _amountController.text = 'R\$ ${transaction.amount.toStringAsFixed(2)}';
+    _selectedDate = transaction.date;
+    _dateController.text = '${transaction.date.day}/${transaction.date.month}/${transaction.date.year}';
+    _selectedCategoryId = transaction.categoryId;
+    _originalAmount = transaction.amount;
+
+    // Configura a categoria inicial
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final categoriesState = context.read<CategoriesCubit>().state;
+      if (categoriesState is CategoriesSuccess && _selectedCategoryId != null) {
+        try {
+          final selectedCategory = categoriesState.categories.firstWhere(
+            (category) => category.id == _selectedCategoryId,
+            orElse: () => categoriesState.categories.first,
+          );
+          _categoryController.text = selectedCategory.name;
+        } catch (e) {
+          print('Erro ao encontrar categoria inicial: $e');
+        }
+      }
     });
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
     _descriptionController.dispose();
     _amountController.dispose();
     _dateController.dispose();
@@ -91,15 +111,21 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
       SnackBar(
         content: Text(message),
         backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.zero,
+        dismissDirection: DismissDirection.horizontal,
       ),
     );
   }
 
   void _showSuccessSnackBar() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Transação adicionada com sucesso!'),
+      SnackBar(
+        content: const Text('Transação atualizada com sucesso!'),
         backgroundColor: AppColors.income,
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.zero,
+        dismissDirection: DismissDirection.horizontal,
       ),
     );
   }
@@ -109,12 +135,12 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
     return Scaffold(
       body: Stack(
         children: [
-          const AppHeader(title: 'Adicionar Transação'),
+          const AppHeader(title: 'Editar Transação'),
           Positioned(
             top: 164.h,
             left: 28.w,
             right: 28.w,
-            bottom: 140.h,
+            bottom: 300.h,
             child: Container(
               width: 358.w,
               height: 500.h,
@@ -129,61 +155,6 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                   physics: const BouncingScrollPhysics(),
                   child: Column(
                     children: [
-                      TabBar(
-                        controller: _tabController,
-                        indicatorColor: Colors.transparent,
-                        dividerColor: Colors.transparent,
-                        labelPadding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        padding: EdgeInsets.zero,
-                        onTap: (index) {
-                          setState(() {});
-                        },
-                        tabs: [
-                          Tab(
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                              alignment: Alignment.center,
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: _tabController.index == 0
-                                    ? AppColors.iceWhite
-                                    : AppColors.white,
-                                borderRadius: const BorderRadius.all(
-                                  Radius.circular(24.0),
-                                ),
-                              ),
-                              child: Text(
-                                'Entradas',
-                                style: AppTextStyles.mediumText16w500
-                                    .apply(color: AppColors.darkGrey),
-                              ),
-                            ),
-                          ),
-                          Tab(
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                              alignment: Alignment.center,
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: _tabController.index == 1
-                                    ? AppColors.iceWhite
-                                    : AppColors.white,
-                                borderRadius: const BorderRadius.all(
-                                  Radius.circular(24.0),
-                                ),
-                              ),
-                              child: Text(
-                                'Saídas',
-                                style: AppTextStyles.mediumText16w500
-                                    .apply(color: AppColors.darkGrey),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16.0),
                       Column(
                         children: [
                           CustomTextFormField(
@@ -193,13 +164,13 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                             labelText: 'VALOR',
                             hintText: 'Digite um valor',
                             suffixIcon: Icon(
-                              _tabController.index == 0 
+                              widget.transaction.type == 'entrada'
                                 ? Icons.thumb_up 
                                 : Icons.thumb_down,
                               color: AppColors.purple,
                             ),
                             inputFormatters: [
-                              MoneyInputFormatter(),
+                              EditMoneyInputFormatter(),
                             ],
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -230,6 +201,20 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                               
                               if (state is CategoriesSuccess) {
                                 final categories = state.categories;
+                                
+                                // Se ainda não tiver categoria selecionada e tiver ID, tenta selecionar
+                                if (_categoryController.text.isEmpty && _selectedCategoryId != null) {
+                                  try {
+                                    final selectedCategory = categories.firstWhere(
+                                      (category) => category.id == _selectedCategoryId,
+                                      orElse: () => categories.first,
+                                    );
+                                    _categoryController.text = selectedCategory.name;
+                                  } catch (e) {
+                                    print('Erro ao encontrar categoria: $e');
+                                  }
+                                }
+
                                 return CategoryFormField(
                                   padding: EdgeInsets.zero,
                                   controller: _categoryController,
@@ -273,7 +258,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                             onTap: () async {
                               final date = await showDatePicker(
                                 context: context,
-                                initialDate: DateTime.now(),
+                                initialDate: _selectedDate ?? DateTime.now(),
                                 firstDate: DateTime(1970),
                                 lastDate: DateTime(2030),
                               );
@@ -303,7 +288,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                               }
                             },
                             child: PrimaryButton(
-                              text: 'Adicionar',
+                              text: 'Salvar',
                               isLoading: _isLoading,
                               onPressed: () async {
                                 if (_formKey.currentState!.validate()) {
@@ -319,30 +304,34 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                                         return;
                                       }
 
-                                      final amount = double.parse(
-                                        _amountController.text
-                                            .replaceAll('R\$', '')
-                                            .replaceAll('.', '')
-                                            .replaceAll(',', '.')
-                                            .trim(),
-                                      );
+                                      final amount = _amountController.text == 'R\$ ${_originalAmount?.toStringAsFixed(2)}'
+                                          ? _originalAmount!
+                                          : double.parse(
+                                              _amountController.text
+                                                  .replaceAll('R\$', '')
+                                                  .replaceAll('.', '')
+                                                  .replaceAll(',', '.')
+                                                  .trim(),
+                                            );
 
                                       final transactionData = {
                                         'description': _descriptionController.text,
-                                        'amount': _tabController.index == 1 ? -amount : amount,
-                                        'type': _tabController.index == 0 ? 'entrada' : 'saida',
+                                        'amount': amount,
+                                        'type': widget.transaction.type,
                                         'date': _selectedDate?.toIso8601String() ?? 
-                                            DateTime.now().toIso8601String(),
-                                        'categoryId': _selectedCategoryId,
+                                            widget.transaction.date.toIso8601String(),
+                                        'categoryId': _selectedCategoryId ?? widget.transaction.categoryId ?? '',
                                         'userId': authState.id,
                                       };
 
-                                      await context.read<TransactionCubit>().addTransaction(
+                                      await context.read<TransactionCubit>().updateTransaction(
+                                        widget.transaction.id,
                                         authState.accessToken,
                                         transactionData,
                                       );
                                     } catch (e) {
-                                      _showErrorSnackBar('Erro ao processar o valor');
+                                      _showErrorSnackBar(e.toString().replaceAll('Exception: ', ''));
+                                      setState(() => _isLoading = false);
                                     }
                                   } else {
                                     _showErrorSnackBar('Usuário não autenticado');

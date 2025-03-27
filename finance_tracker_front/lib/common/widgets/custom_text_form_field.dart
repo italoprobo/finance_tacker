@@ -44,7 +44,6 @@ class CustomTextFormField extends StatefulWidget {
 }
 
 class _CustomTextFormFieldState extends State<CustomTextFormField> {
-
   final defaultBorder = const OutlineInputBorder(
     borderSide: BorderSide(color: AppColors.purple),
   );

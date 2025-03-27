@@ -7,17 +7,14 @@ mixin CustomModalSheetMixin<T extends StatefulWidget> on State<T> {
   Future<bool?> showCustomModalBottomSheet({
     required BuildContext context,
     required String content,
-    String? buttonText,
-    VoidCallback? onPressed,
-    List<Widget>? actions,
+    required String buttonText,
+    required VoidCallback onPressed,
     bool isDismissible = true,
   }) {
-    assert(buttonText != null || actions != null);
-
     return showModalBottomSheet(
       isDismissible: isDismissible,
       context: context,
-      isScrollControlled: true, 
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24.0),
@@ -27,8 +24,7 @@ mixin CustomModalSheetMixin<T extends StatefulWidget> on State<T> {
       builder: (BuildContext context) {
         return Container(
           padding: const EdgeInsets.all(24.0),
-          width: double.infinity, 
-          height: 250, 
+          width: double.infinity,
           decoration: const BoxDecoration(
             color: AppColors.white,
             borderRadius: BorderRadius.only(
@@ -39,24 +35,39 @@ mixin CustomModalSheetMixin<T extends StatefulWidget> on State<T> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text(
-                content,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.mediumText20.copyWith(
-                  color: AppColors.purple,
-                ),
+              Stack(
+                children: [
+                  // Botão X para fechar
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: const Icon(
+                        Icons.close,
+                        color: AppColors.error,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                  // Conteúdo centralizado
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20.0, bottom: 30.0),
+                    child: Text(
+                      content,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.mediumText20.copyWith(
+                        color: AppColors.purple,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 20),
-              if (actions != null)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: actions,
-                )
-              else
-                PrimaryButton(
-                  text: buttonText!,
-                  onPressed: onPressed ?? () => Navigator.pop(context),
-                ),
+              PrimaryButton(
+                text: buttonText,
+                onPressed: onPressed,
+              ),
+              const SizedBox(height: 16),
             ],
           ),
         );
