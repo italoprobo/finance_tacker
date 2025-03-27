@@ -13,6 +13,9 @@ import 'package:finance_tracker_front/features/home/widget/transaction_filters.d
 import 'package:finance_tracker_front/models/transaction.dart';
 import 'package:go_router/go_router.dart';
 import 'package:finance_tracker_front/common/widgets/custom_modal_bottom_sheet.dart';
+import 'package:finance_tracker_front/common/widgets/loading_overlay.dart';
+import 'package:finance_tracker_front/common/widgets/operation_feedback.dart';
+import 'package:finance_tracker_front/common/widgets/confirmation_dialog.dart';
 
 class WalletPage extends StatefulWidget {
   const WalletPage({super.key});
@@ -25,6 +28,7 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
   late TabController _tabController;
   String? _selectedCategory;
   DateTime? _selectedDate;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -195,9 +199,13 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
                     child: TabBarView(
                       controller: _tabController,
                       children: [
-                        _TransactionsList(
-                          selectedCategory: _selectedCategory,
-                          selectedDate: _selectedDate,
+                        LoadingOverlay(
+                          isLoading: _isLoading,
+                          message: 'Carregando...',
+                          child: _TransactionsList(
+                            selectedCategory: _selectedCategory,
+                            selectedDate: _selectedDate,
+                          ),
                         ),
                         const Center(child: Text('Em desenvolvimento')),
                       ],
@@ -333,36 +341,21 @@ class _TransactionsList extends StatelessWidget {
                                 GestureDetector(
                                   onTap: () {
                                     context.pop();
-                                    showCustomModalBottomSheet(
+                                    showDialog(
                                       context: context,
-                                      title: 'Confirmar exclusão',
-                                      content: Text(
-                                        'Tem certeza que deseja excluir esta transação?',
-                                        style: AppTextStyles.smalltextw400,
-                                        textAlign: TextAlign.center,
+                                      builder: (context) => ConfirmationDialog(
+                                        title: 'Confirmar exclusão',
+                                        message: 'Tem certeza que deseja excluir esta transação?',
+                                        confirmText: 'Excluir',
+                                        cancelText: 'Cancelar',
+                                        confirmColor: AppColors.expense,
+                                        onConfirm: () {
+                                          // Lógica de exclusão
+                                        },
+                                        onCancel: () {
+                                          Navigator.pop(context);
+                                        },
                                       ),
-                                      buttonText: 'Excluir',
-                                      buttonColor: AppColors.expense,
-                                      onPressed: () async {
-                                        try {
-                                          final authState = context.read<AuthCubit>().state;
-                                          if (authState is AuthSuccess) {
-                                            await context.read<TransactionCubit>().deleteTransaction(
-                                              authState.accessToken,
-                                              transaction.id,
-                                            );
-                                          }
-                                        } catch (e) {
-                                          if (context.mounted) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(
-                                                content: Text('Erro ao excluir transação'),
-                                                backgroundColor: AppColors.expense,
-                                              ),
-                                            );
-                                          }
-                                        }
-                                      },
                                     );
                                   },
                                   child: Column(
@@ -404,6 +397,64 @@ class _TransactionsList extends StatelessWidget {
         }
         return const Center(child: Text("Erro desconhecido"));
       },
+    );
+  }
+}
+
+class OperationFeedback extends StatelessWidget {
+  final bool isSuccess;
+  final String message;
+  final VoidCallback onRetry;
+
+  const OperationFeedback({
+    Key? key,
+    required this.isSuccess,
+    required this.message,
+    required this.onRetry,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isSuccess ? AppColors.income.withOpacity(0.1) : AppColors.expense.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isSuccess ? Icons.check_circle : Icons.error,
+            color: isSuccess ? AppColors.income : AppColors.expense,
+            size: 48,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: AppTextStyles.mediumText16w500.copyWith(
+              color: isSuccess ? AppColors.income : AppColors.expense,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: onRetry,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(
+              'Tentar novamente',
+              style: AppTextStyles.mediumText16w500.copyWith(
+                color: isSuccess ? AppColors.income : AppColors.expense,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -19,15 +19,17 @@ class AuthSuccess extends AuthState {
   final String accessToken;
   final String name;
   final String id;
+  final String email;
 
   AuthSuccess({
     required this.accessToken,
     required this.name,
     required this.id,
+    required this.email,
   });
 
   @override
-  List<Object> get props => [accessToken, name, id];
+  List<Object> get props => [accessToken, name, id, email];
 }
 
 class AuthFailure extends AuthState {
@@ -51,9 +53,10 @@ class AuthCubit extends Cubit<AuthState> {
     final accessToken = prefs.getString('accessToken');
     final name = prefs.getString('name') ?? '';
     final id = prefs.getString('userId') ?? '';
+    final email = prefs.getString('userEmail') ?? '';
 
     if (accessToken != null && accessToken.isNotEmpty) {
-      emit(AuthSuccess(accessToken: accessToken, name: name, id: id));
+      emit(AuthSuccess(accessToken: accessToken, name: name, id: id, email: email));
     }
   }
 
@@ -88,9 +91,11 @@ class AuthCubit extends Cubit<AuthState> {
         final payloadMap = json.decode(decoded);
         
         final String userId = payloadMap['id'] ?? '';
+        final String userEmail = payloadMap['email'] ?? '';
 
         print('Token: $accessToken'); // Debug log
         print('ID from token: $userId'); // Debug log
+        print('Email from token: $userEmail'); // Debug log
 
         if (userId.isEmpty) {
           emit(AuthFailure("ID do usuário não encontrado"));
@@ -101,8 +106,9 @@ class AuthCubit extends Cubit<AuthState> {
         await prefs.setString('accessToken', accessToken);
         await prefs.setString('name', name);
         await prefs.setString('userId', userId);
+        await prefs.setString('userEmail', userEmail);
 
-        emit(AuthSuccess(accessToken: accessToken, name: name, id: userId));
+        emit(AuthSuccess(accessToken: accessToken, name: name, id: userId, email: userEmail));
       } else {
         emit(AuthFailure("Erro no cadastro"));
       }
@@ -142,10 +148,12 @@ class AuthCubit extends Cubit<AuthState> {
         final payloadMap = json.decode(decoded);
         
         final String id = payloadMap['id'] ?? '';
+        final String userEmail = payloadMap['email'] ?? '';
         
         print('Token: $accessToken'); // Debug log
         print('Name: $name'); // Debug log
         print('ID from token: $id'); // Debug log
+        print('Email from token: $userEmail'); // Debug log
 
         if (id.isEmpty) {
           emit(AuthFailure("ID do usuário não encontrado"));
@@ -156,8 +164,9 @@ class AuthCubit extends Cubit<AuthState> {
         await prefs.setString('accessToken', accessToken);
         await prefs.setString('name', name);
         await prefs.setString('userId', id);
+        await prefs.setString('userEmail', userEmail);
 
-        emit(AuthSuccess(accessToken: accessToken, name: name, id: id));
+        emit(AuthSuccess(accessToken: accessToken, name: name, id: id, email: userEmail));
       } else {
         emit(AuthFailure("Erro no login"));
       }
@@ -175,6 +184,7 @@ class AuthCubit extends Cubit<AuthState> {
       await prefs.remove('accessToken');
       await prefs.remove('name');
       await prefs.remove('userId');
+      await prefs.remove('userEmail');
       emit(AuthInitial());
     } catch (e) {
       print("Erro ao fazer logout: $e");
