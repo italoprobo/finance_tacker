@@ -9,6 +9,7 @@ import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart'
 import 'package:finance_tracker_front/features/home/widget/balance_card.dart';
 import 'package:finance_tracker_front/features/home/widget/balance_card_skeleton.dart';
 import 'package:finance_tracker_front/features/home/widget/transaction_skeleton.dart';
+import 'package:finance_tracker_front/features/home/widget/transaction_filters.dart';
 import 'package:finance_tracker_front/models/card_cubit.dart';
 import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:finance_tracker_front/features/categories/application/categories_cubit.dart';
@@ -18,6 +19,7 @@ import 'package:go_router/go_router.dart';
 import 'package:finance_tracker_front/features/home/application/home_cubit.dart';
 import 'package:finance_tracker_front/features/home/widget/animated_transaction_tile.dart';
 import 'package:finance_tracker_front/models/transaction.dart';
+import 'package:finance_tracker_front/common/widgets/custom_modal_bottom_sheet.dart';
 
 class HomeDashboard extends StatefulWidget {
   const HomeDashboard({super.key});
@@ -30,6 +32,8 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
   double get textScaleFactor =>
       MediaQuery.of(context).size.width < 360 ? 0.7 : 1.0;
   double get iconSize => MediaQuery.of(context).size.width < 360 ? 16.0 : 24.0;
+  String? _selectedCategory;
+  DateTime? _selectedDate;
 
   @override
   void initState() {
@@ -42,6 +46,18 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
         transactionCubit.fetchUserTransactions(authState.accessToken);
       }
     });
+  }
+
+  List<TransactionModel> _filterTransactions(List<TransactionModel> transactions) {
+    return transactions.where((transaction) {
+      bool matchesCategory = _selectedCategory == null || 
+                           transaction.categoryId == _selectedCategory;
+      bool matchesDate = _selectedDate == null ||
+                        transaction.date.year == _selectedDate!.year &&
+                        transaction.date.month == _selectedDate!.month &&
+                        transaction.date.day == _selectedDate!.day;
+      return matchesCategory && matchesDate;
+    }).toList();
   }
 
   @override
@@ -61,7 +77,6 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
         if (state.cards.isEmpty){
           return const Center(child: Text("Nenhum cartão encontrado"));
         } else {
-        //double totalBalance = state.cards.fold(0, (sum, card) => sum + (card.currentBalance));
           return Stack(
             children: [
               const AppHeader(),
@@ -79,10 +94,11 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
                     double totalExpense = 0;
 
                     if (transactionState is TransactionsSuccess) {
-                      totalIncome = transactionState.transactions
+                      final filteredTransactions = _filterTransactions(transactionState.transactions);
+                      totalIncome = filteredTransactions
                           .where((t) => t.type == 'entrada')
                           .fold(0, (sum, t) => sum + t.amount);
-                      totalExpense = transactionState.transactions
+                      totalExpense = filteredTransactions
                           .where((t) => t.type == 'saida')
                           .fold(0, (sum, t) => sum + t.amount.abs());
                     }
@@ -131,7 +147,7 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
                         return Column(
                           children: [
                             Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 8.w),
+                              padding: EdgeInsets.symmetric(horizontal: 16.w),
                               child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -155,47 +171,55 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
                               ),
                             ),
                             const SizedBox(height: 8),
+                            // TransactionFilters(
+                            //   selectedCategory: _selectedCategory,
+                            //   selectedDate: _selectedDate,
+                            //   onCategoryChanged: (category) {
+                            //     setState(() {
+                            //       _selectedCategory = category;
+                            //     });
+                            //   },
+                            //   onDateChanged: (date) {
+                            //     setState(() {
+                            //       _selectedDate = date;
+                            //     });
+                            //   },
+                            // ),
+                            const SizedBox(height: 8),
                             Expanded(
-                              child: ListView.builder(
-                                physics: const BouncingScrollPhysics(),
-                                padding: EdgeInsets.symmetric(horizontal: 4.w),
-                                itemCount: state.transactions.length,
-                                itemBuilder: (context, index) {
-                                  final transaction = state.transactions[index];
-                                  final bool isIncome = transaction.type == 'entrada';
-                                  final color = isIncome
-                                      ? AppColors.income
-                                      : AppColors.expense;
-                                  final value = isIncome
-                                      ? transaction.amount.toCurrencyWithSign()
-                                      : transaction.amount.abs().toCurrency();
-                                  return Padding(
-                                    padding: EdgeInsets.only(bottom: 8.h),
-                                    child: AnimatedTransactionTile(
-                                      transaction: Transaction.fromModel(transaction),
-                                      isIncome: isIncome,
-                                      value: value,
-                                      onLongPress: () {
-                                        showModalBottomSheet(
-                                          context: context,
-                                          shape: const RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.only(
-                                              topLeft: Radius.circular(24.0),
-                                              topRight: Radius.circular(24.0),
-                                            ),
-                                          ),
-                                          builder: (context) => Container(
-                                            padding: const EdgeInsets.all(24.0),
-                                            child: Column(
+                              child: RefreshIndicator(
+                                onRefresh: () async {
+                                  final authState = context.read<AuthCubit>().state;
+                                  if (authState is AuthSuccess) {
+                                    await context.read<TransactionCubit>().fetchUserTransactions(authState.accessToken);
+                                  }
+                                },
+                                child: ListView.builder(
+                                  physics: const AlwaysScrollableScrollPhysics(),
+                                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                                  itemCount: _filterTransactions(state.transactions).length,
+                                  itemBuilder: (context, index) {
+                                    final transaction = _filterTransactions(state.transactions)[index];
+                                    final bool isIncome = transaction.type == 'entrada';
+                                    final color = isIncome
+                                        ? AppColors.income
+                                        : AppColors.expense;
+                                    final value = isIncome
+                                        ? transaction.amount.toCurrencyWithSign()
+                                        : transaction.amount.abs().toCurrency();
+                                    return Padding(
+                                      padding: EdgeInsets.only(bottom: 8.h),
+                                      child: AnimatedTransactionTile(
+                                        transaction: Transaction.fromModel(transaction),
+                                        isIncome: isIncome,
+                                        value: value,
+                                        onLongPress: () {
+                                          showCustomModalBottomSheet(
+                                            context: context,
+                                            title: 'O que deseja fazer?',
+                                            content: Column(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                Text(
-                                                  'O que deseja fazer?',
-                                                  style: AppTextStyles.mediumText20.copyWith(
-                                                    color: AppColors.purple,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 20),
                                                 Row(
                                                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                                   children: [
@@ -235,49 +259,36 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
                                                     GestureDetector(
                                                       onTap: () {
                                                         context.pop();
-                                                        showDialog(
+                                                        showCustomModalBottomSheet(
                                                           context: context,
-                                                          builder: (context) => AlertDialog(
-                                                            title: Text(
-                                                              'Confirmar exclusão',
-                                                              style: AppTextStyles.mediumText20.copyWith(
-                                                                color: AppColors.purple,
-                                                              ),
-                                                            ),
-                                                            content: const Text(
-                                                              'Tem certeza que deseja excluir esta transação?',
-                                                              style: AppTextStyles.smalltextw400,
-                                                            ),
-                                                            actions: [
-                                                              TextButton(
-                                                                onPressed: () => context.pop(),
-                                                                child: Text(
-                                                                  'Cancelar',
-                                                                  style: AppTextStyles.smalltextw400.copyWith(
-                                                                    color: AppColors.inputcolor,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                              TextButton(
-                                                                onPressed: () {
-                                                                  context.pop();
-                                                                  final authState = context.read<AuthCubit>().state;
-                                                                  if (authState is AuthSuccess) {
-                                                                    context.read<TransactionCubit>().deleteTransaction(
-                                                                      authState.accessToken,
-                                                                      transaction.id,
-                                                                    );
-                                                                  }
-                                                                },
-                                                                child: Text(
-                                                                  'Excluir',
-                                                                  style: AppTextStyles.smalltextw400.copyWith(
-                                                                    color: AppColors.expense,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ],
+                                                          title: 'Confirmar exclusão',
+                                                          content: Text(
+                                                            'Tem certeza que deseja excluir esta transação?',
+                                                            style: AppTextStyles.smalltextw400,
+                                                            textAlign: TextAlign.center,
                                                           ),
+                                                          buttonText: 'Excluir',
+                                                          buttonColor: AppColors.expense,
+                                                          onPressed: () async {
+                                                            try {
+                                                              final authState = context.read<AuthCubit>().state;
+                                                              if (authState is AuthSuccess) {
+                                                                await context.read<TransactionCubit>().deleteTransaction(
+                                                                  authState.accessToken,
+                                                                  transaction.id,
+                                                                );
+                                                              }
+                                                            } catch (e) {
+                                                              if (context.mounted) {
+                                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                                  const SnackBar(
+                                                                    content: Text('Erro ao excluir transação'),
+                                                                    backgroundColor: AppColors.expense,
+                                                                  ),
+                                                                );
+                                                              }
+                                                            }
+                                                          },
                                                         );
                                                       },
                                                       child: Column(
@@ -309,12 +320,12 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
                                                 ),
                                               ],
                                             ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  );
-                                },
+                                          );
+                                        },
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
                             )
                           ],

@@ -49,7 +49,7 @@ class TransactionsRepository {
     }
   }
 
-  Future<void> deleteTransaction(String transactionId, String token) async {
+  Future<void> deleteTransaction(String token, String transactionId) async {
     try {
       await dio.delete(
         '/transactions/$transactionId',

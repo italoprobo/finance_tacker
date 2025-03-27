@@ -9,8 +9,10 @@ import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart';
 import 'package:finance_tracker_front/features/home/widget/transaction_skeleton.dart';
 import 'package:finance_tracker_front/features/home/widget/animated_transaction_tile.dart';
+import 'package:finance_tracker_front/features/home/widget/transaction_filters.dart';
 import 'package:finance_tracker_front/models/transaction.dart';
 import 'package:go_router/go_router.dart';
+import 'package:finance_tracker_front/common/widgets/custom_modal_bottom_sheet.dart';
 
 class WalletPage extends StatefulWidget {
   const WalletPage({super.key});
@@ -21,6 +23,8 @@ class WalletPage extends StatefulWidget {
 
 class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  String? _selectedCategory;
+  DateTime? _selectedDate;
 
   @override
   void initState() {
@@ -47,6 +51,18 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
     super.dispose();
   }
 
+  List<TransactionModel> _filterTransactions(List<TransactionModel> transactions) {
+    return transactions.where((transaction) {
+      bool matchesCategory = _selectedCategory == null || 
+                           transaction.categoryId == _selectedCategory;
+      bool matchesDate = _selectedDate == null ||
+                        transaction.date.year == _selectedDate!.year &&
+                        transaction.date.month == _selectedDate!.month &&
+                        transaction.date.day == _selectedDate!.day;
+      return matchesCategory && matchesDate;
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,7 +86,7 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
               child: Column(
                 children: [
                   Padding(
-                    padding: EdgeInsets.fromLTRB(28.w, 32.h, 28.w, 0),
+                    padding: EdgeInsets.fromLTRB(16.w, 32.h, 16.w, 0),
                     child: Column(
                       children: [
                         Column(
@@ -99,7 +115,8 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
 
                                 double totalBalance = 0;
                                 if (state is TransactionsSuccess) {
-                                  totalBalance = state.transactions.fold(
+                                  final filteredTransactions = _filterTransactions(state.transactions);
+                                  totalBalance = filteredTransactions.fold(
                                     0,
                                     (sum, t) => sum + (t.type == 'entrada' ? t.amount : -t.amount),
                                   );
@@ -154,15 +171,34 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
                             ],
                           ),
                         ),
+                        //const SizedBox(height: 4),
+                        // TransactionFilters(
+                        //   selectedCategory: _selectedCategory,
+                        //   selectedDate: _selectedDate,
+                        //   onCategoryChanged: (category) {
+                        //     setState(() {
+                        //       _selectedCategory = category;
+                        //     });
+                        //   },
+                        //   onDateChanged: (date) {
+                        //     setState(() {
+                        //       _selectedDate = date;
+                        //     });
+                        //   },
+                        // ),
+                        //const SizedBox(height: 16),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   Expanded(
                     child: TabBarView(
                       controller: _tabController,
                       children: [
-                        _TransactionsList(),
+                        _TransactionsList(
+                          selectedCategory: _selectedCategory,
+                          selectedDate: _selectedDate,
+                        ),
                         const Center(child: Text('Em desenvolvimento')),
                       ],
                     ),
@@ -178,6 +214,26 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
 }
 
 class _TransactionsList extends StatelessWidget {
+  final String? selectedCategory;
+  final DateTime? selectedDate;
+
+  const _TransactionsList({
+    this.selectedCategory,
+    this.selectedDate,
+  });
+
+  List<TransactionModel> _filterTransactions(List<TransactionModel> transactions) {
+    return transactions.where((transaction) {
+      bool matchesCategory = selectedCategory == null || 
+                           transaction.categoryId == selectedCategory;
+      bool matchesDate = selectedDate == null ||
+                        transaction.date.year == selectedDate!.year &&
+                        transaction.date.month == selectedDate!.month &&
+                        transaction.date.day == selectedDate!.day;
+      return matchesCategory && matchesDate;
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<TransactionCubit, TransactionState>(
@@ -185,7 +241,7 @@ class _TransactionsList extends StatelessWidget {
         if (state is TransactionsInitial || state is TransactionsLoading) {
           return ListView.builder(
             physics: const BouncingScrollPhysics(),
-            padding: EdgeInsets.symmetric(horizontal: 28.w),
+            padding: EdgeInsets.symmetric(horizontal: 5.w),
             itemCount: 5,
             itemBuilder: (context, index) {
               return Padding(
@@ -201,48 +257,43 @@ class _TransactionsList extends StatelessWidget {
         }
 
         if (state is TransactionsSuccess) {
-          if (state.transactions.isEmpty) {
+          final filteredTransactions = _filterTransactions(state.transactions);
+          
+          if (filteredTransactions.isEmpty) {
             return const Center(child: Text("Nenhuma transação encontrada."));
           }
 
-          return ListView.builder(
-            physics: const BouncingScrollPhysics(),
-            padding: EdgeInsets.symmetric(horizontal: 12.w),
-            itemCount: state.transactions.length,
-            itemBuilder: (context, index) {
-              final transaction = state.transactions[index];
-              final bool isIncome = transaction.type == 'entrada';
-              final value = isIncome
-                  ? transaction.amount.toCurrencyWithSign()
-                  : transaction.amount.abs().toCurrency();
+          return RefreshIndicator(
+            onRefresh: () async {
+              final authState = context.read<AuthCubit>().state;
+              if (authState is AuthSuccess) {
+                await context.read<TransactionCubit>().fetchUserTransactions(authState.accessToken);
+              }
+            },
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              itemCount: filteredTransactions.length,
+              itemBuilder: (context, index) {
+                final transaction = filteredTransactions[index];
+                final bool isIncome = transaction.type == 'entrada';
+                final value = isIncome
+                    ? transaction.amount.toCurrencyWithSign()
+                    : transaction.amount.abs().toCurrency();
 
-              return Padding(
-                padding: EdgeInsets.only(bottom: 8.h),
-                child: AnimatedTransactionTile(
-                  transaction: Transaction.fromModel(transaction),
-                  isIncome: isIncome,
-                  value: value,
-                  onLongPress: () {
-                    showModalBottomSheet(
-                      context: context,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(24.0),
-                          topRight: Radius.circular(24.0),
-                        ),
-                      ),
-                      builder: (context) => Container(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 8.h),
+                  child: AnimatedTransactionTile(
+                    transaction: Transaction.fromModel(transaction),
+                    isIncome: isIncome,
+                    value: value,
+                    onLongPress: () {
+                      showCustomModalBottomSheet(
+                        context: context,
+                        title: 'O que deseja fazer?',
+                        content: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              'O que deseja fazer?',
-                              style: AppTextStyles.mediumText20.copyWith(
-                                color: AppColors.purple,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
@@ -263,7 +314,7 @@ class _TransactionsList extends StatelessWidget {
                                           color: AppColors.iceWhite,
                                           borderRadius: BorderRadius.circular(12),
                                         ),
-                                        child: Icon(
+                                        child: const Icon(
                                           Icons.edit,
                                           color: AppColors.purple,
                                           size: 24,
@@ -282,49 +333,36 @@ class _TransactionsList extends StatelessWidget {
                                 GestureDetector(
                                   onTap: () {
                                     context.pop();
-                                    showDialog(
+                                    showCustomModalBottomSheet(
                                       context: context,
-                                      builder: (context) => AlertDialog(
-                                        title: Text(
-                                          'Confirmar exclusão',
-                                          style: AppTextStyles.mediumText20.copyWith(
-                                            color: AppColors.purple,
-                                          ),
-                                        ),
-                                        content: Text(
-                                          'Tem certeza que deseja excluir esta transação?',
-                                          style: AppTextStyles.smalltextw400,
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => context.pop(),
-                                            child: Text(
-                                              'Cancelar',
-                                              style: AppTextStyles.smalltextw400.copyWith(
-                                                color: AppColors.inputcolor,
-                                              ),
-                                            ),
-                                          ),
-                                          TextButton(
-                                            onPressed: () {
-                                              context.pop();
-                                              final authState = context.read<AuthCubit>().state;
-                                              if (authState is AuthSuccess) {
-                                                context.read<TransactionCubit>().deleteTransaction(
-                                                  authState.accessToken,
-                                                  transaction.id,
-                                                );
-                                              }
-                                            },
-                                            child: Text(
-                                              'Excluir',
-                                              style: AppTextStyles.smalltextw400.copyWith(
-                                                color: AppColors.expense,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                      title: 'Confirmar exclusão',
+                                      content: Text(
+                                        'Tem certeza que deseja excluir esta transação?',
+                                        style: AppTextStyles.smalltextw400,
+                                        textAlign: TextAlign.center,
                                       ),
+                                      buttonText: 'Excluir',
+                                      buttonColor: AppColors.expense,
+                                      onPressed: () async {
+                                        try {
+                                          final authState = context.read<AuthCubit>().state;
+                                          if (authState is AuthSuccess) {
+                                            await context.read<TransactionCubit>().deleteTransaction(
+                                              authState.accessToken,
+                                              transaction.id,
+                                            );
+                                          }
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(
+                                                content: Text('Erro ao excluir transação'),
+                                                backgroundColor: AppColors.expense,
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
                                     );
                                   },
                                   child: Column(
@@ -336,7 +374,7 @@ class _TransactionsList extends StatelessWidget {
                                           color: AppColors.iceWhite,
                                           borderRadius: BorderRadius.circular(12),
                                         ),
-                                        child: Icon(
+                                        child: const Icon(
                                           Icons.delete,
                                           color: AppColors.expense,
                                           size: 24,
@@ -356,12 +394,12 @@ class _TransactionsList extends StatelessWidget {
                             ),
                           ],
                         ),
-                      ),
-                    );
-                  },
-                ),
-              );
-            },
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
           );
         }
         return const Center(child: Text("Erro desconhecido"));

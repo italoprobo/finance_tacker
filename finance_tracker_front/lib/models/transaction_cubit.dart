@@ -103,9 +103,9 @@ class TransactionCubit extends Cubit<TransactionState> {
     }
   }
 
-  Future<void> deleteTransaction(String transactionId, String token) async {
+  Future<void> deleteTransaction(String token, String transactionId) async {
     try {
-      await transactionsRepository.deleteTransaction(transactionId, token);
+      await transactionsRepository.deleteTransaction(token, transactionId);
       await fetchUserTransactions(token);
     } catch (e) {
       emit(TransactionsFailure("Erro ao excluir transação"));
