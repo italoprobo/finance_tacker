@@ -6,6 +6,7 @@ import 'package:finance_tracker_front/common/widgets/app_header.dart';
 import 'package:finance_tracker_front/common/widgets/custom_bottom_sheet.dart';
 import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart';
 import 'package:finance_tracker_front/features/home/widget/balance_card.dart';
+import 'package:finance_tracker_front/features/home/widget/balance_card_skeleton.dart';
 import 'package:finance_tracker_front/models/card_cubit.dart';
 import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:flutter/material.dart';
@@ -65,6 +66,10 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
                 top: 145.h,
                 child: BlocBuilder<TransactionCubit, TransactionState>(
                   builder: (context, transactionState) {
+                    if (transactionState is TransactionsLoading) {
+                      return const BalanceCardSkeleton();
+                    }
+
                     double totalIncome = 0;
                     double totalExpense = 0;
 
@@ -74,7 +79,7 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
                           .fold(0, (sum, t) => sum + t.amount);
                       totalExpense = transactionState.transactions
                           .where((t) => t.type == 'saida')
-                          .fold(0, (sum, t) => sum + t.amount);
+                          .fold(0, (sum, t) => sum + t.amount.abs());
                     }
 
                     double totalBalanceTransaction = totalIncome - totalExpense;
@@ -147,7 +152,7 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
                                       : AppColors.expense;
                                   final value = isIncome
                                       ? '+ R\$ ${transaction.amount.toStringAsFixed(2)}'
-                                      : '- R\$ ${transaction.amount.toStringAsFixed(2)}';
+                                      : 'R\$ ${transaction.amount.abs().toStringAsFixed(2)}';
                                   return ListTile(
                                     contentPadding: const EdgeInsets.symmetric(
                                         horizontal: 8.0),
