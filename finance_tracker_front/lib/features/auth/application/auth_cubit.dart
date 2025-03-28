@@ -92,6 +92,7 @@ class AuthCubit extends Cubit<AuthState> {
         
         final String userId = payloadMap['id'] ?? '';
         final String userEmail = payloadMap['email'] ?? '';
+        final String userName = payloadMap['name'] ?? '';
 
         print('Token: $accessToken'); // Debug log
         print('ID from token: $userId'); // Debug log
@@ -107,6 +108,7 @@ class AuthCubit extends Cubit<AuthState> {
         await prefs.setString('name', name);
         await prefs.setString('userId', userId);
         await prefs.setString('userEmail', userEmail);
+        await prefs.setString('userName', userEmail);
 
         emit(AuthSuccess(accessToken: accessToken, name: name, id: userId, email: userEmail));
       } else {

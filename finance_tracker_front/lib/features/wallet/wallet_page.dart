@@ -9,12 +9,10 @@ import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart';
 import 'package:finance_tracker_front/features/home/widget/transaction_skeleton.dart';
 import 'package:finance_tracker_front/features/home/widget/animated_transaction_tile.dart';
-import 'package:finance_tracker_front/features/home/widget/transaction_filters.dart';
 import 'package:finance_tracker_front/models/transaction.dart';
 import 'package:go_router/go_router.dart';
 import 'package:finance_tracker_front/common/widgets/custom_modal_bottom_sheet.dart';
 import 'package:finance_tracker_front/common/widgets/loading_overlay.dart';
-import 'package:finance_tracker_front/common/widgets/operation_feedback.dart';
 import 'package:finance_tracker_front/common/widgets/confirmation_dialog.dart';
 
 class WalletPage extends StatefulWidget {
@@ -28,7 +26,7 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
   late TabController _tabController;
   String? _selectedCategory;
   DateTime? _selectedDate;
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
   @override
   void initState() {

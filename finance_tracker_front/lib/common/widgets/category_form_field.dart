@@ -62,8 +62,8 @@ class _CategoryFormFieldState extends State<CategoryFormField> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
+              const Padding(
+                padding: EdgeInsets.all(16.0),
                 child: Text(
                   'Selecione uma categoria',
                   style: AppTextStyles.mediumText16w500,

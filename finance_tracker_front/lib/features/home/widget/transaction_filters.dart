@@ -4,7 +4,6 @@ import 'package:finance_tracker_front/common/constants/app_colors.dart';
 import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
 import 'package:finance_tracker_front/common/extensions/sizes.dart';
 import 'package:finance_tracker_front/features/categories/application/categories_cubit.dart';
-import 'package:finance_tracker_front/models/category.dart';
 import 'package:intl/intl.dart';
 
 class TransactionFilters extends StatefulWidget {
@@ -117,7 +116,7 @@ class _TransactionFiltersState extends State<TransactionFilters> {
                           : AppColors.inputcolor,
                     ),
                   ),
-                  Icon(
+                  const Icon(
                     Icons.calendar_today,
                     size: 16,
                     color: AppColors.inputcolor,

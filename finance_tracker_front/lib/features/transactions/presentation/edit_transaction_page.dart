@@ -120,8 +120,8 @@ class _EditTransactionPageState extends State<EditTransactionPage> {
 
   void _showSuccessSnackBar() {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Transação atualizada com sucesso!'),
+      const SnackBar(
+        content: Text('Transação atualizada com sucesso!'),
         backgroundColor: AppColors.income,
         behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.zero,

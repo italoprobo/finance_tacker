@@ -45,10 +45,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   bottom: 0,
                   child: Column(
                     children: [
-                      // Foto de perfil e informações
                       Column(
                         children: [
-                          // Foto de perfil
                           const CircleAvatar(
                             radius: 40,
                             backgroundColor: AppColors.white,
@@ -89,27 +87,22 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: ListView(
                             children: [
                               SizedBox(height: 24.h),
-                              // Opção: Alterar nome
                               ListTile(
                                 contentPadding: EdgeInsets.zero,
                                 leading: const Icon(Icons.person_outline, color: AppColors.purple, size: 20),
-                                title: Text('Alterar nome', style: AppTextStyles.mediumText16w500),
+                                title: const Text('Alterar nome', style: AppTextStyles.mediumText16w500),
                                 trailing: const Icon(Icons.arrow_forward_ios, color: AppColors.purple, size: 16),
                                 onTap: () {
-                                  // TODO: Implementar alteração de nome
                                 },
                               ),
-                              // Opção: Alterar senha
                               ListTile(
                                 contentPadding: EdgeInsets.zero,
                                 leading: const Icon(Icons.lock_outline, color: AppColors.purple, size: 20),
-                                title: Text('Alterar senha', style: AppTextStyles.mediumText16w500),
+                                title: const Text('Alterar senha', style: AppTextStyles.mediumText16w500),
                                 trailing: const Icon(Icons.arrow_forward_ios, color: AppColors.purple, size: 16),
                                 onTap: () {
-                                  // TODO: Implementar alteração de senha
                                 },
                               ),
-                              // Opção: Sair
                               ListTile(
                                 contentPadding: EdgeInsets.zero,
                                 leading: const Icon(Icons.logout, color: AppColors.expense, size: 20),

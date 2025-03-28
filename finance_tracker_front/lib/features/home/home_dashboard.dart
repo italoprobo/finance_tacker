@@ -9,10 +9,8 @@ import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart'
 import 'package:finance_tracker_front/features/home/widget/balance_card.dart';
 import 'package:finance_tracker_front/features/home/widget/balance_card_skeleton.dart';
 import 'package:finance_tracker_front/features/home/widget/transaction_skeleton.dart';
-import 'package:finance_tracker_front/features/home/widget/transaction_filters.dart';
 import 'package:finance_tracker_front/models/card_cubit.dart';
 import 'package:finance_tracker_front/models/transaction_cubit.dart';
-import 'package:finance_tracker_front/features/categories/application/categories_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -262,7 +260,7 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
                                                         showCustomModalBottomSheet(
                                                           context: context,
                                                           title: 'Confirmar exclusão',
-                                                          content: Text(
+                                                          content: const Text(
                                                             'Tem certeza que deseja excluir esta transação?',
                                                             style: AppTextStyles.smalltextw400,
                                                             textAlign: TextAlign.center,

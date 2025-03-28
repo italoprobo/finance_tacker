@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
-import 'package:finance_tracker_front/common/extensions/sizes.dart';
 
 class TransactionSkeleton extends StatelessWidget {
   const TransactionSkeleton({super.key});
