@@ -14,7 +14,6 @@ import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:finance_tracker_front/features/home/application/home_cubit.dart';
 import 'package:finance_tracker_front/features/home/widget/animated_transaction_tile.dart';
 import 'package:finance_tracker_front/models/transaction.dart';
 import 'package:finance_tracker_front/common/widgets/custom_modal_bottom_sheet.dart';
@@ -41,9 +40,23 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
       final transactionCubit = context.read<TransactionCubit>();
 
       if (authState is AuthSuccess && authState.accessToken.isNotEmpty) {
-        transactionCubit.fetchUserTransactions(authState.accessToken);
+        print('Inicializando TransactionCubit com token e userId');
+        transactionCubit.initialize(authState.accessToken, authState.id);
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final authState = context.read<AuthCubit>().state;
+    final transactionCubit = context.read<TransactionCubit>();
+
+    if (authState is AuthSuccess && authState.accessToken.isNotEmpty) {
+      print('Verificando estado do TransactionCubit');
+      print('UserId atual: ${authState.id}');
+      transactionCubit.initialize(authState.accessToken, authState.id);
+    }
   }
 
   List<TransactionModel> _filterTransactions(List<TransactionModel> transactions) {
@@ -156,9 +169,7 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
                                         .apply(color: AppColors.black),
                                   ),
                                   GestureDetector(
-                                    onTap: () {
-                                      context.read<HomeCubit>().changePage(2);
-                                    },
+                                    onTap: () => context.goNamed('wallet'),
                                     child: Text(
                                       "Ver todas",
                                       style: AppTextStyles.smalltextw400

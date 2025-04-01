@@ -8,6 +8,7 @@ import 'features/auth/application/auth_cubit.dart';
 import 'features/transactions/data/transactions_repository.dart'; 
 import 'app_router.dart';
 import 'features/categories/application/categories_cubit.dart';
+import 'common/extensions/sizes.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,9 +24,13 @@ Future<void> main() async {
         BlocProvider<TransactionCubit>(
           create: (context) {
             final cubit = TransactionCubit(transactionsRepository);
+            final authState = context.read<AuthCubit>().state;
+            if (authState is AuthSuccess) {
+              cubit.fetchUserTransactions(authState.accessToken);
+            }
             return cubit;
           },
-        lazy: false, 
+          lazy: false,
         ),
         BlocProvider(
           create: (context) => CategoriesCubit(apiClient.dio),
@@ -48,6 +53,10 @@ class MyApp extends StatelessWidget {
       title: 'Finance AI',
       routerConfig: appRouter,
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        Sizes.init(context);
+        return child!;
+      },
     );
   }
 }

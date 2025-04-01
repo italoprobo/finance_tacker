@@ -42,7 +42,9 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
       final transactionCubit = context.read<TransactionCubit>();
 
       if (authState is AuthSuccess && authState.accessToken.isNotEmpty) {
-        transactionCubit.fetchUserTransactions(authState.accessToken);
+        print('Inicializando TransactionCubit com token e userId na WalletPage');
+        print('UserId atual: ${authState.id}');
+        transactionCubit.initialize(authState.accessToken, authState.id);
       }
     });
   }
@@ -71,7 +73,10 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
       backgroundColor: AppColors.purple,
       body: Stack(
         children: [
-          const AppHeader(title: 'Carteira'),
+          AppHeader(
+            title: 'Carteira',
+            onBackPressed: () => context.goNamed('home'),
+          ),
           Positioned(
             top: 164.h,
             left: 0,
@@ -120,8 +125,12 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
                                   final filteredTransactions = _filterTransactions(state.transactions);
                                   totalBalance = filteredTransactions.fold(
                                     0,
-                                    (sum, t) => sum + (t.type == 'entrada' ? t.amount : -t.amount),
+                                    (sum, t) {
+                                      print('Processando transação: ${t.type} - ${t.amount}');
+                                      return sum + (t.type == 'entrada' ? t.amount : -t.amount.abs());
+                                    },
                                   );
+                                  print('Saldo total calculado: $totalBalance');
                                 }
                                 return Text(
                                   totalBalance.toCurrency(),

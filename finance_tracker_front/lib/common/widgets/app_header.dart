@@ -9,8 +9,16 @@ import 'package:go_router/go_router.dart';
 class AppHeader extends StatefulWidget {
   final String? title;
   final bool hasOptions;
+  final bool hideNavBar;
+  final VoidCallback? onBackPressed;
 
-  const AppHeader({super.key, this.title, this.hasOptions = false});
+  const AppHeader({
+    super.key, 
+    this.title, 
+    this.hasOptions = false,
+    this.hideNavBar = false,
+    this.onBackPressed,
+  });
 
   @override
   State<AppHeader> createState() => _AppHeaderState();
@@ -23,7 +31,7 @@ class _AppHeaderState extends State<AppHeader> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             GestureDetector(
-              onTap: () => context.pop(),
+              onTap: widget.onBackPressed ?? () => context.pop(),
               child: const Icon(
                 Icons.arrow_back_ios,
                 size: 16.0,

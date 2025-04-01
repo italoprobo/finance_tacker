@@ -71,46 +71,50 @@ class AuthCubit extends Cubit<AuthState> {
       });
 
       if (response.statusCode == 201) {
-        final data = response.data;
-        print('Register Response: $data'); // Debug log
+        // Após registro bem-sucedido, fazer login para obter o token
+        final loginResponse = await dio.post('/auth/login', data: {
+          "email": email,
+          "password": password,
+        });
 
-        final String accessToken = data['accessToken'];
-        
-        // Decodificar o token JWT para pegar o ID do usuário
-        final String token = accessToken;
-        final parts = token.split('.');
-        if (parts.length != 3) {
-          emit(AuthFailure("Token inválido"));
-          return;
+        if (loginResponse.statusCode == 201) {
+          final loginData = loginResponse.data;
+          final String accessToken = loginData['accessToken'];
+          
+          // Decodificar o token JWT para pegar o ID do usuário
+          final String token = accessToken;
+          final parts = token.split('.');
+          if (parts.length != 3) {
+            emit(AuthFailure("Token inválido"));
+            return;
+          }
+
+          // Decodificar a parte do payload do token
+          final payload = parts[1];
+          final normalized = base64Url.normalize(payload);
+          final decoded = utf8.decode(base64Url.decode(normalized));
+          final payloadMap = json.decode(decoded);
+          
+          final String userId = payloadMap['id'] ?? '';
+          final String userEmail = payloadMap['email'] ?? '';
+          final String userName = payloadMap['name'] ?? '';
+
+          if (userId.isEmpty) {
+            emit(AuthFailure("ID do usuário não encontrado"));
+            return;
+          }
+          
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('accessToken', accessToken);
+          await prefs.setString('name', name);
+          await prefs.setString('userId', userId);
+          await prefs.setString('userEmail', userEmail);
+          await prefs.setString('userName', name);
+
+          emit(AuthSuccess(accessToken: accessToken, name: name, id: userId, email: userEmail));
+        } else {
+          emit(AuthFailure("Erro ao fazer login após registro"));
         }
-
-        // Decodificar a parte do payload do token
-        final payload = parts[1];
-        final normalized = base64Url.normalize(payload);
-        final decoded = utf8.decode(base64Url.decode(normalized));
-        final payloadMap = json.decode(decoded);
-        
-        final String userId = payloadMap['id'] ?? '';
-        final String userEmail = payloadMap['email'] ?? '';
-        final String userName = payloadMap['name'] ?? '';
-
-        print('Token: $accessToken'); // Debug log
-        print('ID from token: $userId'); // Debug log
-        print('Email from token: $userEmail'); // Debug log
-
-        if (userId.isEmpty) {
-          emit(AuthFailure("ID do usuário não encontrado"));
-          return;
-        }
-        
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('accessToken', accessToken);
-        await prefs.setString('name', name);
-        await prefs.setString('userId', userId);
-        await prefs.setString('userEmail', userEmail);
-        await prefs.setString('userName', userEmail);
-
-        emit(AuthSuccess(accessToken: accessToken, name: name, id: userId, email: userEmail));
       } else {
         emit(AuthFailure("Erro no cadastro"));
       }
