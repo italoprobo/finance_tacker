@@ -40,7 +40,6 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
       final transactionCubit = context.read<TransactionCubit>();
 
       if (authState is AuthSuccess && authState.accessToken.isNotEmpty) {
-        print('Inicializando TransactionCubit com token e userId');
         transactionCubit.initialize(authState.accessToken, authState.id);
       }
     });
@@ -53,8 +52,6 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
     final transactionCubit = context.read<TransactionCubit>();
 
     if (authState is AuthSuccess && authState.accessToken.isNotEmpty) {
-      print('Verificando estado do TransactionCubit');
-      print('UserId atual: ${authState.id}');
       transactionCubit.initialize(authState.accessToken, authState.id);
     }
   }

@@ -47,9 +47,7 @@ class TransactionModel extends Equatable {
   });
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
-    print('Criando TransactionModel do JSON: $json');
     final userId = json['user']?['id'] ?? json['userId'];
-    print('UserId extraído: $userId');
     
     return TransactionModel(
       id: json['id'],
@@ -75,93 +73,62 @@ class TransactionCubit extends Cubit<TransactionState> {
 
   Future<void> initialize(String token, String userId) async {
     if (_isInitialized && _currentUserId == userId) {
-      print('TransactionCubit já inicializado para o mesmo usuário');
       return;
     }
     
     try {
-      print('Iniciando processo de inicialização');
-      print('Token recebido: ${token.substring(0, 20)}...');
-      print('UserId recebido: $userId');
-
       if (token.isEmpty) {
-        print('Token vazio');
         emit(TransactionsFailure("Token não fornecido"));
         return;
       }
 
       if (userId.isEmpty) {
-        print('UserId vazio');
         emit(TransactionsFailure("ID do usuário não fornecido"));
         return;
       }
 
       _currentUserId = userId;
-      print('UserId definido: $_currentUserId');
-      
       await fetchUserTransactions(token);
       _isInitialized = true;
-      print('Inicialização concluída com sucesso');
     } catch (e) {
-      print('Erro na inicialização: $e');
       emit(TransactionsFailure(e.toString()));
     }
   }
 
   Future<void> fetchUserTransactions(String token) async {
     if (state is TransactionsLoading) {
-      print('Já existe uma busca de transações em andamento');
       return;
     }
     
-    print('Iniciando busca de transações');
     emit(TransactionsLoading());
 
     try {
       if (token.isEmpty) {
-        print('Token vazio');
         emit(TransactionsFailure("Token não fornecido"));
         return;
       }
 
       final transactions = await transactionsRepository.fetchUserTransactions(token);
-      print('Transações recebidas: ${transactions.length}');
-      
       emit(TransactionsSuccess(transactions: transactions));
     } catch (e) {
-      print('Erro ao buscar transações: $e');
       emit(TransactionsFailure(e.toString()));
     }
   }
 
   Future<void> addTransaction(String token, Map<String, dynamic> transactionData) async {
     try {
-      print('Tentando adicionar transação');
-      print('Dados da transação: $transactionData');
-      print('UserId atual: $_currentUserId');
-
       final newTransaction = await transactionsRepository.addTransaction(token, transactionData);
-      print('Transação criada com sucesso: ${newTransaction.id}');
-      print('UserId da transação criada: ${newTransaction.userId}');
       
       if (state is TransactionsSuccess) {
         final currentState = state as TransactionsSuccess;
-        // Verificar se a transação pertence ao usuário atual
         if (newTransaction.userId == _currentUserId) {
-          print('Adicionando transação à lista do usuário');
           final updatedTransactions = [...currentState.transactions, newTransaction];
           emit(TransactionsSuccess(transactions: updatedTransactions));
-        } else {
-          print('Transação não pertence ao usuário atual');
-          print('UserId da transação: ${newTransaction.userId}');
-          print('UserId atual: $_currentUserId');
         }
       } else {
-        print('Estado atual não é TransactionsSuccess, buscando transações novamente');
         await fetchUserTransactions(token);
       }
     } catch (e) {
-      print('Erro ao adicionar transação: $e');
       emit(TransactionsFailure(e.toString()));
     }
   }

@@ -42,8 +42,6 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
       final transactionCubit = context.read<TransactionCubit>();
 
       if (authState is AuthSuccess && authState.accessToken.isNotEmpty) {
-        print('Inicializando TransactionCubit com token e userId na WalletPage');
-        print('UserId atual: ${authState.id}');
         transactionCubit.initialize(authState.accessToken, authState.id);
       }
     });
@@ -126,11 +124,11 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
                                   totalBalance = filteredTransactions.fold(
                                     0,
                                     (sum, t) {
-                                      print('Processando transação: ${t.type} - ${t.amount}');
                                       return sum + (t.type == 'entrada' ? t.amount : -t.amount.abs());
                                     },
                                   );
-                                  print('Saldo total calculado: $totalBalance');
+                                  // Arredonda para 2 casas decimais para evitar problemas de precisão
+                                  totalBalance = double.parse(totalBalance.toStringAsFixed(2));
                                 }
                                 return Text(
                                   totalBalance.toCurrency(),
@@ -348,21 +346,36 @@ class _TransactionsList extends StatelessWidget {
                                 GestureDetector(
                                   onTap: () {
                                     context.pop();
-                                    showDialog(
+                                    showCustomModalBottomSheet(
                                       context: context,
-                                      builder: (context) => ConfirmationDialog(
-                                        title: 'Confirmar exclusão',
-                                        message: 'Tem certeza que deseja excluir esta transação?',
-                                        confirmText: 'Excluir',
-                                        cancelText: 'Cancelar',
-                                        confirmColor: AppColors.expense,
-                                        onConfirm: () {
-                                          // Lógica de exclusão
-                                        },
-                                        onCancel: () {
-                                          Navigator.pop(context);
-                                        },
+                                      title: 'Confirmar exclusão',
+                                      content: const Text(
+                                        'Tem certeza que deseja excluir esta transação?',
+                                        style: AppTextStyles.smalltextw400,
+                                        textAlign: TextAlign.center,
                                       ),
+                                      buttonText: 'Excluir',
+                                      buttonColor: AppColors.expense,
+                                      onPressed: () async {
+                                        try {
+                                          final authState = context.read<AuthCubit>().state;
+                                          if (authState is AuthSuccess) {
+                                            await context.read<TransactionCubit>().deleteTransaction(
+                                              authState.accessToken,
+                                              transaction.id,
+                                            );
+                                          }
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(
+                                                content: Text('Erro ao excluir transação'),
+                                                backgroundColor: AppColors.expense,
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
                                     );
                                   },
                                   child: Column(

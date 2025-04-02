@@ -37,6 +37,16 @@ mixin CustomSnackBar<T extends StatefulWidget> on State<T> {
         backgroundColor: setColor(),
         closeIconColor: AppColors.icewhite,
         behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.only(
+          top: 16,
+          left: 16,
+          right: 16,
+        ),
+        duration: const Duration(seconds: 3),
+        elevation: 0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(8)),
+        ),
       ),
     );
   }

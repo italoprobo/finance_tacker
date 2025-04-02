@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
+import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
 import 'package:finance_tracker_front/common/extensions/sizes.dart';
 import 'package:finance_tracker_front/common/widgets/app_header.dart';
 import 'package:finance_tracker_front/common/widgets/primary_button.dart';
 import 'package:finance_tracker_front/common/widgets/custom_text_form_field.dart';
 import 'package:finance_tracker_front/common/widgets/category_form_field.dart';
+import 'package:finance_tracker_front/common/widgets/custom_snackbar.dart';
 import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart';
 import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:finance_tracker_front/features/categories/application/categories_cubit.dart';
@@ -15,28 +17,36 @@ import 'package:go_router/go_router.dart';
 class EditMoneyInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    // Se o texto estiver vazio, retorna zero
     if (newValue.text.isEmpty) {
-      return newValue.copyWith(text: '');
+      return newValue.copyWith(text: 'R\$ 0,00');
     }
 
     // Remove tudo que não é número
     String value = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
 
-    // Se não tiver números, retorna vazio
+    // Se não tiver números, retorna zero
     if (value.isEmpty) {
-      return newValue.copyWith(text: '');
+      return newValue.copyWith(text: 'R\$ 0,00');
     }
 
-    // Converte o valor para centavos
-    double amount = int.parse(value) / 100;
-    
-    // Formata o número com separador de milhares e decimais
-    String formatted = 'R\$ ${amount.toStringAsFixed(2)}'
-        .replaceAll('.', ',')
-        .replaceAllMapped(
-          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]}.',
-        );
+    // Se o valor já começa com R$, não formata novamente
+    if (newValue.text.startsWith('R\$ ')) {
+      return newValue;
+    }
+
+    // Separa os centavos (últimos 2 dígitos)
+    String cents = value.length >= 2 ? value.substring(value.length - 2) : '00';
+    String reais = value.length > 2 ? value.substring(0, value.length - 2) : '0';
+
+    // Formata com separadores de milhar
+    final formattedReais = reais.replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+
+    // Monta o valor final
+    String formatted = 'R\$ $formattedReais,$cents';
 
     return TextEditingValue(
       text: formatted,
@@ -57,7 +67,7 @@ class EditTransactionPage extends StatefulWidget {
   State<EditTransactionPage> createState() => _EditTransactionPageState();
 }
 
-class _EditTransactionPageState extends State<EditTransactionPage> {
+class _EditTransactionPageState extends State<EditTransactionPage> with SingleTickerProviderStateMixin, CustomSnackBar {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
@@ -68,13 +78,25 @@ class _EditTransactionPageState extends State<EditTransactionPage> {
   String? _selectedCategoryId;
   bool _isLoading = false;
   double? _originalAmount;
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.transaction.type == 'entrada' ? 0 : 1,
+    );
+    
     final transaction = widget.transaction;
     _descriptionController.text = transaction.description;
-    _amountController.text = 'R\$ ${transaction.amount.toStringAsFixed(2)}';
+    
+    // Formata o valor corretamente com vírgulas
+    final amount = transaction.amount.abs();
+    final formattedAmount = amount.toStringAsFixed(2).replaceAll('.', ',');
+    _amountController.text = 'R\$ $formattedAmount';
+    
     _selectedDate = transaction.date;
     _dateController.text = '${transaction.date.day}/${transaction.date.month}/${transaction.date.year}';
     _selectedCategoryId = transaction.categoryId;
@@ -107,26 +129,18 @@ class _EditTransactionPageState extends State<EditTransactionPage> {
   }
 
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.zero,
-        dismissDirection: DismissDirection.horizontal,
-      ),
+    showCustomSnackBar(
+      context: context,
+      text: message,
+      type: SnackBarType.error,
     );
   }
 
   void _showSuccessSnackBar() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Transação atualizada com sucesso!'),
-        backgroundColor: AppColors.income,
-        behavior: SnackBarBehavior.floating,
-        margin: EdgeInsets.zero,
-        dismissDirection: DismissDirection.horizontal,
-      ),
+    showCustomSnackBar(
+      context: context,
+      text: 'Transação atualizada com sucesso!',
+      type: SnackBarType.success,
     );
   }
 
@@ -156,7 +170,7 @@ class _EditTransactionPageState extends State<EditTransactionPage> {
                 top: 164.h,
                 left: 28.w,
                 right: 28.w,
-                bottom: 300.h,
+                bottom: 140.h,
                 child: Container(
                   width: 358.w,
                   height: 500.h,
@@ -171,6 +185,61 @@ class _EditTransactionPageState extends State<EditTransactionPage> {
                       physics: const BouncingScrollPhysics(),
                       child: Column(
                         children: [
+                          TabBar(
+                            controller: _tabController,
+                            indicatorColor: Colors.transparent,
+                            dividerColor: Colors.transparent,
+                            labelPadding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            padding: EdgeInsets.zero,
+                            onTap: (index) {
+                              setState(() {});
+                            },
+                            tabs: [
+                              Tab(
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                  alignment: Alignment.center,
+                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: _tabController.index == 0
+                                        ? AppColors.iceWhite
+                                        : AppColors.white,
+                                    borderRadius: const BorderRadius.all(
+                                      Radius.circular(24.0),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Entradas',
+                                    style: AppTextStyles.mediumText16w500
+                                        .apply(color: AppColors.darkGrey),
+                                  ),
+                                ),
+                              ),
+                              Tab(
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                  alignment: Alignment.center,
+                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: _tabController.index == 1
+                                        ? AppColors.iceWhite
+                                        : AppColors.white,
+                                    borderRadius: const BorderRadius.all(
+                                      Radius.circular(24.0),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Saídas',
+                                    style: AppTextStyles.mediumText16w500
+                                        .apply(color: AppColors.darkGrey),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16.0),
                           Column(
                             children: [
                               CustomTextFormField(
@@ -180,7 +249,7 @@ class _EditTransactionPageState extends State<EditTransactionPage> {
                                 labelText: 'VALOR',
                                 hintText: 'Digite um valor',
                                 suffixIcon: Icon(
-                                  widget.transaction.type == 'entrada'
+                                  _tabController.index == 0
                                     ? Icons.thumb_up 
                                     : Icons.thumb_down,
                                   color: AppColors.purple,
@@ -192,6 +261,19 @@ class _EditTransactionPageState extends State<EditTransactionPage> {
                                   if (value == null || value.isEmpty) {
                                     return 'Este campo não pode estar vazio';
                                   }
+                                  
+                                  // Remove R$, pontos e vírgulas para verificar o valor numérico
+                                  final numericValue = value
+                                      .replaceAll('R\$', '')
+                                      .replaceAll('.', '')
+                                      .replaceAll(',', '.')
+                                      .trim();
+                                  
+                                  final amount = double.tryParse(numericValue);
+                                  if (amount == null || amount <= 0) {
+                                    return 'Digite um valor maior que zero';
+                                  }
+                                  
                                   return null;
                                 },
                               ),
@@ -298,7 +380,12 @@ class _EditTransactionPageState extends State<EditTransactionPage> {
                                 listener: (context, state) {
                                   if (state is TransactionsSuccess) {
                                     _showSuccessSnackBar();
-                                    context.pop();
+                                    // Aguarda um momento para mostrar a mensagem de sucesso antes de voltar
+                                    Future.delayed(const Duration(milliseconds: 500), () {
+                                      if (context.mounted) {
+                                        context.goNamed('home');
+                                      }
+                                    });
                                   } else if (state is TransactionsFailure) {
                                     _showErrorSnackBar(state.message);
                                   }
@@ -320,31 +407,49 @@ class _EditTransactionPageState extends State<EditTransactionPage> {
                                             return;
                                           }
 
-                                          final amount = _amountController.text == 'R\$ ${_originalAmount?.toStringAsFixed(2)}'
-                                              ? _originalAmount!
-                                              : double.parse(
-                                                  _amountController.text
-                                                      .replaceAll('R\$', '')
-                                                      .replaceAll('.', '')
-                                                      .replaceAll(',', '.')
-                                                      .trim(),
-                                                );
+                                          final amount = double.parse(
+                                            _amountController.text
+                                                .replaceAll('R\$', '')
+                                                .replaceAll('.', '')
+                                                .replaceAll(',', '.')
+                                                .trim(),
+                                          );
+
+                                          // Garantir que o valor seja exatamente o mesmo que foi digitado
+                                          final finalAmount = _tabController.index == 1 ? -amount : amount;
 
                                           final transactionData = {
                                             'description': _descriptionController.text,
-                                            'amount': amount,
-                                            'type': widget.transaction.type,
+                                            'amount': finalAmount,
+                                            'type': _tabController.index == 0 ? 'entrada' : 'saida',
                                             'date': _selectedDate?.toIso8601String() ?? 
                                                 widget.transaction.date.toIso8601String(),
                                             'categoryId': _selectedCategoryId ?? widget.transaction.categoryId ?? '',
                                             'userId': authState.id,
                                           };
 
-                                          await context.read<TransactionCubit>().updateTransaction(
-                                            widget.transaction.id,
-                                            authState.accessToken,
-                                            transactionData,
-                                          );
+                                          // Verifica se houve alterações
+                                          bool hasChanges = 
+                                              _descriptionController.text != widget.transaction.description ||
+                                              finalAmount != widget.transaction.amount ||
+                                              _selectedDate != widget.transaction.date ||
+                                              _selectedCategoryId != widget.transaction.categoryId;
+
+                                          if (hasChanges) {
+                                            await context.read<TransactionCubit>().updateTransaction(
+                                              widget.transaction.id,
+                                              authState.accessToken,
+                                              transactionData,
+                                            );
+                                          } else {
+                                            // Se não houver alterações, mostra mensagem de sucesso e volta
+                                            _showSuccessSnackBar();
+                                            Future.delayed(const Duration(milliseconds: 500), () {
+                                              if (context.mounted) {
+                                                context.goNamed('home');
+                                              }
+                                            });
+                                          }
                                         } catch (e) {
                                           _showErrorSnackBar(e.toString().replaceAll('Exception: ', ''));
                                           setState(() => _isLoading = false);

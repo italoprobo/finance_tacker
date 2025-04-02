@@ -71,7 +71,6 @@ class AuthCubit extends Cubit<AuthState> {
       });
 
       if (response.statusCode == 201) {
-        // Após registro bem-sucedido, fazer login para obter o token
         final loginResponse = await dio.post('/auth/login', data: {
           "email": email,
           "password": password,
@@ -81,7 +80,6 @@ class AuthCubit extends Cubit<AuthState> {
           final loginData = loginResponse.data;
           final String accessToken = loginData['accessToken'];
           
-          // Decodificar o token JWT para pegar o ID do usuário
           final String token = accessToken;
           final parts = token.split('.');
           if (parts.length != 3) {
@@ -89,7 +87,6 @@ class AuthCubit extends Cubit<AuthState> {
             return;
           }
 
-          // Decodificar a parte do payload do token
           final payload = parts[1];
           final normalized = base64Url.normalize(payload);
           final decoded = utf8.decode(base64Url.decode(normalized));
@@ -133,8 +130,7 @@ class AuthCubit extends Cubit<AuthState> {
       });
 
       if (response.statusCode == 201) {
-        final data = response.data;
-        print('Login Response: $data'); // Debug log
+        final data = response.data;// Debug log
 
         final String accessToken = data['accessToken'];
         final String name = data['name'];
@@ -155,11 +151,6 @@ class AuthCubit extends Cubit<AuthState> {
         
         final String id = payloadMap['id'] ?? '';
         final String userEmail = payloadMap['email'] ?? '';
-        
-        print('Token: $accessToken'); // Debug log
-        print('Name: $name'); // Debug log
-        print('ID from token: $id'); // Debug log
-        print('Email from token: $userEmail'); // Debug log
 
         if (id.isEmpty) {
           emit(AuthFailure("ID do usuário não encontrado"));

@@ -8,6 +8,7 @@ import 'package:finance_tracker_front/common/widgets/app_header.dart';
 import 'package:finance_tracker_front/common/widgets/primary_button.dart';
 import 'package:finance_tracker_front/common/widgets/custom_text_form_field.dart';
 import 'package:finance_tracker_front/common/widgets/category_form_field.dart';
+import 'package:finance_tracker_front/common/widgets/custom_snackbar.dart';
 import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart';
 import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:finance_tracker_front/features/categories/application/categories_cubit.dart';
@@ -53,7 +54,7 @@ class AddTransactionPage extends StatefulWidget {
   State<AddTransactionPage> createState() => _AddTransactionPageState();
 }
 
-class _AddTransactionPageState extends State<AddTransactionPage> with SingleTickerProviderStateMixin {
+class _AddTransactionPageState extends State<AddTransactionPage> with SingleTickerProviderStateMixin, CustomSnackBar {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
@@ -87,20 +88,18 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
   }
 
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.error,
-      ),
+    showCustomSnackBar(
+      context: context,
+      text: message,
+      type: SnackBarType.error,
     );
   }
 
   void _showSuccessSnackBar() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Transação adicionada com sucesso!'),
-        backgroundColor: AppColors.income,
-      ),
+    showCustomSnackBar(
+      context: context,
+      text: 'Transação adicionada com sucesso!',
+      type: SnackBarType.success,
     );
   }
 

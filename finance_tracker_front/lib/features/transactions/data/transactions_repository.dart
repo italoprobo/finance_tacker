@@ -9,12 +9,10 @@ class TransactionsRepository {
 
   Future<List<TransactionModel>> fetchUserTransactions(String token) async {
     try {
-      print('Buscando transações com token: ${token.substring(0, 20)}...');
       
       // Decodificar o token para validação
       final parts = token.split('.');
       if (parts.length != 3) {
-        print('Token inválido: não contém 3 partes');
         throw Exception("Token inválido");
       }
 
@@ -24,10 +22,8 @@ class TransactionsRepository {
       final payloadMap = json.decode(decoded);
       final String userId = payloadMap['id'] ?? '';
 
-      print('ID do usuário extraído do token: $userId');
 
       if (userId.isEmpty) {
-        print('ID do usuário não encontrado no token');
         throw Exception("ID do usuário não encontrado no token");
       }
 
@@ -41,25 +37,19 @@ class TransactionsRepository {
         ),
       );
 
-      print('Resposta do servidor: ${response.data}');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
         if (data.isEmpty) {
-          print('Nenhuma transação encontrada');
           return [];
         }
         
-        print('Encontradas ${data.length} transações');
         return data.map((e) => TransactionModel.fromJson(e)).toList();
       } else {
-        print('Erro ao buscar transações: ${response.statusCode}');
         throw Exception(response.data['message'] ?? "Erro ao buscar transações");
       }
     } catch (e) {
-      print('Erro ao buscar transações: $e');
       if (e is DioException) {
-        print('Detalhes do erro Dio: ${e.response?.data}');
         throw Exception(e.response?.data['message'] ?? "Falha na conexão com o servidor");
       }
       throw Exception("Falha na conexão com o servidor");
@@ -69,12 +59,9 @@ class TransactionsRepository {
   Future<TransactionModel> addTransaction(
       String token, Map<String, dynamic> transactionData) async {
     try { 
-      print('Tentando criar transação com dados: $transactionData');
       
-      // Decodificar o token para obter o ID do usuário
       final parts = token.split('.');
       if (parts.length != 3) {
-        print('Token inválido: não contém 3 partes');
         throw Exception("Token inválido");
       }
 
@@ -84,10 +71,8 @@ class TransactionsRepository {
       final payloadMap = json.decode(decoded);
       final String userId = payloadMap['id'] ?? '';
 
-      print('ID do usuário extraído do token: $userId');
 
       if (userId.isEmpty) {
-        print('ID do usuário não encontrado no token');
         throw Exception("ID do usuário não encontrado no token");
       }
 
@@ -96,7 +81,6 @@ class TransactionsRepository {
         ...transactionData,
         'userId': userId,
       };
-      print('Dados a serem enviados: $dataToSend');
 
       final response = await dio.post(
         '/transactions',
@@ -109,25 +93,17 @@ class TransactionsRepository {
         ),
       );
 
-      print('Resposta do servidor: ${response.data}');
-
       if (response.statusCode == 201) {
         final transaction = TransactionModel.fromJson(response.data);
         if (transaction.userId != userId) {
-          print('Erro: Transação criada com userId incorreto');
-          print('UserId esperado: $userId');
-          print('UserId recebido: ${transaction.userId}');
           throw Exception("Transação criada com usuário incorreto");
         }
         return transaction;
       } else {
-        print('Erro ao criar transação: ${response.statusCode}');
         throw Exception(response.data['message'] ?? "Erro ao adicionar transação");
       }
     } catch (e) {
-      print('Erro ao criar transação: $e');
       if (e is DioException) {
-        print('Detalhes do erro Dio: ${e.response?.data}');
         throw Exception(e.response?.data['message'] ?? "Erro ao adicionar transação");
       }
       throw Exception(e.toString());
