@@ -93,6 +93,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                 title: const Text('Alterar nome', style: AppTextStyles.mediumText16w500),
                                 trailing: const Icon(Icons.arrow_forward_ios, color: AppColors.purple, size: 16),
                                 onTap: () {
+                                  context.pushNamed(
+                                    'edit-name',
+                                    extra: state.name,
+                                  );
                                 },
                               ),
                               ListTile(

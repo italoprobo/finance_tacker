@@ -189,4 +189,43 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<void> updateUser(String token, String userId, Map<String, dynamic> userData) async {
+    if (state is AuthLoading) return;
+    
+    emit(AuthLoading());
+    try {
+      final response = await dio.patch(
+        '/users/$userId',
+        data: jsonEncode(userData),
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final String name = data['name'];
+        final String email = data['email'];
+        final String id = data['id'];
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('name', name);
+
+        emit(AuthSuccess(
+          accessToken: token,
+          name: name,
+          id: id,
+          email: email,
+        ));
+      } else {
+        emit(AuthFailure("Erro ao atualizar usuário"));
+      }
+    } catch (e) {
+      emit(AuthFailure("Falha na conexão com o servidor"));
+    }
+  }
+
 }

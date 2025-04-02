@@ -1,6 +1,7 @@
 import 'package:finance_tracker_front/features/home/home_page.dart';
 import 'package:finance_tracker_front/features/login/login.dart';
 import 'package:finance_tracker_front/features/profile/profile_page.dart';
+import 'package:finance_tracker_front/features/profile/edit_name_page.dart';
 import 'package:finance_tracker_front/features/reports/reports_page.dart';
 import 'package:finance_tracker_front/features/signup/sign_up_page.dart';
 import 'package:finance_tracker_front/features/transactions/transactions_page.dart';
@@ -53,10 +54,17 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       name: 'edit-transaction',
       path: '/edit-transaction',
-      // Use o rootNavigatorKey para garantir que não use o shell
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => EditTransactionPage(
         transaction: state.extra as TransactionModel,
+      ),
+    ),
+    GoRoute(
+      name: 'edit-name',
+      path: '/edit-name',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => EditNamePage(
+        currentName: state.extra as String,
       ),
     ),
     
