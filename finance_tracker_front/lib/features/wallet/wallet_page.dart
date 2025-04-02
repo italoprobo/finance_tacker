@@ -13,7 +13,6 @@ import 'package:finance_tracker_front/models/transaction.dart';
 import 'package:go_router/go_router.dart';
 import 'package:finance_tracker_front/common/widgets/custom_modal_bottom_sheet.dart';
 import 'package:finance_tracker_front/common/widgets/loading_overlay.dart';
-import 'package:finance_tracker_front/common/widgets/confirmation_dialog.dart';
 
 class WalletPage extends StatefulWidget {
   const WalletPage({super.key});

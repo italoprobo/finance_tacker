@@ -94,7 +94,6 @@ class AuthCubit extends Cubit<AuthState> {
           
           final String userId = payloadMap['id'] ?? '';
           final String userEmail = payloadMap['email'] ?? '';
-          final String userName = payloadMap['name'] ?? '';
 
           if (userId.isEmpty) {
             emit(AuthFailure("ID do usuário não encontrado"));
@@ -116,7 +115,6 @@ class AuthCubit extends Cubit<AuthState> {
         emit(AuthFailure("Erro no cadastro"));
       }
     } catch (e) {
-      print('Erro no cadastro: $e');
       emit(AuthFailure("Falha na conexão com o servidor"));
     }
   }
@@ -135,7 +133,6 @@ class AuthCubit extends Cubit<AuthState> {
         final String accessToken = data['accessToken'];
         final String name = data['name'];
         
-        // Decodificar o token JWT para pegar o ID do usuário
         final String token = accessToken;
         final parts = token.split('.');
         if (parts.length != 3) {
@@ -143,7 +140,6 @@ class AuthCubit extends Cubit<AuthState> {
           return;
         }
 
-        // Decodificar a parte do payload do token
         final payload = parts[1];
         final normalized = base64Url.normalize(payload);
         final decoded = utf8.decode(base64Url.decode(normalized));
@@ -168,7 +164,6 @@ class AuthCubit extends Cubit<AuthState> {
         emit(AuthFailure("Erro no login"));
       }
     } catch (e) {
-      print('Erro no login: $e');
       emit(AuthFailure("Falha na conexão com o servidor"));
     }
   }
@@ -184,7 +179,6 @@ class AuthCubit extends Cubit<AuthState> {
       await prefs.remove('userEmail');
       emit(AuthInitial());
     } catch (e) {
-      print("Erro ao fazer logout: $e");
       emit(AuthFailure("Erro ao fazer logout"));
     }
   }
