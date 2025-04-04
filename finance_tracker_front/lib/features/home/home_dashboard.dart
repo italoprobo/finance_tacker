@@ -74,7 +74,34 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
     return Scaffold(body: BlocBuilder<CardCubit, CardState>(
       builder: (context, state) {
         if (state is CardLoading || state is CardInitial) {
-          return const Center(child: CircularProgressIndicator());
+          return Stack(
+            children: [
+              const AppHeader(),
+              Positioned(
+                left: 24.w,
+                right: 25.w,
+                top: 145.h,
+                child: const BalanceCardSkeleton(),
+              ),
+              Positioned(
+                top: 410.h,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: ListView.builder(
+                  physics: const BouncingScrollPhysics(),
+                  padding: EdgeInsets.zero,
+                  itemCount: 5,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 8.h),
+                      child: const TransactionSkeleton(),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
         }
 
         if (state is CardFailure) {

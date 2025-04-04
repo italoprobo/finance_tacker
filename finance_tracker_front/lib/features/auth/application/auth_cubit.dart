@@ -164,9 +164,22 @@ class AuthCubit extends Cubit<AuthState> {
         emit(AuthFailure("Erro no login"));
       }
     } catch (e) {
-      emit(AuthFailure("Falha na conexão com o servidor"));
+    if (e is DioException) {
+      if (e.response?.statusCode == 401) {
+        emit(AuthFailure("Email ou senha incorretos"));
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+                 e.type == DioExceptionType.connectionError) {
+        emit(AuthFailure("Falha na conexão com o servidor. Verifique sua internet."));
+      } else if (e.response?.data['message'] != null) {
+        emit(AuthFailure(e.response?.data['message']));
+      } else {
+        emit(AuthFailure("Ocorreu um erro ao fazer login"));
+      }
+    } else {
+      emit(AuthFailure("Ocorreu um erro inesperado"));
     }
   }
+}
 
   Future<void> logout() async {
     emit(AuthLoading());

@@ -105,6 +105,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 title: const Text('Alterar senha', style: AppTextStyles.mediumText16w500),
                                 trailing: const Icon(Icons.arrow_forward_ios, color: AppColors.purple, size: 16),
                                 onTap: () {
+                                  context.pushNamed('edit-password');
                                 },
                               ),
                               ListTile(

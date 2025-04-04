@@ -1,5 +1,6 @@
 import 'package:finance_tracker_front/features/home/home_page.dart';
 import 'package:finance_tracker_front/features/login/login.dart';
+import 'package:finance_tracker_front/features/profile/edit_password_page.dart';
 import 'package:finance_tracker_front/features/profile/profile_page.dart';
 import 'package:finance_tracker_front/features/profile/edit_name_page.dart';
 import 'package:finance_tracker_front/features/reports/reports_page.dart';
@@ -66,6 +67,12 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => EditNamePage(
         currentName: state.extra as String,
       ),
+    ),
+    GoRoute(
+      name: 'edit-password',
+      path: '/edit-password',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const EditPasswordPage(),
     ),
     
     // Rotas dentro do ShellRoute (com barra de navegação)

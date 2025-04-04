@@ -3,38 +3,32 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
 import 'package:finance_tracker_front/common/extensions/sizes.dart';
 import 'package:finance_tracker_front/common/widgets/app_header.dart';
-import 'package:finance_tracker_front/common/widgets/custom_text_form_field.dart';
+import 'package:finance_tracker_front/common/widgets/password_form_field.dart';
 import 'package:finance_tracker_front/common/widgets/primary_button.dart';
 import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart';
 import 'package:finance_tracker_front/common/widgets/custom_snackbar.dart';
+import 'package:finance_tracker_front/common/utils/validator.dart';
 import 'package:go_router/go_router.dart';
 
-class EditNamePage extends StatefulWidget {
-  final String currentName;
-
-  const EditNamePage({
-    super.key,
-    required this.currentName,
-  });
+class EditPasswordPage extends StatefulWidget {
+  const EditPasswordPage({super.key});
 
   @override
-  State<EditNamePage> createState() => _EditNamePageState();
+  State<EditPasswordPage> createState() => _EditPasswordPageState();
 }
 
-class _EditNamePageState extends State<EditNamePage> with CustomSnackBar {
+class _EditPasswordPageState extends State<EditPasswordPage> with CustomSnackBar {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  final _currentPasswordController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
 
   @override
-  void initState() {
-    super.initState();
-    _nameController.text = widget.currentName;
-  }
-
-  @override
   void dispose() {
-    _nameController.dispose();
+    _currentPasswordController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -49,7 +43,7 @@ class _EditNamePageState extends State<EditNamePage> with CustomSnackBar {
   void _showSuccessSnackBar() {
     showCustomSnackBar(
       context: context,
-      text: 'Nome atualizado com sucesso!',
+      text: 'Senha atualizada com sucesso!',
       type: SnackBarType.success,
     );
   }
@@ -60,7 +54,7 @@ class _EditNamePageState extends State<EditNamePage> with CustomSnackBar {
       body: Stack(
         children: [
           const AppHeader(
-            title: "Alterar Nome",
+            title: "Alterar Senha",
           ),
           Positioned(
             top: 115.h,
@@ -82,17 +76,36 @@ class _EditNamePageState extends State<EditNamePage> with CustomSnackBar {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     SizedBox(height: 24.h),
-                    CustomTextFormField(
+                    PasswordFormField(
                       padding: EdgeInsets.zero,
-                      controller: _nameController,
-                      labelText: 'NOME',
-                      hintText: 'Digite seu nome',
+                      controller: _currentPasswordController,
+                      labelText: 'SENHA ATUAL',
+                      hintText: '********',
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Este campo não pode estar vazio';
+                        if (value == null) {
+                          return 'Digite sua senha atual';
                         }
                         return null;
                       },
+                    ),
+                    const SizedBox(height: 16.0),
+                    PasswordFormField(
+                      padding: EdgeInsets.zero,
+                      controller: _newPasswordController,
+                      labelText: 'NOVA SENHA',
+                      hintText: '********',
+                      validator: Validator.validatePassword,
+                    ),
+                    const SizedBox(height: 16.0),
+                    PasswordFormField(
+                      padding: EdgeInsets.zero,
+                      controller: _confirmPasswordController,
+                      labelText: 'CONFIRMAR NOVA SENHA',
+                      hintText: '********',
+                      validator: (value) => Validator.confirmPassword(
+                        value,
+                        _newPasswordController.text,
+                      ),
                     ),
                     const SizedBox(height: 26.0),
                     BlocListener<AuthCubit, AuthState>(
@@ -112,21 +125,24 @@ class _EditNamePageState extends State<EditNamePage> with CustomSnackBar {
                       },
                       child: PrimaryButton(
                         text: 'Salvar',
-                        onPressed: _isLoading 
-                          ? null 
-                          : () {
-                              if (_formKey.currentState!.validate()) {
-                                final authState = context.read<AuthCubit>().state;
-                                if (authState is AuthSuccess) {
-                                  final newName = _nameController.text.trim();
-                                  context.read<AuthCubit>().updateUser(
-                                    authState.accessToken,
-                                    authState.id,
-                                    {'name': newName},
-                                  );
+                        onPressed: _isLoading
+                            ? null
+                            : () {
+                                if (_formKey.currentState!.validate()) {
+                                  final authState = context.read<AuthCubit>().state;
+                                  if (authState is AuthSuccess) {
+                                    context.read<AuthCubit>().updateUser(
+                                      authState.accessToken,
+                                      authState.id,
+                                      {
+                                        'currentPassword': _currentPasswordController.text,
+                                        'password': _newPasswordController.text,
+                                        'confirmPassword': _confirmPasswordController.text,
+                                      },
+                                    );
+                                  }
                                 }
-                              }
-                            },
+                              },
                       ),
                     ),
                   ],
@@ -138,4 +154,4 @@ class _EditNamePageState extends State<EditNamePage> with CustomSnackBar {
       ),
     );
   }
-} 
+}

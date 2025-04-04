@@ -39,10 +39,8 @@ class _LoginPageState extends State<LoginPage> {
             }
             if (state is AuthSuccess) {
               context.goNamed('home');
-              // ver com o chat como posso fazer para ele poder ir e voltar no app
-              // com essa opção gonamed quando eu clico no botao de voltar no celular ele sai do app
             } else if (state is AuthFailure) {
-              DialogsHelper.showErrorBottomSheet(context, state.message);
+              DialogsHelper.showLoginErrorBottomSheet(context, state.message);
             }
           },
           builder: (context, state) {

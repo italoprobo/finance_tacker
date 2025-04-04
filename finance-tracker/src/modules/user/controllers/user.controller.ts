@@ -3,7 +3,7 @@ import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { UpdateUserDto } from '../dtos/update-user.dto';
 import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
-
+import * as bcrypt from 'bcrypt';
 
 @Controller('users')
 //@UseGuards(JwtAuthGuard)
@@ -28,5 +28,11 @@ export class UserController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
+  }
+
+  @Post('generate-hash')
+  async generateHash(@Body('password') password: string) {
+  const hashedPassword = await bcrypt.hash(password, 10);
+  return { hash: hashedPassword };
   }
 }

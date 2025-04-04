@@ -146,4 +146,68 @@ class DialogsHelper {
       },
     );
   }
+
+  static Future<void> showLoginErrorBottomSheet(
+      BuildContext context, String errorMessage) async {
+    return showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(38.0),
+          topRight: Radius.circular(38.0),
+        ),
+      ),
+      builder: (BuildContext context) {
+        String title = "Ops! Algo deu errado.";
+        String buttonText = "Tentar novamente";
+        
+        if (errorMessage.contains("Email ou senha incorretos")) {
+          title = "Credenciais inválidas";
+        } else if (errorMessage.contains("conexão")) {
+          title = "Erro de conexão";
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(24.0),
+          decoration: const BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(38.0),
+              topRight: Radius.circular(38.0),
+            ),
+          ),
+          height: 250,
+          width: double.infinity,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.mediumText20.copyWith(
+                  color: AppColors.error,
+                ),
+              ),
+              const SizedBox(height: 12.0),
+              Text(
+                errorMessage,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.smalltext.copyWith(color: AppColors.grey),
+              ),
+              const SizedBox(height: 20.0),
+              SizedBox(
+                width: double.infinity,
+                child: PrimaryButton(
+                  text: buttonText,
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
