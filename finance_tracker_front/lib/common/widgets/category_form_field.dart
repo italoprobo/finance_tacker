@@ -10,6 +10,7 @@ class CategoryFormField extends StatefulWidget {
   final List<String> categories;
   final Function(String) onCategorySelected;
   final EdgeInsetsGeometry? padding;
+  final MouseCursor? cursor;
 
   const CategoryFormField({
     super.key,
@@ -19,7 +20,8 @@ class CategoryFormField extends StatefulWidget {
     required this.validator,
     required this.categories,
     required this.onCategorySelected,
-    this.padding,
+    this.padding, 
+    this.cursor,
   });
 
   @override
@@ -94,6 +96,7 @@ class _CategoryFormFieldState extends State<CategoryFormField> {
             ],
           ),
         ),
+        mouseCursor: widget.cursor ?? SystemMouseCursors.text,
       ),
     );
   }

@@ -19,6 +19,7 @@ class CustomTextFormField extends StatefulWidget {
   final List<TextInputFormatter>? inputFormatters;
   final FormFieldValidator<String>? validator;
   final String? helperText;
+  final MouseCursor? cursor;
 
   const CustomTextFormField({
     super.key,
@@ -37,6 +38,7 @@ class CustomTextFormField extends StatefulWidget {
     this.inputFormatters,
     this.validator,
     this.helperText,
+    this.cursor,
   });
 
   @override
@@ -83,6 +85,7 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
         keyboardType: widget.keyboardType,
         textCapitalization: widget.textCapitalization ?? TextCapitalization.none,
         controller: widget.controller,
+        cursorColor: AppColors.purple,
         decoration: InputDecoration(
           helperText: _helperText,
           helperMaxLines: 2,
@@ -98,6 +101,7 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
           enabledBorder: defaultBorder,
           disabledBorder: defaultBorder,
         ),
+        mouseCursor: widget.cursor ?? SystemMouseCursors.text,
       ),
     );
   }

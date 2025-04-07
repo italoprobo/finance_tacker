@@ -6,19 +6,28 @@ import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 
 class DialogsHelper {
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  static bool _isDialogShowing = false;
+
   static void showLoadingDialog(BuildContext context) {
-    showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (_) => const Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
+    if (!_isDialogShowing) {
+      _isDialogShowing = true;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        },
+      );
+    }
   }
 
   static void hideLoadingDialog(BuildContext context) {
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
+    if (_isDialogShowing) {
+      _isDialogShowing = false;
+      Navigator.of(context, rootNavigator: true).pop();
     }
   }
 

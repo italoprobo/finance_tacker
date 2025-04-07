@@ -167,7 +167,7 @@ class TransactionCubit extends Cubit<TransactionState> {
         }).toList();
         emit(TransactionsSuccess(transactions: updatedTransactions));
       } else {
-        await fetchUserTransactions(token);
+      await fetchUserTransactions(token);
       }
     } catch (e) {
       emit(TransactionsFailure("Erro ao atualizar transação"));

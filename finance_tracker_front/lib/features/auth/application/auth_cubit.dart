@@ -3,6 +3,10 @@ import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart';
 
 // Estados 
 abstract class AuthState extends Equatable {
@@ -20,16 +24,31 @@ class AuthSuccess extends AuthState {
   final String name;
   final String id;
   final String email;
+  final String? profileImage;
 
   AuthSuccess({
     required this.accessToken,
     required this.name,
     required this.id,
     required this.email,
+    this.profileImage,
   });
 
-  @override
-  List<Object> get props => [accessToken, name, id, email];
+    AuthSuccess copyWith({
+    String? accessToken,
+    String? id,
+    String? name,
+    String? email,
+    String? profileImage,
+  }) {
+    return AuthSuccess(
+      accessToken: accessToken ?? this.accessToken,
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      profileImage: profileImage ?? this.profileImage,
+    );
+  }
 }
 
 class AuthFailure extends AuthState {
@@ -49,14 +68,29 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
     Future<void> _loadToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    final accessToken = prefs.getString('accessToken');
-    final name = prefs.getString('name') ?? '';
-    final id = prefs.getString('userId') ?? '';
-    final email = prefs.getString('userEmail') ?? '';
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final accessToken = prefs.getString('accessToken');
+      final name = prefs.getString('name') ?? '';
+      final id = prefs.getString('userId') ?? '';
+      final email = prefs.getString('userEmail') ?? '';
 
-    if (accessToken != null && accessToken.isNotEmpty) {
-      emit(AuthSuccess(accessToken: accessToken, name: name, id: id, email: email));
+      print('Loading token: $accessToken'); // Debug log
+
+      if (accessToken != null && accessToken.isNotEmpty) {
+        emit(AuthSuccess(
+          accessToken: accessToken,
+          name: name,
+          id: id,
+          email: email,
+          profileImage: null
+        ));
+      } else {
+        emit(AuthInitial());
+      }
+    } catch (e) {
+      print('Erro ao carregar token: $e'); // Debug log
+      emit(AuthInitial());
     }
   }
 
@@ -107,7 +141,7 @@ class AuthCubit extends Cubit<AuthState> {
           await prefs.setString('userEmail', userEmail);
           await prefs.setString('userName', name);
 
-          emit(AuthSuccess(accessToken: accessToken, name: name, id: userId, email: userEmail));
+          emit(AuthSuccess(accessToken: accessToken, name: name, id: userId, email: userEmail, profileImage: ''));
         } else {
           emit(AuthFailure("Erro ao fazer login após registro"));
         }
@@ -128,7 +162,7 @@ class AuthCubit extends Cubit<AuthState> {
       });
 
       if (response.statusCode == 201) {
-        final data = response.data;// Debug log
+        final data = response.data;
 
         final String accessToken = data['accessToken'];
         final String name = data['name'];
@@ -159,7 +193,14 @@ class AuthCubit extends Cubit<AuthState> {
         await prefs.setString('userId', id);
         await prefs.setString('userEmail', userEmail);
 
-        emit(AuthSuccess(accessToken: accessToken, name: name, id: id, email: userEmail));
+        // Emitir o estado com o token correto
+        emit(AuthSuccess(
+          accessToken: accessToken,
+          name: name,
+          id: id,
+          email: userEmail,
+          profileImage: null // Inicializar como null
+        ));
       } else {
         emit(AuthFailure("Erro no login"));
       }
@@ -226,6 +267,7 @@ class AuthCubit extends Cubit<AuthState> {
           name: name,
           id: id,
           email: email,
+          profileImage: state is AuthSuccess ? (state as AuthSuccess).profileImage : '',
         ));
       } else {
         emit(AuthFailure("Erro ao atualizar usuário"));
@@ -235,4 +277,70 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<void> updateProfileImage(dynamic image) async {
+    try {
+      final currentState = state;
+      if (currentState is! AuthSuccess) {
+        throw Exception('Usuário não autenticado');
+      }
+
+      if (currentState.accessToken.isEmpty) {
+        throw Exception('Token de autenticação inválido');
+      }
+
+      emit(AuthLoading());
+
+      FormData formData;
+      if (image is XFile) {
+        final bytes = await image.readAsBytes();
+        String fileName = image.name;
+
+        formData = FormData.fromMap({
+          'image': MultipartFile.fromBytes(
+            bytes,
+            filename: fileName,
+          ),
+        });
+      } else {
+        throw Exception('Formato de imagem inválido');
+      }
+
+      final response = await dio.post(
+        '/upload/profile-image',
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${currentState.accessToken}',
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final filename = response.data['filename'];
+        
+        if (filename == null || filename.isEmpty) {
+          throw Exception('Nome do arquivo não recebido do servidor');
+        }
+
+        // Garantimos que o estado AuthSuccess seja emitido
+        final newState = AuthSuccess(
+          accessToken: currentState.accessToken,
+          name: currentState.name,
+          id: currentState.id,
+          email: currentState.email,
+          profileImage: filename,
+        );
+        emit(newState);
+      } else {
+        throw Exception('Erro ao fazer upload da imagem');
+      }
+    } catch (e) {
+      print('Erro durante o upload: $e');
+      if (state is AuthSuccess) {
+        emit(state); // Voltamos ao estado anterior em caso de erro
+      }
+      rethrow;
+    }
+  }
 }

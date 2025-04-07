@@ -7,6 +7,7 @@ import 'package:finance_tracker_front/common/constants/app_colors.dart';
 import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
 import 'package:finance_tracker_front/common/extensions/sizes.dart';
 import 'package:finance_tracker_front/common/widgets/app_header.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -16,10 +17,65 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickAndUploadImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        if (!mounted) return;
+        await context.read<AuthCubit>().updateProfileImage(image);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      DialogsHelper.showErrorBottomSheet(
+        context, 
+        'Erro ao atualizar imagem de perfil: ${e.toString()}'
+      );
+    }
+  }
+
+  Widget _buildProfileImage(AuthSuccess state) {
+    return GestureDetector(
+      onTap: _pickAndUploadImage,
+      child: Stack(
+        children: [
+          CircleAvatar(
+            radius: 40,
+            backgroundColor: AppColors.white,
+            backgroundImage: (state.profileImage != null && state.profileImage!.isNotEmpty)
+                ? NetworkImage('http://localhost:3000/uploads/profile-images/${state.profileImage}', scale: 1.0)
+                : null,
+            child: (state.profileImage == null || state.profileImage!.isEmpty)
+                ? const Icon(Icons.person, size: 40, color: AppColors.purple)
+                : null,
+          ),
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: AppColors.purple,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.camera_alt,
+                color: AppColors.white,
+                size: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocConsumer<AuthCubit, AuthState>(
+        listenWhen: (previous, current) => previous != current,
         listener: (context, state) {
           if (state is AuthLoading) {
             DialogsHelper.showLoadingDialog(context);
@@ -47,11 +103,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     children: [
                       Column(
                         children: [
-                          const CircleAvatar(
-                            radius: 40,
-                            backgroundColor: AppColors.white,
-                            child: Icon(Icons.person, size: 40, color: AppColors.purple),
-                          ),
+                          _buildProfileImage(state),
                           SizedBox(height: 12.h),
                           // Nome do usuário
                           Text(
@@ -126,7 +178,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ],
             );
           }
-          return const Center(child: CircularProgressIndicator());
+          return const SizedBox.shrink();
         },
       ),
     );

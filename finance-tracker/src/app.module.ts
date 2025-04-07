@@ -9,6 +9,9 @@ import { CategoriesModule } from './modules/categories/categories.module';
 import { TransactionsModule } from './modules/transactions/transaction.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { CorsMiddleware } from './modules/middleware/middleware';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+import { UploadModule } from './modules/upload/upload.module';
 
 @Module({
   imports: [
@@ -19,6 +22,16 @@ import { CorsMiddleware } from './modules/middleware/middleware';
     CategoriesModule,
     TransactionsModule,
     ReportsModule,
+    UploadModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+      exclude: ['/api*'],
+      serveStaticOptions: {
+        index: false,
+        fallthrough: true,
+      },
+    }),
   ],
   controllers: [ProtectedController],
   providers: [],

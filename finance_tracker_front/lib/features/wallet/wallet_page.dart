@@ -347,7 +347,7 @@ class _TransactionsList extends StatelessWidget {
                                     context.pop();
                                     showCustomModalBottomSheet(
                                       context: context,
-                                      title: 'Confirmar exclusão',
+                                        title: 'Confirmar exclusão',
                                       content: const Text(
                                         'Tem certeza que deseja excluir esta transação?',
                                         style: AppTextStyles.smalltextw400,

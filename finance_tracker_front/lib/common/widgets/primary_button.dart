@@ -6,13 +6,15 @@ import 'custom_circular_progress_indicator.dart';
 class PrimaryButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final String text;
-  final bool isLoading; 
+  final bool isLoading;
+  final Color? backgroundColor;
 
   const PrimaryButton({
     super.key,
     this.onPressed,
     required this.text,
     this.isLoading = false,
+    this.backgroundColor,
   });
 
   final BorderRadius _borderRadius = const BorderRadius.all(Radius.circular(24.0));
@@ -25,20 +27,23 @@ class PrimaryButton extends StatelessWidget {
         height: 48.0,
         decoration: BoxDecoration(
           borderRadius: _borderRadius,
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: onPressed != null
-                ? AppColors.gradient
-                : AppColors.greyGradient,
-          ),
+          color: backgroundColor,
+          gradient: backgroundColor == null
+              ? LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: onPressed != null
+                      ? AppColors.gradient
+                      : AppColors.greyGradient,
+                )
+              : null,
         ),
         child: InkWell(
           borderRadius: _borderRadius,
-          onTap: isLoading ? null : onPressed, 
+          onTap: isLoading ? null : onPressed,
           child: Center(
             child: isLoading
-                ? const CustomCircularProgressIndicator() 
+                ? const CustomCircularProgressIndicator()
                 : Text(
                     text,
                     style: AppTextStyles.buttontext.copyWith(

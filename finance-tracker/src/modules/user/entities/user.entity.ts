@@ -17,6 +17,9 @@ export class User{
     @Column()
     password: string;
 
+    @Column({ nullable: true })
+    profileImage: string;
+
     @OneToMany(() => Transaction, (transaction) => transaction.user)
     transactions: Transaction[];
 

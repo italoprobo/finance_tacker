@@ -250,6 +250,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                                       controller: _categoryController,
                                       labelText: 'CATEGORIA',
                                       hintText: 'Selecione uma categoria',
+                                      cursor: SystemMouseCursors.click,
                                       categories: categories
                                           .map((category) => category.name)
                                           .toList(),
@@ -284,6 +285,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                                 readOnly: true,
                                 labelText: 'DATA',
                                 hintText: 'Selecione uma data',
+                                cursor: SystemMouseCursors.click,
                                 suffixIcon: const Icon(Icons.calendar_month_outlined, color: AppColors.purple),
                                 onTap: () async {
                                   final date = await showDatePicker(
