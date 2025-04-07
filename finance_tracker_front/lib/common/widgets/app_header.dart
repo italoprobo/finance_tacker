@@ -10,6 +10,7 @@ class AppHeader extends StatefulWidget {
   final String? title;
   final bool hasOptions;
   final bool hideNavBar;
+  final bool isWhiteTheme;
   final VoidCallback? onBackPressed;
 
   const AppHeader({
@@ -17,6 +18,7 @@ class AppHeader extends StatefulWidget {
     this.title, 
     this.hasOptions = false,
     this.hideNavBar = false,
+    this.isWhiteTheme = false,
     this.onBackPressed,
   });
 
@@ -32,19 +34,21 @@ class _AppHeaderState extends State<AppHeader> {
           children: [
             GestureDetector(
               onTap: widget.onBackPressed ?? () => context.pop(),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_back_ios,
                 size: 16.0,
-                color: AppColors.white,
+                color: widget.isWhiteTheme ? Colors.black : AppColors.white,
               ),
             ),
             Text(
               widget.title!,
-              style: AppTextStyles.mediumText18.apply(color: AppColors.white),
+              style: AppTextStyles.mediumText18.apply(
+                color: widget.isWhiteTheme ? Colors.black : AppColors.white,
+              ),
             ),
-            widget.hasOptions ? const Icon(
+            widget.hasOptions ? Icon(
               Icons.more_horiz,
-              color: AppColors.white,
+              color: widget.isWhiteTheme ? Colors.black : AppColors.white,
             ) : const SizedBox.shrink(),
           ],
         ) : 
@@ -53,37 +57,40 @@ class _AppHeaderState extends State<AppHeader> {
             children: [
               GreetingsWidget(),
               NotificationWidget()
-                  ],
-                );
+            ],
+          );
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-              Positioned(
-                left: 0,
-                right: 0,
-                child: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
+        Positioned(
+          left: 0,
+          right: 0,
+          child: Container(
+            decoration: BoxDecoration(
+              color: widget.isWhiteTheme ? Colors.white : null,
+              gradient: widget.isWhiteTheme 
+                  ? null 
+                  : const LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: AppColors.gradient,
                     ),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.elliptical(500, 30),
-                      bottomRight: Radius.elliptical(500, 30),
-                    ),
-                  ),
-                  height: 287.h,
-                ),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.elliptical(500, 30),
+                bottomRight: Radius.elliptical(500, 30),
               ),
-              Positioned(
-                left: 24.0,
-                right: 24.0,
-                top: 62.h,
-                child: _innerHeader,
-              ),
+            ),
+            height: 287.h,
+          ),
+        ),
+        Positioned(
+          left: 24.0,
+          right: 24.0,
+          top: 62.h,
+          child: _innerHeader,
+        ),
       ],
     );
   }

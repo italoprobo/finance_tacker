@@ -9,11 +9,13 @@ import 'features/transactions/data/transactions_repository.dart';
 import 'app_router.dart';
 import 'features/categories/application/categories_cubit.dart';
 import 'common/extensions/sizes.dart';
+import 'package:finance_tracker_front/common/di/di.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final apiClient = ApiClient(); 
   final transactionsRepository = TransactionsRepository(apiClient.dio); 
+  setupDependencies();
 
   runApp(
     MultiBlocProvider(

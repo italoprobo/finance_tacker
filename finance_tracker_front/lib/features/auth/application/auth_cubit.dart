@@ -74,6 +74,7 @@ class AuthCubit extends Cubit<AuthState> {
       final name = prefs.getString('name') ?? '';
       final id = prefs.getString('userId') ?? '';
       final email = prefs.getString('userEmail') ?? '';
+      final profileImage = prefs.getString('profileImage');
 
       print('Loading token: $accessToken'); // Debug log
 
@@ -83,7 +84,7 @@ class AuthCubit extends Cubit<AuthState> {
           name: name,
           id: id,
           email: email,
-          profileImage: null
+          profileImage: profileImage
         ));
       } else {
         emit(AuthInitial());
@@ -156,6 +157,7 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> login(String email, String password) async {
     emit(AuthLoading());
     try {
+      // Login normal
       final response = await dio.post('/auth/login', data: {
         "email": email,
         "password": password,
@@ -163,7 +165,6 @@ class AuthCubit extends Cubit<AuthState> {
 
       if (response.statusCode == 201) {
         final data = response.data;
-
         final String accessToken = data['accessToken'];
         final String name = data['name'];
         
@@ -187,50 +188,101 @@ class AuthCubit extends Cubit<AuthState> {
           return;
         }
 
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('accessToken', accessToken);
-        await prefs.setString('name', name);
-        await prefs.setString('userId', id);
-        await prefs.setString('userEmail', userEmail);
+        // Buscar dados completos do usuário incluindo a imagem
+        try {
+          final userResponse = await dio.get(
+            '/users/$id',
+            options: Options(
+              headers: {
+                'Authorization': 'Bearer $accessToken',
+              },
+            ),
+          );
 
-        // Emitir o estado com o token correto
-        emit(AuthSuccess(
-          accessToken: accessToken,
-          name: name,
-          id: id,
-          email: userEmail,
-          profileImage: null // Inicializar como null
-        ));
+          if (userResponse.statusCode == 200) {
+            final userData = userResponse.data;
+            final String? profileImage = userData['profileImage'];
+
+            // Salvar todos os dados nas preferências
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('accessToken', accessToken);
+            await prefs.setString('name', name);
+            await prefs.setString('userId', id);
+            await prefs.setString('userEmail', userEmail);
+            if (profileImage != null) {
+              await prefs.setString('profileImage', profileImage);
+            }
+
+            emit(AuthSuccess(
+              accessToken: accessToken,
+              name: name,
+              id: id,
+              email: userEmail,
+              profileImage: profileImage,
+            ));
+          } else {
+            // Se falhar em obter os dados completos, ainda fazemos login mas sem a imagem
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('accessToken', accessToken);
+            await prefs.setString('name', name);
+            await prefs.setString('userId', id);
+            await prefs.setString('userEmail', userEmail);
+
+            emit(AuthSuccess(
+              accessToken: accessToken,
+              name: name,
+              id: id,
+              email: userEmail,
+              profileImage: null,
+            ));
+          }
+        } catch (e) {
+          // Se falhar em obter os dados completos, ainda fazemos login mas sem a imagem
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('accessToken', accessToken);
+          await prefs.setString('name', name);
+          await prefs.setString('userId', id);
+          await prefs.setString('userEmail', userEmail);
+
+          emit(AuthSuccess(
+            accessToken: accessToken,
+            name: name,
+            id: id,
+            email: userEmail,
+            profileImage: null,
+          ));
+        }
       } else {
         emit(AuthFailure("Erro no login"));
       }
     } catch (e) {
-    if (e is DioException) {
-      if (e.response?.statusCode == 401) {
-        emit(AuthFailure("Email ou senha incorretos"));
-      } else if (e.type == DioExceptionType.connectionTimeout ||
-                 e.type == DioExceptionType.connectionError) {
-        emit(AuthFailure("Falha na conexão com o servidor. Verifique sua internet."));
-      } else if (e.response?.data['message'] != null) {
-        emit(AuthFailure(e.response?.data['message']));
+      if (e is DioException) {
+        if (e.response?.statusCode == 401) {
+          emit(AuthFailure("Email ou senha incorretos"));
+        } else if (e.type == DioExceptionType.connectionTimeout ||
+                   e.type == DioExceptionType.connectionError) {
+          emit(AuthFailure("Falha na conexão com o servidor. Verifique sua internet."));
+        } else if (e.response?.data['message'] != null) {
+          emit(AuthFailure(e.response?.data['message']));
+        } else {
+          emit(AuthFailure("Ocorreu um erro ao fazer login"));
+        }
       } else {
-        emit(AuthFailure("Ocorreu um erro ao fazer login"));
+        emit(AuthFailure("Ocorreu um erro inesperado"));
       }
-    } else {
-      emit(AuthFailure("Ocorreu um erro inesperado"));
     }
   }
-}
 
   Future<void> logout() async {
     emit(AuthLoading());
 
-    try{
+    try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('accessToken');
       await prefs.remove('name');
       await prefs.remove('userId');
       await prefs.remove('userEmail');
+      await prefs.remove('profileImage');
       emit(AuthInitial());
     } catch (e) {
       emit(AuthFailure("Erro ao fazer logout"));
@@ -323,7 +375,10 @@ class AuthCubit extends Cubit<AuthState> {
           throw Exception('Nome do arquivo não recebido do servidor');
         }
 
-        // Garantimos que o estado AuthSuccess seja emitido
+        // Salvar o nome da imagem no SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('profileImage', filename);
+
         final newState = AuthSuccess(
           accessToken: currentState.accessToken,
           name: currentState.name,
@@ -338,7 +393,7 @@ class AuthCubit extends Cubit<AuthState> {
     } catch (e) {
       print('Erro durante o upload: $e');
       if (state is AuthSuccess) {
-        emit(state); // Voltamos ao estado anterior em caso de erro
+        emit(state);
       }
       rethrow;
     }

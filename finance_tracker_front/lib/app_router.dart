@@ -1,8 +1,10 @@
+import 'package:finance_tracker_front/common/di/di.dart';
 import 'package:finance_tracker_front/features/home/home_page.dart';
 import 'package:finance_tracker_front/features/login/login.dart';
 import 'package:finance_tracker_front/features/profile/edit_password_page.dart';
 import 'package:finance_tracker_front/features/profile/profile_page.dart';
 import 'package:finance_tracker_front/features/profile/edit_name_page.dart';
+import 'package:finance_tracker_front/features/reports/reports_cubit.dart';
 import 'package:finance_tracker_front/features/reports/reports_page.dart';
 import 'package:finance_tracker_front/features/signup/sign_up_page.dart';
 import 'package:finance_tracker_front/features/transactions/transactions_page.dart';
@@ -10,6 +12,7 @@ import 'package:finance_tracker_front/features/wallet/wallet_page.dart';
 import 'package:finance_tracker_front/features/transactions/presentation/add_transaction_page.dart';
 import 'package:finance_tracker_front/features/transactions/presentation/edit_transaction_page.dart';
 import 'package:finance_tracker_front/models/transaction_cubit.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'features/splash/splash_page.dart';
 import 'features/onboarding/onboarding_page.dart';
@@ -88,7 +91,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           name: 'reports',
           path: '/reports',
-          builder: (context, state) => const ReportsPage(),
+          builder: (context, state) => BlocProvider(
+            create: (context) => getIt<ReportsCubit>(),
+            child: const ReportsPage(),
+          ),
         ),
         GoRoute(
           name: 'wallet',

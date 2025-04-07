@@ -47,6 +47,8 @@ dependencies:
   bloc: ^8.1.4
   image_picker: ^1.1.2
   universal_html: ^2.2.4
+  fl_chart: ^0.70.2
+  get_it: ^8.0.3
 
 dev_dependencies:
   flutter_test:
