@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'package:finance_tracker_front/common/di/di.dart';
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
 import 'package:finance_tracker_front/common/widgets/app_header.dart';
 import 'package:finance_tracker_front/features/reports/reports_cubit.dart';
@@ -86,7 +85,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                 ),
                 Flexible(
                   flex: 2,
-                  child: _buildSummary(),
+                  child: _buildTransactionsList(),
                 ),
               ],
             ),
@@ -161,7 +160,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
               horizontal: 24.0,
             ),
             child: AspectRatio(
-              aspectRatio: 1.70,
+              aspectRatio: 1.40,
               child: LineChart(
                 LineChartData(
                   lineTouchData: LineTouchData(
@@ -299,96 +298,72 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildSummary() {
+  Widget _buildTransactionsList() {
     return BlocBuilder<ReportsCubit, ReportsState>(
       builder: (context, state) {
-        if (state is! ReportsSuccess) return const SizedBox.shrink();
+        if (state is! ReportsSuccess) {
+          return const SizedBox.shrink();
+        }
 
-        return ListView(
+        if (state.reports.isEmpty) {
+          return const Center(
+            child: Text('Nenhuma transação encontrada neste período'),
+          );
+        }
+
+        return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          children: [
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
+          itemCount: state.reports.length,
+          itemBuilder: (context, index) {
+            final report = state.reports[index];
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8.0),
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
+                border: Border.all(
                   color: Colors.grey.withOpacity(0.2),
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Total Receitas',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'R\$ ${state.totalIncome.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          report.type,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              'Total Despesas',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                              ),
+                        if (report.periodStart != null)
+                          Text(
+                            '${report.periodStart!.day}/${report.periodStart!.month}/${report.periodStart!.year}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'R\$ ${state.totalExpense.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
                       ],
                     ),
-                    const Divider(height: 24),
-                    Text(
-                      'Saldo',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
+                  ),
+                  Text(
+                    'R\$ ${(report.totalIncome - report.totalExpense).toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: report.totalIncome - report.totalExpense >= 0
+                          ? Colors.green
+                          : Colors.red,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'R\$ ${(state.totalIncome - state.totalExpense).toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: state.totalIncome - state.totalExpense >= 0
-                            ? Colors.green
-                            : Colors.red,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ),
-          ],
+            );
+          },
         );
       },
     );

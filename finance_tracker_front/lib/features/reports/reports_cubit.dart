@@ -25,9 +25,9 @@ class ReportsCubit extends Cubit<ReportsState> {
       case ReportPeriod.week:
         return 1;
       case ReportPeriod.month:
-        return 1;
+        return 5;
       case ReportPeriod.year:
-        return 1;
+        return 2;
     }
   }
 

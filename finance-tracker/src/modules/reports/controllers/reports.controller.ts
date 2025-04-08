@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
 import { Report } from '../entities/reports.entity';
 import { ReportsService } from '../services/reports.services';
 import { CreateReportDto } from '../dtos/create-report.dto';
@@ -35,5 +35,14 @@ export class ReportsController {
     @Delete(':id')
     async delete(@Param('id') id: string): Promise<void> {
         return this.reportsService.delete(id);
+    }
+
+    @Get('by-period')
+    async getReportsByPeriod(
+        @Query('start_date') startDate: string,
+        @Query('end_date') endDate: string,
+        @Query('user_id') userId: string
+    ): Promise<Report[]> {
+        return this.reportsService.getReportsByPeriod(startDate, endDate, userId);
     }
 }

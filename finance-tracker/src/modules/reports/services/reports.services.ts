@@ -61,4 +61,37 @@ export class ReportsService {
             throw new NotFoundException('Relatório não encontrado');
         }
     }
+
+    async getReportsByPeriod(startDate: string, endDate: string, userId: string): Promise<Report[]> {
+        if (!userId) throw new NotFoundException('ID do usuário é obrigatório');
+        
+        // Verificar se o usuário existe
+        const user = await this.userRepository.findOne({ where: { id: userId } });
+        if (!user) throw new NotFoundException('Usuário não encontrado');
+        
+        // Buscar transações do usuário no período
+        const query = this.reportRepository.createQueryBuilder('report')
+            .where('report.user_id = :userId', { userId })
+            .andWhere('report.period_start >= :startDate', { startDate })
+            .andWhere('report.period_end <= :endDate', { endDate })
+            .leftJoinAndSelect('report.user', 'user');
+        
+        const reports = await query.getMany();
+        
+        // Se não houver relatórios, gerar um relatório vazio para o período
+        if (reports.length === 0) {
+            const emptyReport = new Report();
+            emptyReport.type = 'diario'; // Ou determinar baseado no período
+            emptyReport.period_start = new Date(startDate);
+            emptyReport.period_end = new Date(endDate);
+            emptyReport.total_income = 0;
+            emptyReport.total_expense = 0;
+            emptyReport.user = user;
+            
+            // Não salvar no banco, apenas retornar
+            return [emptyReport];
+        }
+        
+        return reports;
+    }
 }
