@@ -51,7 +51,7 @@ class HomePage extends StatelessWidget {
           ),
           CustomBottomAppBarItem(
             key: const ValueKey('reports'),
-            label: BottomAppBarItem.stats.name,
+            label: 'reports',
             primaryIcon: Icons.analytics,
             secondaryIcon: Icons.analytics_outlined,
             onPressed: () {

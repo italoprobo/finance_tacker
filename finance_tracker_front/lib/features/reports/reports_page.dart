@@ -6,6 +6,8 @@ import 'package:finance_tracker_front/features/reports/reports_state.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finance_tracker_front/common/extensions/sizes.dart';
+import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
 
 class ReportsPage extends StatefulWidget {
   const ReportsPage({super.key});
@@ -44,6 +46,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    Sizes.init(context);
     return Scaffold(
       body: Stack(
         children: [
@@ -53,38 +56,44 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
             isWhiteTheme: true,
           ),
           Positioned(
-            top: 150,
-            left: 8,
-            right: 8,
+            top: 150.h,
+            left: 0,
+            right: 0,
             bottom: 0,
             child: Column(
               children: [
-                _buildPeriodTabs(),
-                const SizedBox(height: 32),
-                Flexible(
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w),
+                  child: _buildPeriodTabs(),
+                ),
+                SizedBox(height: 9.h),
+                SizedBox(
+                  height: 220.h,
                   child: _buildChartArea(),
                 ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                SizedBox(height: 16.h),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         'Principais Transações',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: AppTextStyles.buttontext.apply(color: AppColors.black),
                       ),
-                      Icon(
-                        Icons.sort,
-                        color: AppColors.purple,
+                      GestureDetector(
+                        onTap: () {},
+                        child: const Icon(
+                          Icons.sort,
+                          color: AppColors.purple,
+                          size: 20,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                Flexible(
-                  flex: 2,
+                SizedBox(height: 8.h),
+                Expanded(
                   child: _buildTransactionsList(),
                 ),
               ],
@@ -97,7 +106,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
 
   Widget _buildPeriodTabs() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: StatefulBuilder(
         builder: (context, setState) {
           return TabBar(
@@ -154,134 +163,138 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
             );
           }
 
+          print('ValueSpots: ${state.valueSpots}');
+          
           return Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 8.0,
-              horizontal: 24.0,
+            padding: EdgeInsets.symmetric(
+              vertical: 4.h,
+              horizontal: 16.w,
             ),
-            child: AspectRatio(
-              aspectRatio: 1.40,
-              child: LineChart(
-                LineChartData(
-                  lineTouchData: LineTouchData(
-                    enabled: true,
-                    touchTooltipData: LineTouchTooltipData(
-                      tooltipRoundedRadius: 8,
-                      tooltipPadding: const EdgeInsets.all(8),
-                      tooltipBorder: const BorderSide(
-                        color: AppColors.purple,
-                        width: 1,
-                      ),
-                      getTooltipItems: (touchedSpots) {
-                        return touchedSpots.map((spot) {
-                          return LineTooltipItem(
-                            'R\$ ${spot.y.toStringAsFixed(2)}',
-                            const TextStyle(
-                              color: AppColors.purple,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                            ),
-                          );
-                        }).toList();
+            child: LineChart(
+              LineChartData(
+                lineTouchData: LineTouchData(
+                  enabled: true,
+                  touchTooltipData: LineTouchTooltipData(
+                    tooltipRoundedRadius: 8,
+                    tooltipPadding: const EdgeInsets.all(8),
+                    tooltipBorder: const BorderSide(
+                      color: AppColors.purple,
+                      width: 1,
+                    ),
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((spot) {
+                        return LineTooltipItem(
+                          'R\$ ${spot.y.toStringAsFixed(2)}',
+                          const TextStyle(
+                            color: AppColors.purple,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        );
+                      }).toList();
+                    },
+                  ),
+                ),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: 1,
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(
+                      color: Colors.grey.withOpacity(0.1),
+                      strokeWidth: 1,
+                    );
+                  },
+                ),
+                titlesData: FlTitlesData(
+                  show: true,
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  leftTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) {
+                        final period = _reportsCubit?.selectedPeriod;
+                        String text = '';
+                        
+                        switch (period) {
+                          case null:
+                            text = '';
+                            break;
+                          case ReportPeriod.day:
+                            text = '${value.toInt()}h';
+                            break;
+                          case ReportPeriod.week:
+                            text = _reportsCubit!.dayName(value);
+                            break;
+                          case ReportPeriod.month:
+                            text = value.toInt().toString();
+                            break;
+                          case ReportPeriod.year:
+                            text = _reportsCubit!.monthName(value);
+                            break;
+                        }
+
+                        return Text(
+                          text,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey,
+                          ),
+                        );
                       },
                     ),
                   ),
-                  gridData: FlGridData(
-                    show: true,
-                    drawVerticalLine: false,
-                    horizontalInterval: 1,
-                    getDrawingHorizontalLine: (value) {
-                      return FlLine(
-                        color: Colors.grey.withOpacity(0.1),
-                        strokeWidth: 1,
-                      );
-                    },
-                  ),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    leftTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 30,
-                        interval: _reportsCubit?.interval ?? 1,
-                        getTitlesWidget: (value, meta) {
-                          final period = _reportsCubit?.selectedPeriod;
-                          String text = '';
-                          
-                          switch (period) {
-                            case null:
-                              text = '';
-                              break;
-                            case ReportPeriod.day:
-                              text = '${value.toInt()}h';
-                              break;
-                            case ReportPeriod.week:
-                              text = _reportsCubit!.dayName(value);
-                              break;
-                            case ReportPeriod.month:
-                              text = value.toInt().toString();
-                              break;
-                            case ReportPeriod.year:
-                              text = _reportsCubit!.monthName(value);
-                              break;
-                          }
-
-                          return Text(
-                            text,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  borderData: FlBorderData(
-                    show: false,
-                  ),
-                  minX: 0,
-                  maxX: state.valueSpots.isEmpty 
-                      ? 0 
-                      : state.valueSpots.length.toDouble() - 1,
-                  minY: state.valueSpots.isEmpty 
-                      ? 0 
-                      : state.valueSpots.map((e) => e.y).reduce(min),
-                  maxY: state.valueSpots.isEmpty 
-                      ? 0 
-                      : state.valueSpots.map((e) => e.y).reduce(max) * 1.1,
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: state.valueSpots,
-                      isCurved: true,
-                      preventCurveOverShooting: true,
-                      curveSmoothness: 0.35,
-                      barWidth: 2,
-                      isStrokeCapRound: true,
-                      dotData: const FlDotData(show: false),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColors.purple.withOpacity(0.20),
-                            AppColors.purple.withOpacity(0),
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
+                borderData: FlBorderData(
+                  show: false,
+                ),
+                minX: 0,
+                maxX: (state.valueSpots.length - 1).toDouble(),
+                minY: state.valueSpots.map((e) => e.y).reduce(min) < 0 
+                    ? state.valueSpots.map((e) => e.y).reduce(min) * 1.1
+                    : 0,
+                maxY: state.valueSpots.map((e) => e.y).reduce(max) * 1.2,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: state.valueSpots,
+                    isCurved: true,
+                    color: AppColors.purple,
+                    barWidth: 2,
+                    isStrokeCapRound: true,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        return FlDotCirclePainter(
+                          radius: 4,
+                          color: AppColors.purple,
+                          strokeWidth: 2,
+                          strokeColor: Colors.white,
+                        );
+                      },
+                    ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.purple.withOpacity(0.20),
+                          AppColors.purple.withOpacity(0),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           );
@@ -312,13 +325,33 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
           itemCount: state.reports.length,
           itemBuilder: (context, index) {
             final report = state.reports[index];
+            
+            String title;
+            switch (_reportsCubit?.selectedPeriod) {
+              case ReportPeriod.day:
+                title = '${report.periodStart?.hour}h';
+                break;
+              case ReportPeriod.week:
+                title = _reportsCubit?.dayName(report.periodStart?.weekday.toDouble() ?? 0.0) ?? '';
+                break;
+              case ReportPeriod.month:
+                title = 'Dia ${report.periodStart?.day}';
+                break;
+              case ReportPeriod.year:
+                title = _reportsCubit?.monthName((report.periodStart?.month ?? 1).toDouble() - 1) ?? '';
+                break;
+              default:
+                title = report.type;
+            }
+
             return Container(
-              margin: const EdgeInsets.only(bottom: 8.0),
-              padding: const EdgeInsets.all(16.0),
+              margin: EdgeInsets.only(bottom: 8.h),
+              padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -331,9 +364,10 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          report.type,
+                          title,
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
