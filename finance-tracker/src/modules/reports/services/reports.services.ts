@@ -66,93 +66,104 @@ export class ReportsService {
     }
 
     async getReportsByPeriod(startDate: string, endDate: string, userId: string): Promise<Report[]> {
-        if (!userId) throw new NotFoundException('ID do usuário é obrigatório');
-        
-        const user = await this.userRepository.findOne({ where: { id: userId } });
-        if (!user) throw new NotFoundException('Usuário não encontrado');
+        try {
+            console.log('=== Iniciando getReportsByPeriod ===');
+            console.log('Parâmetros:', { startDate, endDate, userId });
 
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        
-        // Buscar transações
-        const transactions = await this.dataSource
-            .createQueryBuilder()
-            .select([
-                'transaction.id',
-                'transaction.amount',
-                'transaction.type',
-                'transaction.date',
-            ])
-            .from('transactions', 'transaction')
-            .where('transaction.user_id = :userId', { userId })
-            .andWhere('transaction.date >= :startDate', { startDate: start })
-            .andWhere('transaction.date <= :endDate', { endDate: end })
-            .orderBy('transaction.date', 'ASC')
-            .getRawMany();
+            if (!userId) throw new NotFoundException('ID do usuário é obrigatório');
+            
+            const user = await this.userRepository.findOne({ where: { id: userId } });
+            console.log('Usuário encontrado:', user?.id);
+            
+            if (!user) throw new NotFoundException('Usuário não encontrado');
 
-        // Determinar o tipo de período baseado na diferença de dias
-        const diffDays = differenceInDays(end, start);
-        const reportMap = new Map<string, any>();
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            // Corrigindo a query para incluir o filtro de data
+            const transactions = await this.dataSource
+                .createQueryBuilder()
+                .select([
+                    'transaction.id',
+                    'transaction.amount',
+                    'transaction.type',
+                    'transaction.date',
+                    'transaction.user_id'
+                ])
+                .from('transactions', 'transaction')
+                .where('transaction.user_id = :userId', { userId })
+                .andWhere('transaction.date >= :startDate', { startDate: start })
+                .andWhere('transaction.date <= :endDate', { endDate: end })
+                .orderBy('transaction.date', 'ASC')
+                .getRawMany();
 
-        // Inicializar períodos vazios
-        if (diffDays <= 1) {
-            // Diário - 24 horas
-            for (let hour = 0; hour < 24; hour++) {
-                const key = hour.toString();
-                reportMap.set(key, this.createEmptyReport(key, 'diario', start, user));
-            }
-        } else if (diffDays <= 7) {
-            // Semanal - 7 dias
-            for (let day = 1; day <= 7; day++) {
-                const key = day.toString();
-                reportMap.set(key, this.createEmptyReport(key, 'diario', start, user));
-            }
-        } else if (diffDays <= 31) {
-            // Mensal - até 31 dias
-            const daysInMonth = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
-            for (let day = 1; day <= daysInMonth; day++) {
-                const key = day.toString();
-                reportMap.set(key, this.createEmptyReport(key, 'mensal', start, user));
-            }
-        } else {
-            // Anual - 12 meses
-            for (let month = 1; month <= 12; month++) {
-                const key = month.toString();
-                reportMap.set(key, this.createEmptyReport(key, 'anual', start, user));
-            }
+            console.log('Datas da busca:', {
+                start: start.toISOString(),
+                end: end.toISOString()
+            });
+            console.log('Transações encontradas:', transactions.length);
+            console.log('Exemplo de transação:', transactions[0]);
+            
+            return this.processTransactions(transactions, start, end, userId);
+        } catch (error) {
+            console.error('Erro detalhado em getReportsByPeriod:', error);
+            throw error;
         }
+    }
 
-        // Processar transações
-        for (const transaction of transactions) {
-            const date = new Date(transaction.date);
-            let key: string;
+    private processTransactions(transactions: any[], startDate: Date, endDate: Date, userId: string): Report[] {
+        const reportMap = new Map<string, Report>();
 
-            if (diffDays <= 1) {
-                key = date.getHours().toString();
-            } else if (diffDays <= 7) {
-                const dayOfWeek = date.getDay();
-                key = dayOfWeek === 0 ? '7' : dayOfWeek.toString();
-            } else if (diffDays <= 31) {
-                key = date.getDate().toString();
-            } else {
-                key = (date.getMonth() + 1).toString();
-            }
+        transactions.forEach(transaction => {
+            try {
+                // Corrigindo a forma de obter a data
+                const transactionDate = new Date(transaction.transaction_date);
+                
+                // Formatando a chave manualmente sem usar toISOString
+                const key = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}-${String(transactionDate.getDate()).padStart(2, '0')}`;
 
-            const report = reportMap.get(key);
-            if (report) {
-                const amount = Number(transaction.amount);
-                if (transaction.type.toLowerCase() === 'income' || 
-                    transaction.type.toLowerCase() === 'receita') {
+                if (!reportMap.has(key)) {
+                    const report = new Report();
+                    report.id = key;
+                    report.type = 'diario';
+                    report.period_start = transactionDate;
+                    // Criando uma nova data para o final do dia
+                    report.period_end = new Date(
+                        transactionDate.getFullYear(),
+                        transactionDate.getMonth(),
+                        transactionDate.getDate(),
+                        23, 59, 59, 999
+                    );
+                    report.total_income = 0;
+                    report.total_expense = 0;
+                    report.user = { id: userId } as User;
+                    reportMap.set(key, report);
+                }
+
+                const report = reportMap.get(key)!;
+                // Usando o campo correto da transação (transaction_amount em vez de amount)
+                const amount = Math.abs(Number(transaction.transaction_amount));
+
+                // Usando o campo correto da transação (transaction_type em vez de type)
+                if (transaction.transaction_type.toLowerCase() === 'entrada') {
                     report.total_income += amount;
-                } else {
+                } else if (transaction.transaction_type.toLowerCase() === 'saida') {
                     report.total_expense += amount;
                 }
+            } catch (e) {
+                console.error('Erro ao processar transação:', e, 'Transação:', transaction);
             }
-        }
+        });
 
-        // Converter para array e ordenar
-        return Array.from(reportMap.values())
-            .sort((a, b) => a.period_start.getTime() - b.period_start.getTime());
+        const reports = Array.from(reportMap.values());
+        
+        // Ordenando por data
+        reports.sort((a, b) => {
+            if (!a.period_start || !b.period_start) return 0;
+            return a.period_start.getTime() - b.period_start.getTime();
+        });
+
+        return reports;
     }
 
     private createEmptyReport(key: string, type: 'diario' | 'mensal' | 'anual', baseDate: Date, user: User): Report {

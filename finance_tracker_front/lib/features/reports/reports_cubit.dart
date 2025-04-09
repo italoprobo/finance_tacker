@@ -71,72 +71,28 @@ class ReportsCubit extends Cubit<ReportsState> {
 
     final spots = <FlSpot>[];
     
-    switch (_selectedPeriod) {
-      case ReportPeriod.day:
-        for (int hour = 0; hour < 24; hour++) {
-          final report = reports.firstWhere(
-            (r) => r.periodStart?.hour == hour,
-            orElse: () => Report(
-              id: hour.toString(),
-              type: 'diario',
-              totalIncome: 0,
-              totalExpense: 0,
-              periodStart: DateTime.now().copyWith(hour: hour),
-            ),
-          );
-          spots.add(FlSpot(hour.toDouble(), report.totalIncome - report.totalExpense));
-        }
-        break;
+    for (var report in reports) {
+        // Calcular o valor líquido (receitas - despesas)
+        final value = report.totalIncome - report.totalExpense;
         
-      case ReportPeriod.week:
-        for (int day = 1; day <= 7; day++) {
-          final report = reports.firstWhere(
-            (r) => r.periodStart?.weekday == day,
-            orElse: () => Report(
-              id: day.toString(),
-              type: 'diario',
-              totalIncome: 0,
-              totalExpense: 0,
-              periodStart: DateTime.now().add(Duration(days: day - DateTime.now().weekday)),
-            ),
-          );
-          spots.add(FlSpot((day - 1).toDouble(), report.totalIncome - report.totalExpense));
+        double x;
+        switch (_selectedPeriod) {
+            case ReportPeriod.day:
+                x = report.periodStart!.hour.toDouble();
+                break;
+            case ReportPeriod.week:
+                x = report.periodStart!.weekday.toDouble() - 1;
+                break;
+            case ReportPeriod.month:
+                x = report.periodStart!.day.toDouble() - 1;
+                break;
+            case ReportPeriod.year:
+                x = report.periodStart!.month.toDouble() - 1;
+                break;
         }
-        break;
         
-      case ReportPeriod.month:
-        final now = DateTime.now();
-        final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-        for (int day = 1; day <= daysInMonth; day++) {
-          final report = reports.firstWhere(
-            (r) => r.periodStart?.day == day,
-            orElse: () => Report(
-              id: day.toString(),
-              type: 'mensal',
-              totalIncome: 0,
-              totalExpense: 0,
-              periodStart: DateTime(now.year, now.month, day),
-            ),
-          );
-          spots.add(FlSpot((day - 1).toDouble(), report.totalIncome - report.totalExpense));
-        }
-        break;
-        
-      case ReportPeriod.year:
-        for (int month = 1; month <= 12; month++) {
-          final report = reports.firstWhere(
-            (r) => r.periodStart?.month == month,
-            orElse: () => Report(
-              id: month.toString(),
-              type: 'anual',
-              totalIncome: 0,
-              totalExpense: 0,
-              periodStart: DateTime.now().copyWith(month: month),
-            ),
-          );
-          spots.add(FlSpot((month - 1).toDouble(), report.totalIncome - report.totalExpense));
-        }
-        break;
+        print('Adicionando spot: x=$x, value=$value, date=${report.periodStart}');
+        spots.add(FlSpot(x, value));
     }
     
     return spots;

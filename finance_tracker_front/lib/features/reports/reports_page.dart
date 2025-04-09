@@ -108,18 +108,18 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: StatefulBuilder(
-        builder: (context, setState) {
-          return TabBar(
-            controller: _periodTabController,
-            onTap: (index) => setState(() {
+      builder: (context, setState) {
+        return TabBar(
+          controller: _periodTabController,
+          onTap: (index) => setState(() {
               _reportsCubit?.getReportsByPeriod(
-                period: ReportPeriod.values[index],
-              );
-            }),
-            indicator: BoxDecoration(
-              borderRadius: BorderRadius.circular(8.0),
-              color: AppColors.purple,
-            ),
+              period: ReportPeriod.values[index],
+            );
+          }),
+          indicator: BoxDecoration(
+            borderRadius: BorderRadius.circular(8.0),
+            color: AppColors.purple,
+          ),
             splashBorderRadius: BorderRadius.circular(8.0),
             labelColor: Colors.white,
             unselectedLabelColor: AppColors.purple,
@@ -138,9 +138,9 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                         ),
                       ),
                     ))
-                .toList(),
-          );
-        },
+              .toList(),
+        );
+      },
       ),
     );
   }
@@ -171,7 +171,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
               horizontal: 16.w,
             ),
             child: LineChart(
-              LineChartData(
+            LineChartData(
                 lineTouchData: LineTouchData(
                   enabled: true,
                   touchTooltipData: LineTouchTooltipData(
@@ -318,7 +318,11 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
           return const SizedBox.shrink();
         }
 
-        if (state.reports.isEmpty) {
+        final reportsWithTransactions = state.reports.where((report) => 
+          report.totalIncome > 0 || report.totalExpense > 0
+        ).toList();
+
+        if (reportsWithTransactions.isEmpty) {
           return const Center(
             child: Text('Nenhuma transação encontrada neste período'),
           );
@@ -327,9 +331,9 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
         return ListView.builder(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.symmetric(horizontal: 16.w),
-          itemCount: state.reports.length,
+          itemCount: reportsWithTransactions.length,
           itemBuilder: (context, index) {
-            final report = state.reports[index];
+            final report = reportsWithTransactions[index];
             
             String title;
             switch (_reportsCubit?.selectedPeriod) {
@@ -384,7 +388,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                       ],
                     ),
                   ),
-                  Text(
+              Text(
                     'R\$ ${(report.totalIncome - report.totalExpense).toStringAsFixed(2)}',
                     style: TextStyle(
                       fontSize: 16,
@@ -393,9 +397,9 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                           ? Colors.green
                           : Colors.red,
                     ),
-                  ),
-                ],
               ),
+            ],
+          ),
             );
           },
         );
