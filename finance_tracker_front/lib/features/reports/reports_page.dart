@@ -31,10 +31,10 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() {
-        _reportsCubit = context.read<ReportsCubit>();
-        _reportsCubit?.getReportsByPeriod();
-      });
+      _reportsCubit = context.read<ReportsCubit>();
+      _reportsCubit?.getReportsByPeriod(
+        period: ReportPeriod.values[_periodTabController.index],
+      );
     });
   }
 
@@ -68,7 +68,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                 ),
                 SizedBox(height: 9.h),
                 SizedBox(
-                  height: 220.h,
+                  height: 280.h,
                   child: _buildChartArea(),
                 ),
                 SizedBox(height: 16.h),
@@ -107,40 +107,35 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
   Widget _buildPeriodTabs() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
-      child: StatefulBuilder(
-      builder: (context, setState) {
-        return TabBar(
+      child: TabBar(
           controller: _periodTabController,
-          onTap: (index) => setState(() {
-              _reportsCubit?.getReportsByPeriod(
+        onTap: (index) {
+          _reportsCubit?.getReportsByPeriod(
               period: ReportPeriod.values[index],
             );
-          }),
+        },
           indicator: BoxDecoration(
             borderRadius: BorderRadius.circular(8.0),
             color: AppColors.purple,
           ),
-            splashBorderRadius: BorderRadius.circular(8.0),
-            labelColor: Colors.white,
-            unselectedLabelColor: AppColors.purple,
-            indicatorSize: TabBarIndicatorSize.tab,
-            tabs: ReportPeriod.values
-                .map((e) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Text(
-                        e.name.toUpperCase(),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: e == _reportsCubit?.selectedPeriod
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    ))
-              .toList(),
-        );
-      },
+        splashBorderRadius: BorderRadius.circular(8.0),
+        labelColor: Colors.white,
+        unselectedLabelColor: AppColors.purple,
+        indicatorSize: TabBarIndicatorSize.tab,
+        physics: const NeverScrollableScrollPhysics(),
+        tabs: ReportPeriod.values.map((period) => 
+          Tab(
+            child: Text(
+              period.name.toUpperCase(),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: period == _reportsCubit?.selectedPeriod
+                    ? FontWeight.w600
+                    : FontWeight.normal,
+              ),
+            ),
+          ),
+        ).toList(),
       ),
     );
   }
@@ -167,7 +162,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
           
           return Padding(
             padding: EdgeInsets.symmetric(
-              vertical: 4.h,
+              vertical: 8.h,
               horizontal: 16.w,
             ),
             child: LineChart(
@@ -175,12 +170,12 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                 lineTouchData: LineTouchData(
                   enabled: true,
                   touchTooltipData: LineTouchTooltipData(
-                    tooltipRoundedRadius: 8,
-                    tooltipPadding: const EdgeInsets.all(8),
-                    tooltipBorder: const BorderSide(
-                      color: AppColors.purple,
-                      width: 1,
-                    ),
+                    tooltipRoundedRadius: 4,
+                    tooltipPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    tooltipMargin: 16,
+                    maxContentWidth: 120,
+                    fitInsideHorizontally: true,
+                    fitInsideVertically: true,
                     getTooltipItems: (touchedSpots) {
                       return touchedSpots.map((spot) {
                         return LineTooltipItem(
@@ -193,12 +188,18 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                         );
                       }).toList();
                     },
+                    getTooltipColor: (spot) => Colors.white,
+                    tooltipBorder: const BorderSide(
+                      color: AppColors.purple,
+                      width: 0.5,
+                    ),
                   ),
+                  touchSpotThreshold: 50,
                 ),
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  horizontalInterval: 1,
+                  horizontalInterval: null,
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
                       color: Colors.grey.withOpacity(0.1),
@@ -220,8 +221,8 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 30,
-                      interval: 1,
+                      reservedSize: 35,
+                      interval: _reportsCubit?.interval ?? 1,
                       getTitlesWidget: (value, meta) {
                         final period = _reportsCubit?.selectedPeriod;
                         String text = '';
@@ -244,11 +245,14 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                             break;
                         }
 
-                        return Text(
-                          text,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey,
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            text,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey,
+                            ),
                           ),
                         );
                       },
@@ -258,12 +262,18 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                 borderData: FlBorderData(
                   show: false,
                 ),
-                minX: 0,
-                maxX: (state.valueSpots.length - 1).toDouble(),
+                minX: _reportsCubit?.selectedPeriod == ReportPeriod.day ? 0 : 1,
+                maxX: _reportsCubit?.selectedPeriod == ReportPeriod.day 
+                    ? 23 
+                    : _reportsCubit?.selectedPeriod == ReportPeriod.week 
+                        ? 7 
+                        : _reportsCubit?.selectedPeriod == ReportPeriod.month 
+                            ? DateTime(DateTime.now().year, DateTime.now().month + 1, 0).day.toDouble()
+                            : 12,
                 minY: state.valueSpots.map((e) => e.y).reduce(min) < 0 
-                    ? state.valueSpots.map((e) => e.y).reduce(min) * 1.1
-                    : 0,
-                maxY: state.valueSpots.map((e) => e.y).reduce(max) * 1.2,
+                    ? state.valueSpots.map((e) => e.y).reduce(min) * 1.2 - 100
+                    : -10,
+                maxY: state.valueSpots.map((e) => e.y).reduce(max) * 1.2 + 100,
                 lineBarsData: [
                   LineChartBarData(
                     spots: state.valueSpots,
@@ -271,6 +281,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                     color: AppColors.purple,
                     barWidth: 2,
                     isStrokeCapRound: true,
+                    preventCurveOverShooting: true,
                     dotData: FlDotData(
                       show: true,
                       getDotPainter: (spot, percent, barData, index) {
@@ -286,7 +297,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                       show: true,
                       gradient: LinearGradient(
                         colors: [
-                          AppColors.purple.withOpacity(0.20),
+                          AppColors.purple.withOpacity(0.15),
                           AppColors.purple.withOpacity(0),
                         ],
                         begin: Alignment.topCenter,
@@ -295,7 +306,18 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                     ),
                   ),
                 ],
+                extraLinesData: ExtraLinesData(
+                  horizontalLines: [
+                    HorizontalLine(
+                      y: 0,
+                      color: Colors.grey.withOpacity(0.3),
+                      strokeWidth: 1,
+                    ),
+                  ],
+                ),
+                clipData: const FlClipData.all(),
               ),
+              duration: const Duration(milliseconds: 500),
             ),
           );
         }
