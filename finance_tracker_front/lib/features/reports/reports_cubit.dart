@@ -1,6 +1,6 @@
-import 'dart:math' as math;
-
+import 'dart:math';
 import 'package:bloc/bloc.dart';
+import 'package:finance_tracker_front/features/reports/chartconfig.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:finance_tracker_front/features/reports/reports_repository.dart';
 import 'package:finance_tracker_front/features/reports/reports_state.dart';
@@ -25,8 +25,16 @@ extension ReportPeriodExtension on ReportPeriod {
 
 class ReportsCubit extends Cubit<ReportsState> {
   final ReportsRepository repository;
+  late final Map<ReportPeriod, ChartConfig> _chartConfigs;
 
-  ReportsCubit(this.repository) : super(ReportsInitial());
+  ReportsCubit(this.repository) : super(ReportsInitial()) {
+    _chartConfigs = {
+      ReportPeriod.day: DailyChartConfig(),
+      ReportPeriod.week: WeeklyChartConfig(),
+      ReportPeriod.month: MonthlyChartConfig(),
+      ReportPeriod.year: YearlyChartConfig(),
+    };
+  }
 
   final List<ReportPeriod> periods = ReportPeriod.values;
   ReportPeriod _selectedPeriod = ReportPeriod.month;
@@ -35,18 +43,12 @@ class ReportsCubit extends Cubit<ReportsState> {
   List<FlSpot> _valueSpots = [];
   List<FlSpot> get valueSpots => _valueSpots;
 
-  double get interval {
-    switch (selectedPeriod) {
-      case ReportPeriod.day:
-        return 4;
-      case ReportPeriod.week:
-        return 1;
-      case ReportPeriod.month:
-        return 5;
-      case ReportPeriod.year:
-        return 2;
-    }
-  }
+  ChartConfig get currentConfig => _chartConfigs[_selectedPeriod]!;
+
+  double get interval => currentConfig.getInterval();
+  double get minX => currentConfig.getMinX();
+  double get maxX => currentConfig.getMaxX();
+  String formatLabel(double value) => currentConfig.formatLabel(value);
 
   Future<void> getReportsByPeriod({ReportPeriod? period}) async {
     try {
@@ -56,119 +58,50 @@ class ReportsCubit extends Cubit<ReportsState> {
         _selectedPeriod = period;
       }
 
+      print('\n=== Início da Busca de Relatórios ===');
+      print('Período selecionado: $_selectedPeriod');
+
       final reports = await repository.getReports(_selectedPeriod);
-      print('Reports recebidos: ${reports.length}');
+      print('\n=== Reports Recebidos ===');
+      print('Quantidade total: ${reports.length}');
+      print('Detalhes dos reports:');
       reports.forEach((report) {
-        print('Report: ${report.periodStart} - Receita: ${report.totalIncome} - Despesa: ${report.totalExpense}');
+        print('- Data: ${report.periodStart}, Receita: ${report.totalIncome}, Despesa: ${report.totalExpense}, Saldo: ${report.totalIncome - report.totalExpense}');
       });
 
       _valueSpots = _processChartData(reports);
-      print('ValueSpots processados: ${_valueSpots.length}');
+      
+      print('\n=== Spots Processados ===');
+      print('Quantidade de spots: ${_valueSpots.length}');
+      print('Spots ordenados por X:');
       _valueSpots.forEach((spot) {
-        print('Spot: (${spot.x}, ${spot.y})');
+        String label = formatLabel(spot.x);
+        print('- $label: (x: ${spot.x}, y: ${spot.y})');
       });
-
-      final totalIncome = reports.fold(0.0, (sum, report) => sum + report.totalIncome);
-      final totalExpense = reports.fold(0.0, (sum, report) => sum + report.totalExpense);
 
       emit(ReportsSuccess(
         reports: reports,
         valueSpots: _valueSpots,
-        totalIncome: totalIncome,
-        totalExpense: totalExpense,
+        totalIncome: reports.fold(0.0, (sum, report) => sum + report.totalIncome),
+        totalExpense: reports.fold(0.0, (sum, report) => sum + report.totalExpense),
       ));
+      
+      print('\n=== Estado Final ===');
+      print('Período: $_selectedPeriod');
+      print('Spots gerados: ${_valueSpots.length}');
+      print('Reports processados: ${reports.length}');
+      
     } catch (e) {
-      print('Erro ao buscar relatórios: $e');
+      print('\n=== Erro na Busca de Relatórios ===');
+      print('Tipo do erro: ${e.runtimeType}');
+      print('Mensagem: $e');
       emit(ReportsFailure(e.toString()));
     }
   }
 
   List<FlSpot> _processChartData(List<Report> reports) {
     if (reports.isEmpty) return [];
-
-    final spots = <FlSpot>[];
-    Map<int, double> values = {};
-    
-    print('\n=== Processando dados do gráfico ===');
-    print('Período selecionado: $_selectedPeriod');
-    print('Número de reports: ${reports.length}');
-    
-    if (_selectedPeriod == ReportPeriod.day) {
-      // Inicializar todas as horas com 0
-      for (int i = 0; i < 24; i++) {
-        values[i] = 0;
-      }
-      
-      for (var report in reports) {
-        if (report.periodStart == null) continue;
-        final value = report.totalIncome - report.totalExpense;
-        final hour = report.periodStart!.hour;
-        values[hour] = value; // Substituir valor ao invés de somar
-        print('Hora ${hour}h: R\$ $value');
-      }
-    } else {
-      int maxPeriod = _selectedPeriod == ReportPeriod.week 
-          ? 7 
-          : _selectedPeriod == ReportPeriod.month 
-              ? DateTime(DateTime.now().year, DateTime.now().month + 1, 0).day 
-              : 12;
-      
-      // Inicializar todos os períodos com 0
-      for (int i = 1; i <= maxPeriod; i++) {
-        values[i] = 0;
-      }
-      
-      for (var report in reports) {
-        if (report.periodStart == null) continue;
-        final value = report.totalIncome - report.totalExpense;
-        int key;
-        
-        switch (_selectedPeriod) {
-          case ReportPeriod.week:
-            key = report.periodStart!.weekday;
-            break;
-          case ReportPeriod.month:
-            key = report.periodStart!.day;
-            break;
-          case ReportPeriod.year:
-            key = report.periodStart!.month;
-            break;
-          default:
-            continue;
-        }
-        
-        values[key] = value; // Substituir valor ao invés de somar
-        print('${_selectedPeriod == ReportPeriod.year ? monthName(key.toDouble()) : 
-              _selectedPeriod == ReportPeriod.week ? dayName(key.toDouble()) : 
-              'Dia $key'}: R\$ $value');
-      }
-    }
-    
-    // Remover a normalização dos valores
-    spots.addAll(
-      values.entries
-        .map((entry) => FlSpot(entry.key.toDouble(), entry.value))
-        .toList()
-        ..sort((a, b) => a.x.compareTo(b.x))
-    );
-    
-    print('\nSpots gerados:');
-    spots.forEach((spot) => print('x: ${spot.x}, y: ${spot.y}'));
-    
-    return spots;
-  }
-
-  String monthName(double value) {
-    final months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-    final index = value.toInt() - 1;
-    if (index < 0 || index >= months.length) return '';
-    return months[index];
-  }
-
-  String dayName(double value) {
-    final days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-    final index = value.toInt() - 1;
-    if (index < 0 || index >= days.length) return '';
-    return days[index];
+    reports.sort((a, b) => a.periodStart!.compareTo(b.periodStart!));
+    return currentConfig.processData(reports);
   }
 }

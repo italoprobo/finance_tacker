@@ -3,6 +3,7 @@ import 'package:finance_tracker_front/common/constants/app_colors.dart';
 import 'package:finance_tracker_front/common/widgets/app_header.dart';
 import 'package:finance_tracker_front/features/reports/reports_cubit.dart';
 import 'package:finance_tracker_front/features/reports/reports_state.dart';
+import 'package:finance_tracker_front/models/report.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -108,16 +109,16 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: TabBar(
-        controller: _periodTabController,
+          controller: _periodTabController,
         onTap: (index) {
           _reportsCubit?.getReportsByPeriod(
-            period: ReportPeriod.values[index],
-          );
+              period: ReportPeriod.values[index],
+            );
         },
-        indicator: BoxDecoration(
-          borderRadius: BorderRadius.circular(8.0),
-          color: AppColors.purple,
-        ),
+          indicator: BoxDecoration(
+            borderRadius: BorderRadius.circular(8.0),
+            color: AppColors.purple,
+          ),
         indicatorColor: Colors.transparent,
         indicatorWeight: 0,
         dividerColor: Colors.transparent,
@@ -161,161 +162,38 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
             );
           }
           
+          print("\n=== DEBUG: Renderizando gráfico ===");
+          print("Período: ${_reportsCubit?.selectedPeriod}");
+          print("minX: ${_reportsCubit?.minX}");
+          print("maxX: ${_reportsCubit?.maxX}");
+          print("interval: ${_reportsCubit?.interval}");
+          print("Spots (${state.valueSpots.length}):");
+          for (var spot in state.valueSpots) {
+            final label = _reportsCubit?.formatLabel(spot.x) ?? '';
+            print("x=${spot.x} ($label), y=${spot.y}");
+          }
+          
           return Padding(
             padding: EdgeInsets.symmetric(
               vertical: 8.h,
               horizontal: 16.w,
             ),
             child: LineChart(
-            LineChartData(
-                lineTouchData: LineTouchData(
-                  enabled: true,
-                  touchTooltipData: LineTouchTooltipData(
-                    tooltipRoundedRadius: 4,
-                    tooltipPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    tooltipMargin: 16,
-                    maxContentWidth: 120,
-                    fitInsideHorizontally: true,
-                    fitInsideVertically: true,
-                    getTooltipItems: (touchedSpots) {
-                      return touchedSpots.map((spot) {
-                        return LineTooltipItem(
-                          'R\$ ${spot.y.toStringAsFixed(2)}',
-                          AppTextStyles.mediumText16w600.copyWith(
-                            color: AppColors.purple,
-                          ),
-                        );
-                      }).toList();
-                    },
-                    getTooltipColor: (spot) => Colors.white,
-                    tooltipBorder: const BorderSide(
-                      color: AppColors.purple,
-                      width: 0.5,
-                    ),
-                  ),
-                  touchSpotThreshold: 50,
-                ),
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: null,
-                  getDrawingHorizontalLine: (value) {
-                    return FlLine(
-                      color: Colors.grey.withOpacity(0.1),
-                      strokeWidth: 1,
-                    );
-                  },
-                ),
-                titlesData: FlTitlesData(
-                  show: true,
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  leftTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 35,
-                      interval: _reportsCubit?.interval ?? 1,
-                      getTitlesWidget: (value, meta) {
-                        final period = _reportsCubit?.selectedPeriod;
-                        String text = '';
-                        
-                        switch (period) {
-                          case null:
-                            text = '';
-                            break;
-                          case ReportPeriod.day:
-                            text = '${value.toInt()}h';
-                            break;
-                          case ReportPeriod.week:
-                            text = _reportsCubit!.dayName(value);
-                            break;
-                          case ReportPeriod.month:
-                            text = value.toInt().toString();
-                            break;
-                          case ReportPeriod.year:
-                            text = _reportsCubit!.monthName(value);
-                            break;
-                        }
-
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            text,
-                            style: AppTextStyles.inputLabelText.copyWith(
-                              color: Colors.grey,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                borderData: FlBorderData(
-                  show: false,
-                ),
-                minX: _reportsCubit?.selectedPeriod == ReportPeriod.day ? 0 : 1,
-                maxX: _reportsCubit?.selectedPeriod == ReportPeriod.day 
-                    ? 23 
-                    : _reportsCubit?.selectedPeriod == ReportPeriod.week 
-                        ? 7 
-                        : _reportsCubit?.selectedPeriod == ReportPeriod.month 
-                            ? DateTime(DateTime.now().year, DateTime.now().month + 1, 0).day.toDouble()
-                            : 12,
-                minY: state.valueSpots.map((e) => e.y).reduce(min) < 0 
-                    ? state.valueSpots.map((e) => e.y).reduce(min) * 1.2 - 100
-                    : -10,
-                maxY: state.valueSpots.map((e) => e.y).reduce(max) * 1.2 + 100,
+              LineChartData(
+                lineTouchData: _buildLineTouchData(),
+                gridData: _buildGridData(),
+                titlesData: _buildTitlesData(),
+                borderData: FlBorderData(show: false),
+                minX: _reportsCubit?.minX ?? 0,
+                maxX: _reportsCubit?.maxX ?? 0,
+                minY: _calculateMinY(state.valueSpots),
+                maxY: _calculateMaxY(state.valueSpots),
                 lineBarsData: [
-                  LineChartBarData(
-                    spots: state.valueSpots,
-                    isCurved: true,
-                    color: AppColors.purple,
-                    barWidth: 2,
-                    isStrokeCapRound: true,
-                    preventCurveOverShooting: true,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 4,
-                          color: AppColors.purple,
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.purple.withOpacity(0.15),
-                          AppColors.purple.withOpacity(0),
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                    ),
-                  ),
+                  _buildLineBarData(state.valueSpots),
                 ],
-                extraLinesData: ExtraLinesData(
-                  horizontalLines: [
-                    HorizontalLine(
-                      y: 0,
-                      color: Colors.grey.withOpacity(0.3),
-                      strokeWidth: 1,
-                    ),
-                  ],
-                ),
-                clipData: const FlClipData.all(),
+                extraLinesData: _buildExtraLinesData(),
+                clipData: FlClipData.none(),
               ),
-              duration: const Duration(milliseconds: 500),
             ),
           );
         }
@@ -331,6 +209,139 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
     );
   }
 
+  LineTouchData _buildLineTouchData() {
+    return LineTouchData(
+      enabled: true,
+      touchTooltipData: LineTouchTooltipData(
+        tooltipRoundedRadius: 4,
+        tooltipPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        tooltipMargin: 16,
+        maxContentWidth: 120,
+        fitInsideHorizontally: true,
+        fitInsideVertically: true,
+        getTooltipItems: (touchedSpots) {
+          return touchedSpots.map((spot) {
+            return LineTooltipItem(
+              'R\$ ${spot.y.toStringAsFixed(2)}',
+              AppTextStyles.mediumText16w600.copyWith(
+                color: spot.y >= 0 ? Colors.green : Colors.red,
+              ),
+            );
+          }).toList();
+        },
+        getTooltipColor: (_) => Colors.white,
+        tooltipBorder: const BorderSide(
+          color: AppColors.purple,
+          width: 0.5,
+        ),
+      ),
+      touchSpotThreshold: 20,
+    );
+  }
+
+  FlGridData _buildGridData() {
+    return FlGridData(
+      show: true,
+      drawVerticalLine: false,
+      horizontalInterval: 100,
+      getDrawingHorizontalLine: (value) {
+        return FlLine(
+          color: Colors.grey.withOpacity(0.1),
+          strokeWidth: 1,
+        );
+      },
+    );
+  }
+
+  FlTitlesData _buildTitlesData() {
+    return FlTitlesData(
+      show: true,
+      rightTitles: const AxisTitles(
+        sideTitles: SideTitles(showTitles: false),
+      ),
+      topTitles: const AxisTitles(
+        sideTitles: SideTitles(showTitles: false),
+      ),
+      leftTitles: const AxisTitles(
+        sideTitles: SideTitles(showTitles: false),
+      ),
+      bottomTitles: AxisTitles(
+        sideTitles: SideTitles(
+          showTitles: true,
+          reservedSize: 35,
+          interval: _reportsCubit?.interval ?? 1,
+          getTitlesWidget: (value, meta) {
+            if (_reportsCubit == null) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                _reportsCubit!.formatLabel(value),
+                style: AppTextStyles.smalltext13.copyWith(
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  LineChartBarData _buildLineBarData(List<FlSpot> spots) {
+    return LineChartBarData(
+      spots: spots,
+      isCurved: true,
+      color: AppColors.purple,
+      barWidth: 2,
+      isStrokeCapRound: true,
+      preventCurveOverShooting: true,
+      dotData: FlDotData(
+        show: true,
+        getDotPainter: (spot, percent, barData, index) {
+          return FlDotCirclePainter(
+            radius: 4,
+            color: AppColors.purple,
+            strokeWidth: 2,
+            strokeColor: Colors.white,
+          );
+        },
+      ),
+      belowBarData: BarAreaData(
+        show: true,
+        gradient: LinearGradient(
+          colors: [
+            AppColors.purple.withOpacity(0.15),
+            AppColors.purple.withOpacity(0),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+    );
+  }
+
+  ExtraLinesData _buildExtraLinesData() {
+    return ExtraLinesData(
+      horizontalLines: [
+        HorizontalLine(
+          y: 0,
+          color: Colors.grey.withOpacity(0.3),
+          strokeWidth: 1,
+        ),
+      ],
+    );
+  }
+
+  double _calculateMinY(List<FlSpot> spots) {
+    final minY = spots.map((e) => e.y).reduce(min);
+    return minY < 0 ? minY * 1.2 - 100 : -10;
+  }
+
+  double _calculateMaxY(List<FlSpot> spots) {
+    return spots.map((e) => e.y).reduce(max) * 1.2 + 100;
+  }
+
   Widget _buildTransactionsList() {
     return BlocBuilder<ReportsCubit, ReportsState>(
       builder: (context, state) {
@@ -338,9 +349,11 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
           return const SizedBox.shrink();
         }
 
-        final reportsWithTransactions = state.reports.where((report) => 
-          report.totalIncome > 0 || report.totalExpense > 0
-        ).toList();
+        // Ordenar por data mais recente
+        final reportsWithTransactions = state.reports
+          .where((report) => report.totalIncome > 0 || report.totalExpense > 0)
+          .toList()
+          ..sort((a, b) => b.periodStart!.compareTo(a.periodStart!));
 
         if (reportsWithTransactions.isEmpty) {
           return const Center(
@@ -354,25 +367,10 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
           itemCount: reportsWithTransactions.length,
           itemBuilder: (context, index) {
             final report = reportsWithTransactions[index];
+            if (report.periodStart == null) return const SizedBox.shrink();
             
-            String title;
-            switch (_reportsCubit?.selectedPeriod) {
-              case ReportPeriod.day:
-                title = '${report.periodStart?.hour}h';
-                break;
-              case ReportPeriod.week:
-                title = _reportsCubit?.dayName(report.periodStart?.weekday.toDouble() ?? 0.0) ?? '';
-                break;
-              case ReportPeriod.month:
-                title = 'Dia ${report.periodStart?.day}';
-                break;
-              case ReportPeriod.year:
-                title = _reportsCubit?.monthName((report.periodStart?.month ?? 1).toDouble() - 1) ?? '';
-                break;
-              default:
-                title = report.type;
-            }
-
+            final balance = report.totalIncome - report.totalExpense;
+            
             return Container(
               margin: EdgeInsets.only(bottom: 8.h),
               padding: EdgeInsets.all(12.w),
@@ -391,33 +389,51 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          title,
+                          _getTransactionTitle(report),
                           style: AppTextStyles.mediumText16w500,
                         ),
-                        if (report.periodStart != null)
-                          Text(
-                            '${report.periodStart!.day}/${report.periodStart!.month}/${report.periodStart!.year}',
-                            style: AppTextStyles.smalltextw400.copyWith(
-                              color: Colors.grey[600],
-                            ),
+                        Text(
+                          _formatDate(report.periodStart!),
+                          style: AppTextStyles.smalltextw400.copyWith(
+                            color: Colors.grey[600],
                           ),
+                        ),
                       ],
                     ),
                   ),
-              Text(
-                    'R\$ ${(report.totalIncome - report.totalExpense).toStringAsFixed(2)}',
+                  Text(
+                    'R\$ ${balance.toStringAsFixed(2)}',
                     style: AppTextStyles.mediumText16w600.copyWith(
-                      color: report.totalIncome - report.totalExpense >= 0
-                          ? Colors.green
-                          : Colors.red,
+                      color: balance >= 0 ? Colors.green : Colors.red,
                     ),
+                  ),
+                ],
               ),
-            ],
-          ),
             );
           },
         );
       },
     );
+  }
+
+  String _getTransactionTitle(Report report) {
+    if (_reportsCubit == null || report.periodStart == null) return '';
+    
+    switch (_reportsCubit!.selectedPeriod) {
+      case ReportPeriod.day:
+        return '${report.periodStart!.hour}h';
+      case ReportPeriod.week:
+        return _reportsCubit!.formatLabel(report.periodStart!.weekday.toDouble());
+      case ReportPeriod.month:
+        return 'Dia ${report.periodStart!.day}';
+      case ReportPeriod.year:
+        return _reportsCubit!.formatLabel(report.periodStart!.month.toDouble());
+      default:
+        return '';
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 }
