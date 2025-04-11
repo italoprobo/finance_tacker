@@ -108,30 +108,33 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: TabBar(
-          controller: _periodTabController,
+        controller: _periodTabController,
         onTap: (index) {
           _reportsCubit?.getReportsByPeriod(
-              period: ReportPeriod.values[index],
-            );
+            period: ReportPeriod.values[index],
+          );
         },
-          indicator: BoxDecoration(
-            borderRadius: BorderRadius.circular(8.0),
-            color: AppColors.purple,
-          ),
+        indicator: BoxDecoration(
+          borderRadius: BorderRadius.circular(8.0),
+          color: AppColors.purple,
+        ),
+        indicatorColor: Colors.transparent,
+        indicatorWeight: 0,
+        dividerColor: Colors.transparent,
         splashBorderRadius: BorderRadius.circular(8.0),
         labelColor: Colors.white,
         unselectedLabelColor: AppColors.purple,
         indicatorSize: TabBarIndicatorSize.tab,
         physics: const NeverScrollableScrollPhysics(),
         tabs: ReportPeriod.values.map((period) => 
-          Tab(
+          Container(
+            width: 90.w,
+            height: 40.h,
+            alignment: Alignment.center,
             child: Text(
-              period.name.toUpperCase(),
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: period == _reportsCubit?.selectedPeriod
-                    ? FontWeight.w600
-                    : FontWeight.normal,
+              period.displayName,
+              style: AppTextStyles.smalltext13.copyWith(
+                fontWeight: FontWeight.w400,
               ),
             ),
           ),
@@ -157,8 +160,6 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
               child: Text('Nenhuma transação encontrada neste período'),
             );
           }
-
-          print('ValueSpots: ${state.valueSpots}');
           
           return Padding(
             padding: EdgeInsets.symmetric(
@@ -180,10 +181,8 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                       return touchedSpots.map((spot) {
                         return LineTooltipItem(
                           'R\$ ${spot.y.toStringAsFixed(2)}',
-                          const TextStyle(
+                          AppTextStyles.mediumText16w600.copyWith(
                             color: AppColors.purple,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
                           ),
                         );
                       }).toList();
@@ -249,8 +248,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                           padding: const EdgeInsets.only(top: 8.0),
                           child: Text(
                             text,
-                            style: const TextStyle(
-                              fontSize: 10,
+                            style: AppTextStyles.inputLabelText.copyWith(
                               color: Colors.grey,
                             ),
                           ),
@@ -394,16 +392,12 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                       children: [
                         Text(
                           title,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: AppTextStyles.mediumText16w500,
                         ),
                         if (report.periodStart != null)
                           Text(
                             '${report.periodStart!.day}/${report.periodStart!.month}/${report.periodStart!.year}',
-                            style: TextStyle(
-                              fontSize: 14,
+                            style: AppTextStyles.smalltextw400.copyWith(
                               color: Colors.grey[600],
                             ),
                           ),
@@ -412,9 +406,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                   ),
               Text(
                     'R\$ ${(report.totalIncome - report.totalExpense).toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                    style: AppTextStyles.mediumText16w600.copyWith(
                       color: report.totalIncome - report.totalExpense >= 0
                           ? Colors.green
                           : Colors.red,

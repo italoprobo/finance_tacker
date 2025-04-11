@@ -8,6 +8,21 @@ import 'package:finance_tracker_front/models/report.dart';
 
 enum ReportPeriod { day, week, month, year }
 
+extension ReportPeriodExtension on ReportPeriod {
+  String get displayName {
+    switch (this) {
+      case ReportPeriod.day:
+        return 'Diário';
+      case ReportPeriod.week:
+        return 'Semanal';
+      case ReportPeriod.month:
+        return 'Mensal';
+      case ReportPeriod.year:
+        return 'Anual';
+    }
+  }
+}
+
 class ReportsCubit extends Cubit<ReportsState> {
   final ReportsRepository repository;
 
