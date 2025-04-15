@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finance_tracker_front/common/extensions/sizes.dart';
 import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
+import 'package:finance_tracker_front/features/reports/chartconfig.dart';
 
 class ReportsPage extends StatefulWidget {
   const ReportsPage({super.key});
@@ -179,7 +180,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
               horizontal: 16.w,
             ),
             child: LineChart(
-              LineChartData(
+            LineChartData(
                 lineTouchData: _buildLineTouchData(),
                 gridData: _buildGridData(),
                 titlesData: _buildTitlesData(),
@@ -401,39 +402,46 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                       ],
                     ),
                   ),
-                  Text(
+              Text(
                     'R\$ ${balance.toStringAsFixed(2)}',
                     style: AppTextStyles.mediumText16w600.copyWith(
                       color: balance >= 0 ? Colors.green : Colors.red,
                     ),
-                  ),
-                ],
               ),
-            );
-          },
+            ],
+          ),
         );
+      },
+    );
       },
     );
   }
 
   String _getTransactionTitle(Report report) {
-    if (_reportsCubit == null || report.periodStart == null) return '';
-    
+    if (_reportsCubit == null || report.periodStart == null) return 'Data inválida';
+
+    final DateTime localDate = report.periodStart!;
+
     switch (_reportsCubit!.selectedPeriod) {
       case ReportPeriod.day:
-        return '${report.periodStart!.hour}h';
+        return '${localDate.hour}h';
       case ReportPeriod.week:
-        return _reportsCubit!.formatLabel(report.periodStart!.weekday.toDouble());
+        return _reportsCubit!.formatLabel(localDate.weekday.toDouble());
       case ReportPeriod.month:
-        return 'Dia ${report.periodStart!.day}';
+        return 'Dia ${localDate.day}';
       case ReportPeriod.year:
-        return _reportsCubit!.formatLabel(report.periodStart!.month.toDouble());
+        if (localDate.month >= 1 && localDate.month <= 12) {
+          return YearlyChartConfig.monthNames[localDate.month - 1];
+        } else {
+          return 'Mês Inválido';
+        }
       default:
-        return '';
+        return 'Período Desconhecido';
     }
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+    final localDate = date.isUtc ? date.toLocal() : date;
+    return '${localDate.day.toString().padLeft(2, '0')}/${localDate.month.toString().padLeft(2, '0')}/${localDate.year}';
   }
 }

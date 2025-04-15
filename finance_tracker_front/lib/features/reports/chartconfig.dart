@@ -21,7 +21,14 @@ class DailyChartConfig extends ChartConfig {
     
     for (var report in reports) {
       if (report.periodStart == null) continue;
-      values[report.periodStart!.hour] = report.totalIncome - report.totalExpense;
+
+      // Usar o horário local diretamente do report.periodStart
+      // que já foi convertido para local no Report.fromJson
+      int hour = report.periodStart!.hour;
+      double currentBalance = report.totalIncome - report.totalExpense;
+      values[hour] = (values[hour] ?? 0) + currentBalance;
+      
+      print('Processando transação: hora=${report.periodStart!.hour}:${report.periodStart!.minute}, valor=$currentBalance');
     }
     
     return values.entries
@@ -161,7 +168,9 @@ class MonthlyChartConfig extends ChartConfig {
 
 // Configuração específica para gráfico anual
 class YearlyChartConfig extends ChartConfig {
-  final List<String> monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  static const List<String> monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+  static List<_MonthRange>? lastMonthRanges;
 
   @override
   List<FlSpot> processData(List<Report> reports) {
@@ -180,6 +189,7 @@ class YearlyChartConfig extends ChartConfig {
     
     // Usar as datas REAIS para criar os ranges de meses
     final monthRanges = _createMonthRanges(minDate, maxDate);
+    lastMonthRanges = monthRanges;
     
     // Inicializar totais
     Map<int, double> totals = {};
@@ -198,7 +208,7 @@ class YearlyChartConfig extends ChartConfig {
           totals[i] = (totals[i] ?? 0) + balance;
           
           print('Report de ${report.periodStart!.day}/${report.periodStart!.month}/${report.periodStart!.year} ' +
-                '(${monthNames[report.periodStart!.month-1]}): R\$ $balance adicionado ao índice $i (${monthNames[range.month-1]}/${range.year})');
+                '(${YearlyChartConfig.monthNames[report.periodStart!.month-1]}): R\$ $balance adicionado ao índice $i (${YearlyChartConfig.monthNames[range.month-1]}/${range.year})');
         }
       }
     }
@@ -212,7 +222,7 @@ class YearlyChartConfig extends ChartConfig {
     print('\nSpots finais:');
     for (var i = 0; i < spots.length; i++) {
       final range = monthRanges[i];
-      print('Índice ${spots[i].x.toInt()} (${monthNames[range.month-1]}/${range.year}): R\$ ${spots[i].y}');
+      print('Índice ${spots[i].x.toInt()} (${YearlyChartConfig.monthNames[range.month-1]}/${range.year}): R\$ ${spots[i].y}');
     }
     
     return spots;
@@ -235,40 +245,93 @@ class YearlyChartConfig extends ChartConfig {
   List<_MonthRange> _createMonthRanges(DateTime minDate, DateTime maxDate) {
     List<_MonthRange> ranges = [];
     
-    // Encontrar o mês mais recente (pode ser o mês da data mais recente)
-    DateTime latestMonth = DateTime(maxDate.year, maxDate.month, 1);
+    // Garantir que estamos usando o primeiro dia do mês para ambas as datas
+    DateTime startMonth = DateTime(minDate.year, minDate.month, 1);
+    DateTime endMonth = DateTime(maxDate.year, maxDate.month, 1);
     
-    // Gerar 6 meses retroativos a partir do mês mais recente
-    for (int i = 5; i >= 0; i--) {
-      int month = latestMonth.month - i;
-      int year = latestMonth.year;
+    print('Período: ${startMonth.month}/${startMonth.year} até ${endMonth.month}/${endMonth.year}');
+    
+    // Calcular diferença em meses
+    int monthsDiff = (endMonth.year - startMonth.year) * 12 + endMonth.month - startMonth.month;
+    
+    // Se temos menos de 5 meses de diferença, ajustar para mostrar meses anteriores
+    if (monthsDiff < 5) {
+      // Ajustar a data de início para ter pelo menos 6 meses
+      int extraMonths = 5 - monthsDiff;
+      int newMonth = startMonth.month - extraMonths;
+      int yearAdjustment = 0;
       
-      if (month <= 0) {
-        month += 12;
-        year -= 1;
+      while (newMonth <= 0) {
+        newMonth += 12;
+        yearAdjustment--;
+      }
+      
+      startMonth = DateTime(startMonth.year + yearAdjustment, newMonth, 1);
+      monthsDiff = 5; // Agora temos 6 meses (índices 0-5)
+      
+      print('Ajustando para mostrar mais meses: ${startMonth.month}/${startMonth.year} até ${endMonth.month}/${endMonth.year}');
+    }
+    
+    // Sempre mostrar exatamente 6 meses (ou menos se não houver 6)
+    int numMonthsToShow = monthsDiff < 5 ? monthsDiff + 1 : 6;
+    
+    // Se temos mais de 6 meses, mostrar os 6 meses mais recentes
+    if (monthsDiff > 5) {
+      // Ajustar a data de início para pegar os 6 meses mais recentes
+      int newMonth = endMonth.month - 5;
+      int yearAdjustment = 0;
+      
+      while (newMonth <= 0) {
+        newMonth += 12;
+        yearAdjustment--;
+      }
+      
+      startMonth = DateTime(endMonth.year + yearAdjustment, newMonth, 1);
+      print('Ajustando para mostrar apenas os 6 meses mais recentes: ${startMonth.month}/${startMonth.year} até ${endMonth.month}/${endMonth.year}');
+    }
+    
+    // Gerar as faixas de meses em ordem cronológica (mais antigo primeiro)
+    for (int i = 0; i < numMonthsToShow; i++) {
+      int month = startMonth.month + i;
+      int year = startMonth.year;
+      
+      // Ajustar para virada de ano
+      while (month > 12) {
+        month -= 12;
+        year++;
       }
       
       final firstDay = DateTime(year, month, 1);
-      final lastDay = DateTime(year, month + 1, 0);
+      final lastDay = DateTime(year, month + 1, 0); // Último dia do mês
       
       ranges.add(_MonthRange(
-        index: 5 - i,
+        index: i, // Índice 0 = mês mais antigo, 5 = mês mais recente
         month: month,
         year: year,
         start: firstDay,
         end: lastDay
       ));
       
-      print('Mês ${monthNames[month-1]}/$year (índice: ${5-i})');
+      print('Mês ${YearlyChartConfig.monthNames[month-1]}/$year (índice: $i)');
     }
     
     return ranges;
   }
   
   bool isDateInRange(DateTime date, DateTime start, DateTime end) {
-    return date.isAtSameMomentAs(start) || 
-           date.isAtSameMomentAs(end) || 
-           (date.isAfter(start) && date.isBefore(end));
+    // Converte a data do report para UTC para consistência.
+    // Se já for UTC, mantém; senão, converte.
+    final dateUtc = date.isUtc ? date : date.toUtc();
+
+    // Garante que as datas de início e fim do range representem
+    // o dia inteiro em UTC.
+    final startUtc = DateTime.utc(start.year, start.month, start.day);
+    // O fim do dia (23:59:59.999) para a data final do range.
+    final endUtc = DateTime.utc(end.year, end.month, end.day, 23, 59, 59, 999);
+
+    // Compara as datas UTC. A data deve ser igual ou posterior ao início
+    // E igual ou anterior ao fim do range.
+    return !dateUtc.isBefore(startUtc) && !dateUtc.isAfter(endUtc);
   }
 
   @override
@@ -285,10 +348,10 @@ class YearlyChartConfig extends ChartConfig {
     final index = value.toInt();
     
     // Obter os meses atuais dos reports
-    if (_lastMonthRanges != null && _lastMonthRanges!.isNotEmpty) {
-      if (index >= 0 && index < _lastMonthRanges!.length) {
-        final range = _lastMonthRanges![index];
-        return monthNames[range.month - 1];
+    if (lastMonthRanges != null && lastMonthRanges!.isNotEmpty) {
+      if (index >= 0 && index < lastMonthRanges!.length) {
+        final range = lastMonthRanges![index];
+        return YearlyChartConfig.monthNames[range.month - 1];
       }
     }
     
@@ -302,16 +365,7 @@ class YearlyChartConfig extends ChartConfig {
       year -= 1;
     }
     
-    return monthNames[month - 1];
-  }
-  
-  // Cache dos últimos monthRanges calculados para uso no formatLabel
-  static List<_MonthRange>? _lastMonthRanges;
-  
-  List<_MonthRange> _getMonthRanges() {
-    final ranges = _createMonthRanges(DateTime.now().subtract(const Duration(days: 180)), DateTime.now());
-    _lastMonthRanges = ranges;
-    return ranges;
+    return YearlyChartConfig.monthNames[month - 1];
   }
 }
 

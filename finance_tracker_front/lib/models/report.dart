@@ -18,11 +18,22 @@ class Report {
   });
 
   factory Report.fromJson(Map<String, dynamic> json) {
+    DateTime? parseAndConvertToLocal(String? dateString) {
+      if (dateString == null) return null;
+      try {
+        final dateTimeUtc = DateTime.parse(dateString);
+        return dateTimeUtc.toLocal();
+      } catch (e) {
+        print('Erro ao parsear data $dateString: $e');
+        return null;
+      }
+    }
+
     return Report(
       id: json['id'] ?? '',
       type: json['type'] ?? '',
-      periodStart: json['period_start'] != null ? DateTime.parse(json['period_start']) : null,
-      periodEnd: json['period_end'] != null ? DateTime.parse(json['period_end']) : null,
+      periodStart: parseAndConvertToLocal(json['period_start']),
+      periodEnd: parseAndConvertToLocal(json['period_end']),
       totalIncome: (json['total_income'] ?? 0).toDouble(),
       totalExpense: (json['total_expense'] ?? 0).toDouble(),
       details: json['details'],

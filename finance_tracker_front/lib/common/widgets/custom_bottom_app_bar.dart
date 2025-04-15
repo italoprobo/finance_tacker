@@ -6,12 +6,14 @@ import '../constants/app_colors.dart';
 class CustomBottomAppBar extends StatelessWidget {
   final Color? selectedItemColor;
   final List<CustomBottomAppBarItem> children;
+  final bool hasNotch;
   
   const CustomBottomAppBar({
     super.key,
     this.selectedItemColor,
     required this.children,
-  }) : assert(children.length == 5, 'children.length must be 5');
+    this.hasNotch = false,
+  }) : assert(children.length >= 4, 'children.length must be at least 4');
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +21,7 @@ class CustomBottomAppBar extends StatelessWidget {
     final routeName = currentRoute.startsWith('/') ? currentRoute.substring(1) : currentRoute;
     
     return BottomAppBar(
-      shape: const CircularNotchedRectangle(),
+      shape: hasNotch ? const CircularNotchedRectangle() : null,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: children.map(

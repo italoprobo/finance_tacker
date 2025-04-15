@@ -20,10 +20,12 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentRoute = GoRouterState.of(context).uri.path;
+    final showFAB = currentRoute == '/' || currentRoute == '/home';
     
     return Scaffold(
       body: child,
-      floatingActionButton: SizedBox(
+      floatingActionButton: showFAB ? SizedBox(
         width: 70,
         height: 70,
         child: FloatingActionButton(
@@ -35,9 +37,10 @@ class HomePage extends StatelessWidget {
           shape: const CircleBorder(),
           child: const Icon(Icons.add, color: AppColors.white, size: 27,),
         ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      ) : null,
+      floatingActionButtonLocation: showFAB ? FloatingActionButtonLocation.centerDocked : null,
       bottomNavigationBar: CustomBottomAppBar(
+        hasNotch: showFAB,
         selectedItemColor: AppColors.purple,
         children: [
           CustomBottomAppBarItem(
@@ -58,7 +61,7 @@ class HomePage extends StatelessWidget {
               context.goNamed('reports');
             },
           ),
-          CustomBottomAppBarItem.empty(),
+          showFAB ? CustomBottomAppBarItem.empty() : null,
           CustomBottomAppBarItem(
             key: const ValueKey('wallet'),
             label: BottomAppBarItem.wallet.name,
@@ -77,7 +80,7 @@ class HomePage extends StatelessWidget {
               context.goNamed('profile');
             },
           ),
-        ],
+        ].whereType<CustomBottomAppBarItem>().toList(),
       ),
     );
   }
