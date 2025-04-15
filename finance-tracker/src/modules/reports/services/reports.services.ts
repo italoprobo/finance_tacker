@@ -70,13 +70,13 @@ export class ReportsService {
             console.log('=== Iniciando getReportsByPeriod ===');
             console.log('Parâmetros:', { startDate, endDate, userId });
 
-            if (!userId) throw new NotFoundException('ID do usuário é obrigatório');
-            
-            const user = await this.userRepository.findOne({ where: { id: userId } });
+        if (!userId) throw new NotFoundException('ID do usuário é obrigatório');
+        
+        const user = await this.userRepository.findOne({ where: { id: userId } });
             console.log('Usuário encontrado:', user?.id);
             
-            if (!user) throw new NotFoundException('Usuário não encontrado');
-
+        if (!user) throw new NotFoundException('Usuário não encontrado');
+        
             const start = new Date(startDate);
             const end = new Date(endDate);
             
@@ -162,7 +162,7 @@ export class ReportsService {
             if (!a.period_start || !b.period_start) return 0;
             return a.period_start.getTime() - b.period_start.getTime();
         });
-
+        
         return reports;
     }
 
