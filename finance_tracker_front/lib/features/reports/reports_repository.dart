@@ -31,22 +31,20 @@ class ReportsRepository {
 
       switch (period) {
         case ReportPeriod.day:
-          startDate = DateTime(now.year, now.month, now.day);
-          endDate = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
+          startDate = DateTime(now.year, now.month, now.day).toUtc();
+          endDate = DateTime(now.year, now.month, now.day, 23, 59, 59, 999).toUtc();
           break;
         case ReportPeriod.week:
-          // Encontrar o início da semana (segunda-feira)
-          startDate = DateTime(now.year, now.month, now.day - now.weekday + 1);
-          endDate = startDate.add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
+          startDate = DateTime(now.year, now.month, now.day - now.weekday + 1).toUtc();
+          endDate = startDate.add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59)).toUtc();
           break;
         case ReportPeriod.month:
-          startDate = DateTime(now.year, now.month, 1);
-          // Último dia do mês atual
-          endDate = DateTime(now.year, now.month + 1, 0, 23, 59, 59, 999);
+          startDate = DateTime(now.year, now.month, 1).toUtc();
+          endDate = DateTime(now.year, now.month + 1, 0, 23, 59, 59, 999).toUtc();
           break;
         case ReportPeriod.year:
-          startDate = DateTime(now.year, 1, 1);
-          endDate = DateTime(now.year, 12, 31, 23, 59, 59, 999);
+          startDate = DateTime(now.year, 1, 1).toUtc();
+          endDate = DateTime(now.year, 12, 31, 23, 59, 59, 999).toUtc();
           break;
       }
 
@@ -94,26 +92,33 @@ class ReportsRepository {
     print('Processando dados recebidos...'); 
 
     for (var reportData in data) {
-        try {
-            final report = Report(
-                id: reportData['id'],
-                type: reportData['type'],
-                periodStart: DateTime.parse(reportData['period_start']),
-                periodEnd: DateTime.parse(reportData['period_end']),
-                totalIncome: (reportData['total_income'] ?? 0).toDouble(),
-                totalExpense: (reportData['total_expense'] ?? 0).toDouble(),
-            );
-            
-            print('Report processado: id=${report.id}, income=${report.totalIncome}, expense=${report.totalExpense}');
-            reports.add(report);
-        } catch (e) {
-            print('Erro ao processar report: $e');
-            print('Dados do report: $reportData'); 
-            continue;
-        }
+      try {
+        // Garantir que as datas são interpretadas como UTC antes de converter para local
+        final periodStart = reportData['period_start'] != null 
+          ? DateTime.parse(reportData['period_start']).toUtc().toLocal()
+          : null;
+        final periodEnd = reportData['period_end'] != null 
+          ? DateTime.parse(reportData['period_end']).toUtc().toLocal()
+          : null;
+
+        final report = Report(
+          id: reportData['id'],
+          type: reportData['type'],
+          periodStart: periodStart,
+          periodEnd: periodEnd,
+          totalIncome: (reportData['total_income'] ?? 0).toDouble(),
+          totalExpense: (reportData['total_expense'] ?? 0).toDouble(),
+        );
+        
+        print('Report processado: id=${report.id}, data=${report.periodStart}, income=${report.totalIncome}, expense=${report.totalExpense}');
+        reports.add(report);
+      } catch (e) {
+        print('Erro ao processar report: $e');
+        print('Dados do report: $reportData'); 
+        continue;
+      }
     }
 
-    // Ordenar por data
     reports.sort((a, b) => a.periodStart!.compareTo(b.periodStart!));
     
     print('Total de reports processados: ${reports.length}');

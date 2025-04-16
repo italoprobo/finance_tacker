@@ -421,23 +421,28 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
     if (_reportsCubit == null || report.periodStart == null) return 'Data inválida';
 
     final DateTime localDate = report.periodStart!;
+    String periodInfo;
 
+    // Obtém a informação do período baseado no tipo de relatório
     switch (_reportsCubit!.selectedPeriod) {
       case ReportPeriod.day:
-        return '${localDate.hour}h';
+        periodInfo = '${localDate.hour.toString().padLeft(2, '0')}:${localDate.minute.toString().padLeft(2, '0')}';
+        break;
       case ReportPeriod.week:
-        return _reportsCubit!.formatLabel(localDate.weekday.toDouble());
+        periodInfo = _reportsCubit!.formatLabel(localDate.weekday.toDouble());
+        break;
       case ReportPeriod.month:
-        return 'Dia ${localDate.day}';
+        periodInfo = 'Dia ${localDate.day}';
+        break;
       case ReportPeriod.year:
-        if (localDate.month >= 1 && localDate.month <= 12) {
-          return YearlyChartConfig.monthNames[localDate.month - 1];
-        } else {
-          return 'Mês Inválido';
-        }
+        periodInfo = YearlyChartConfig.monthNames[localDate.month - 1];
+        break;
       default:
-        return 'Período Desconhecido';
+        periodInfo = 'Período Desconhecido';
     }
+
+    // Retorna a descrição com o período
+    return '${report.details?['description'] ?? 'Sem descrição'} • $periodInfo';
   }
 
   String _formatDate(DateTime date) {

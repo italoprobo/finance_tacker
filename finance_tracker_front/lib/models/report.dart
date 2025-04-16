@@ -21,8 +21,10 @@ class Report {
     DateTime? parseAndConvertToLocal(String? dateString) {
       if (dateString == null) return null;
       try {
-        final dateTimeUtc = DateTime.parse(dateString);
-        return dateTimeUtc.toLocal();
+        final dateTimeUtc = DateTime.parse(dateString).toUtc();
+        final localDate = dateTimeUtc.toLocal();
+        print('Convertendo data: UTC=$dateTimeUtc, Local=$localDate'); // Debug
+        return localDate;
       } catch (e) {
         print('Erro ao parsear data $dateString: $e');
         return null;
@@ -36,7 +38,10 @@ class Report {
       periodEnd: parseAndConvertToLocal(json['period_end']),
       totalIncome: (json['total_income'] ?? 0).toDouble(),
       totalExpense: (json['total_expense'] ?? 0).toDouble(),
-      details: json['details'],
+      details: {
+        ...json['details'] ?? {},
+        'description': json['description'] ?? '',
+        },
     );
   }
   

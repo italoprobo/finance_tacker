@@ -62,6 +62,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
   final _categoryController = TextEditingController();
   
   DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
   late TabController _tabController;
   String _selectedCategoryId = '';
   bool _isLoading = false;
@@ -283,8 +284,8 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                                 padding: EdgeInsets.zero,
                                 controller: _dateController,
                                 readOnly: true,
-                                labelText: 'DATA',
-                                hintText: 'Selecione uma data',
+                                labelText: 'DATA E HORA',
+                                hintText: 'Selecione uma data e hora',
                                 cursor: SystemMouseCursors.click,
                                 suffixIcon: const Icon(Icons.calendar_month_outlined, color: AppColors.purple),
                                 onTap: () async {
@@ -294,12 +295,29 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                                     firstDate: DateTime(1970),
                                     lastDate: DateTime(2030),
                                   );
+                                  
                                   if (date != null) {
-                                    setState(() {
-                                      _selectedDate = date;
-                                      _dateController.text = 
-                                          '${date.day}/${date.month}/${date.year}';
-                                    });
+                                    // Após selecionar a data, mostrar seletor de hora
+                                    final time = await showTimePicker(
+                                      context: context,
+                                      initialTime: TimeOfDay.now(),
+                                    );
+                                    
+                                    if (time != null) {
+                                      setState(() {
+                                        _selectedTime = time;
+                                        _selectedDate = DateTime(
+                                          date.year,
+                                          date.month,
+                                          date.day,
+                                          time.hour,
+                                          time.minute,
+                                        );
+                                        // Atualizar o texto do campo com data e hora
+                                        _dateController.text = 
+                                          '${date.day}/${date.month}/${date.year} ${time.format(context)}';
+                                      });
+                                    }
                                   }
                                 },
                                 validator: (value) {
