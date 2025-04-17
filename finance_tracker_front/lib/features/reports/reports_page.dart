@@ -350,17 +350,27 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
           return const SizedBox.shrink();
         }
 
-        // Ordenar por data mais recente
+        print('Construindo lista de transações');
+        print('Número de reports: ${state.reports.length}');
+        
+        // Filtrar reports com período válido
         final reportsWithTransactions = state.reports
-          .where((report) => report.totalIncome > 0 || report.totalExpense > 0)
-          .toList()
-          ..sort((a, b) => b.periodStart!.compareTo(a.periodStart!));
+          .where((report) => 
+            report.periodStart != null && 
+            (report.totalIncome > 0 || report.totalExpense > 0))
+          .toList();
+        
+        print('Reports com transações válidas: ${reportsWithTransactions.length}');
 
         if (reportsWithTransactions.isEmpty) {
           return const Center(
             child: Text('Nenhuma transação encontrada neste período'),
           );
         }
+        
+        // Ordenar por data mais recente
+        reportsWithTransactions.sort((a, b) => 
+          b.periodStart!.compareTo(a.periodStart!));
 
         return ListView.builder(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -368,9 +378,20 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
           itemCount: reportsWithTransactions.length,
           itemBuilder: (context, index) {
             final report = reportsWithTransactions[index];
-            if (report.periodStart == null) return const SizedBox.shrink();
             
-            final balance = report.totalIncome - report.totalExpense;
+            // Garantir que temos transações válidas
+            final List<Map<String, dynamic>> transactions = [];
+            
+            if (report.details != null && 
+                report.details!['transactions'] is List) {
+              for (var item in report.details!['transactions']) {
+                if (item is Map<String, dynamic>) {
+                  transactions.add(item);
+                }
+              }
+            }
+            
+            print('Report $index: ${transactions.length} transações');
             
             return Container(
               margin: EdgeInsets.only(bottom: 8.h),
@@ -382,37 +403,68 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                   color: Colors.grey.withOpacity(0.2),
                 ),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
+                  Text(
+                    _formatDate(report.periodStart!),
+                    style: AppTextStyles.mediumText16w500,
+                  ),
+                  const SizedBox(height: 8),
+                  ...transactions.map((transaction) {
+                    final isIncome = transaction['type']?.toString().toLowerCase() == 'entrada';
+                    final amount = (transaction['amount'] as num?) ?? 0;
+                    final description = transaction['description'] as String? ?? 'Sem descrição';
+                    
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isIncome ? Colors.green : Colors.red,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              description,
+                              style: AppTextStyles.smalltextw400,
+                            ),
+                          ),
+                          Text(
+                            'R\$ ${amount.toStringAsFixed(2)}',
+                            style: AppTextStyles.smalltextw400.copyWith(
+                              color: isIncome ? Colors.green : Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  if (transactions.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Divider(color: Colors.grey.withOpacity(0.2)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Text(
-                          _getTransactionTitle(report),
-                          style: AppTextStyles.mediumText16w500,
-                        ),
-                        Text(
-                          _formatDate(report.periodStart!),
-                          style: AppTextStyles.smalltextw400.copyWith(
-                            color: Colors.grey[600],
+                          'Total: R\$ ${(report.totalIncome - report.totalExpense).toStringAsFixed(2)}',
+                          style: AppTextStyles.mediumText16w600.copyWith(
+                            color: report.totalIncome >= report.totalExpense ? Colors.green : Colors.red,
                           ),
                         ),
                       ],
                     ),
-                  ),
-              Text(
-                    'R\$ ${balance.toStringAsFixed(2)}',
-                    style: AppTextStyles.mediumText16w600.copyWith(
-                      color: balance >= 0 ? Colors.green : Colors.red,
-                    ),
+                  ],
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
-      },
-    );
       },
     );
   }

@@ -30,7 +30,7 @@ export class ReportsController {
         
         try {
             const reports = await this.reportsService.getReportsByPeriod(startDate, endDate, userId);
-            console.log('Reports gerados com sucesso:', reports);
+            console.log('Reports gerados com sucesso:', reports.length);
             return reports;
         } catch (error) {
             console.error('Erro no controller:', error);

@@ -88,6 +88,7 @@ export class ReportsService {
                     'transaction.amount',
                     'transaction.type',
                     'transaction.date',
+                    'transaction.description',
                     'transaction.user_id'
                 ])
                 .from('transactions', 'transaction')
@@ -112,22 +113,29 @@ export class ReportsService {
     }
 
     private processTransactions(transactions: any[], startDate: Date, endDate: Date, userId: string): Report[] {
+        console.log('=== Processando transações ===');
+        console.log('Número de transações:', transactions.length);
+        if (transactions.length > 0) {
+            console.log('Primeira transação:', JSON.stringify(transactions[0]));
+        }
+
         const reportMap = new Map<string, Report>();
 
         transactions.forEach(transaction => {
             try {
-                // Corrigindo a forma de obter a data
-                const transactionDate = new Date(transaction.transaction_date);
+                console.log('Processando transação:', transaction);
                 
-                // Formatando a chave manualmente sem usar toISOString
+                const transactionDate = new Date(transaction.transaction_date);
+                console.log('Data da transação:', transactionDate);
+                
                 const key = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}-${String(transactionDate.getDate()).padStart(2, '0')}`;
+                console.log('Chave do report:', key);
 
                 if (!reportMap.has(key)) {
                     const report = new Report();
                     report.id = key;
                     report.type = 'diario';
                     report.period_start = transactionDate;
-                    // Criando uma nova data para o final do dia
                     report.period_end = new Date(
                         transactionDate.getFullYear(),
                         transactionDate.getMonth(),
@@ -137,14 +145,23 @@ export class ReportsService {
                     report.total_income = 0;
                     report.total_expense = 0;
                     report.user = { id: userId } as User;
+                    report.details = {
+                        transactions: [] // Inicializa o array de transações
+                    };
                     reportMap.set(key, report);
                 }
 
                 const report = reportMap.get(key)!;
-                // Usando o campo correto da transação (transaction_amount em vez de amount)
                 const amount = Math.abs(Number(transaction.transaction_amount));
 
-                // Usando o campo correto da transação (transaction_type em vez de type)
+                // Adiciona a transação ao details
+                report.details.transactions.push({
+                    id: transaction.transaction_id,
+                    description: transaction.transaction_description,
+                    amount: amount,
+                    type: transaction.transaction_type
+                });
+
                 if (transaction.transaction_type.toLowerCase() === 'entrada') {
                     report.total_income += amount;
                 } else if (transaction.transaction_type.toLowerCase() === 'saida') {

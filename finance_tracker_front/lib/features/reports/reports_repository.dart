@@ -62,16 +62,22 @@ class ReportsRepository {
         },
       );
 
+      print('Status code: ${response.statusCode}');
       print('Resposta da API: ${response.data}');
 
+      // Verificar se a resposta é válida
+      if (response.data == null) {
+        throw Exception('Resposta vazia do servidor');
+      }
+
       if (response.data is List) {
-        final List<dynamic> transactions = response.data;
-        if (transactions.isEmpty) {
+        final List<dynamic> reports = response.data;
+        if (reports.isEmpty) {
           print('Nenhuma transação encontrada para o período');
         } else {
-          print('Encontradas ${transactions.length} transações');
+          print('Encontradas ${reports.length} transações');
         }
-        return _processTransactions(transactions, period, startDate);
+        return _processTransactions(reports, period, startDate);
       }
 
       return [];
@@ -108,9 +114,13 @@ class ReportsRepository {
           periodEnd: periodEnd,
           totalIncome: (reportData['total_income'] ?? 0).toDouble(),
           totalExpense: (reportData['total_expense'] ?? 0).toDouble(),
+          details: reportData['details'],
         );
         
         print('Report processado: id=${report.id}, data=${report.periodStart}, income=${report.totalIncome}, expense=${report.totalExpense}');
+        if (report.details != null) {
+          print('Transactions: ${(report.details!['transactions'] as List?)?.length ?? 0}');
+        }
         reports.add(report);
       } catch (e) {
         print('Erro ao processar report: $e');

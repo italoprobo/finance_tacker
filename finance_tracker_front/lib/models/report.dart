@@ -1,3 +1,5 @@
+import 'dart:math';
+
 class Report {
   final String id;
   final String type;
@@ -18,17 +20,49 @@ class Report {
   });
 
   factory Report.fromJson(Map<String, dynamic> json) {
+    print('\n=== Criando Report do JSON ===');
+    print('JSON recebido: ${json.toString().substring(0, min(500, json.toString().length))}');
+    
     DateTime? parseAndConvertToLocal(String? dateString) {
       if (dateString == null) return null;
       try {
         final dateTimeUtc = DateTime.parse(dateString).toUtc();
-        final localDate = dateTimeUtc.toLocal();
-        print('Convertendo data: UTC=$dateTimeUtc, Local=$localDate'); // Debug
-        return localDate;
+        return dateTimeUtc.toLocal();
       } catch (e) {
         print('Erro ao parsear data $dateString: $e');
         return null;
       }
+    }
+
+    // Processar o campo details de forma segura
+    Map<String, dynamic> detailsMap = {};
+    if (json['details'] != null && json['details'] is Map) {
+      detailsMap = Map<String, dynamic>.from(json['details']);
+      
+      // Verificar se há transações válidas
+      if (detailsMap.containsKey('transactions') && detailsMap['transactions'] is List) {
+        List<Map<String, dynamic>> validTransactions = [];
+        
+        for (var item in detailsMap['transactions']) {
+          if (item is Map) {
+            Map<String, dynamic> transaction = Map<String, dynamic>.from(item);
+            // Garantir que campos obrigatórios estejam presentes
+            if (transaction['amount'] == null) transaction['amount'] = 0;
+            if (transaction['description'] == null) transaction['description'] = 'Sem descrição';
+            if (transaction['type'] == null) transaction['type'] = 'saida';
+            
+            validTransactions.add(transaction);
+          }
+        }
+        
+        detailsMap['transactions'] = validTransactions;
+      } else {
+        // Se não houver transações válidas, inicializar com lista vazia
+        detailsMap['transactions'] = [];
+      }
+    } else {
+      // Se details não for um Map válido, inicializar vazio
+      detailsMap = {'transactions': []};
     }
 
     return Report(
@@ -38,10 +72,7 @@ class Report {
       periodEnd: parseAndConvertToLocal(json['period_end']),
       totalIncome: (json['total_income'] ?? 0).toDouble(),
       totalExpense: (json['total_expense'] ?? 0).toDouble(),
-      details: {
-        ...json['details'] ?? {},
-        'description': json['description'] ?? '',
-        },
+      details: detailsMap,
     );
   }
   
