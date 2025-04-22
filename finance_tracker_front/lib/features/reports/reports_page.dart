@@ -10,6 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finance_tracker_front/common/extensions/sizes.dart';
 import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
 import 'package:finance_tracker_front/features/reports/chartconfig.dart';
+import 'package:go_router/go_router.dart';
 
 class ReportsPage extends StatefulWidget {
   const ReportsPage({super.key});
@@ -52,10 +53,11 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
     return Scaffold(
       body: Stack(
         children: [
-          const AppHeader(
+          AppHeader(
             title: "Estatísticas", 
             hasOptions: false,
             isWhiteTheme: true,
+            onBackPressed: () => context.goNamed('home'),
           ),
           Positioned(
             top: 150.h,
@@ -110,29 +112,30 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: TabBar(
-        controller: _periodTabController,
+          controller: _periodTabController,
         onTap: (index) {
-          // Desativar a animação para pulos entre abas não adjacentes
+          // Verificar a distância do salto
           final currentIndex = _periodTabController.index;
           final distance = (currentIndex - index).abs();
           
           if (distance > 1) {
-            // Para saltos maiores que 1, fazemos instantaneamente
-            // Use jumpToPage em vez de animateTo para evitar a animação
-            // A animação é o que causa o comportamento estranho
+            // Para saltos grandes, desabilitar a animação completamente
             setState(() {
               _periodTabController.index = index;
             });
+          } else {
+            // Para abas adjacentes, animar normalmente
+            _periodTabController.animateTo(index);
           }
           
           _reportsCubit?.getReportsByPeriod(
-            period: ReportPeriod.values[index],
-          );
+              period: ReportPeriod.values[index],
+            );
         },
-        indicator: BoxDecoration(
-          borderRadius: BorderRadius.circular(8.0),
-          color: AppColors.purple,
-        ),
+          indicator: BoxDecoration(
+            borderRadius: BorderRadius.circular(8.0),
+            color: AppColors.purple,
+          ),
         indicatorColor: Colors.transparent,
         indicatorWeight: 0,
         dividerColor: Colors.transparent,

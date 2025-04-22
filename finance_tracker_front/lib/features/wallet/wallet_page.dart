@@ -1,3 +1,5 @@
+import 'package:finance_tracker_front/models/card_cubit.dart';
+import 'package:finance_tracker_front/models/creditcard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
@@ -211,7 +213,7 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
                             selectedDate: _selectedDate,
                           ),
                         ),
-                        const Center(child: Text('Em desenvolvimento')),
+                        _buildCreditCardsList(),
                       ],
                     ),
                   ),
@@ -221,6 +223,137 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCreditCardsList() {
+    return BlocBuilder<CardCubit, CardState>(
+      builder: (context, state) {
+        if (state is CardInitial || state is CardLoading) {
+          return ListView.builder(
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            itemCount: 3,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: EdgeInsets.only(bottom: 9.h),
+                child: Container(
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: AppColors.antiFlashWhite,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              );
+            },
+          );
+        }
+
+        if (state is CardFailure) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  color: AppColors.expense,
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Erro ao carregar cartões:\n${state.message}',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.smalltextw400,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    final authState = context.read<AuthCubit>().state;
+                    if (authState is AuthSuccess) {
+                      context.read<CardCubit>().fetchUserCards(authState.accessToken);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.purple,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    'Tentar novamente',
+                    style: AppTextStyles.smalltextw400.copyWith(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (state is CardSuccess) {
+          if (state.cards.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.credit_card_off,
+                    color: AppColors.grey,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Nenhum cartão de crédito cadastrado',
+                    style: AppTextStyles.smalltextw400,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Aqui poderia navegar para uma tela de cadastro de cartão
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.purple,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      'Adicionar cartão',
+                      style: AppTextStyles.smalltextw400.copyWith(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: () async {
+              final authState = context.read<AuthCubit>().state;
+              if (authState is AuthSuccess) {
+                await context.read<CardCubit>().fetchUserCards(authState.accessToken);
+              }
+            },
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              itemCount: state.cards.length,
+              itemBuilder: (context, index) {
+                final card = state.cards[index];
+                return CreditCardItem(
+                  card: card,
+                  isPending: true, // Você pode usar uma lógica para determinar se está pendente
+                );
+              },
+            ),
+          );
+        }
+
+        return const Center(child: Text("Erro desconhecido"));
+      },
     );
   }
 }
