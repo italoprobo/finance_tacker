@@ -62,6 +62,11 @@ class AppTextStyles {
           fontSize: 14.0,
           fontWeight: FontWeight.w500,
           );
+  static const TextStyle smalltextw600 = TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 14.0,
+          fontWeight: FontWeight.w600,
+          );
   static const TextStyle smalltextw400 = TextStyle(
           fontFamily: 'Inter',
           fontSize: 14.0,

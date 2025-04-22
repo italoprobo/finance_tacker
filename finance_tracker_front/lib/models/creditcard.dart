@@ -15,7 +15,7 @@ class CreditCardItem extends StatelessWidget {
 
   String _getCardIconPath(String cardName) {
     cardName = cardName.toLowerCase();
-    if (cardName.contains('nubank')) return 'assets/images/nubank_logo.png';
+    if (cardName.contains('nubank')) return 'images/nubank_logo.png';
     if (cardName.contains('inter')) return 'assets/images/inter_logo.png';
     if (cardName.contains('itau')) return 'assets/images/itau_logo.png';
     if (cardName.contains('santander')) return 'assets/images/santander_logo.png';
@@ -65,13 +65,24 @@ class CreditCardItem extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  card.name,
-                  style: AppTextStyles.mediumText16w600,
+                Row(
+                  children: [
+                    Text(
+                      card.name,
+                      style: AppTextStyles.mediumText16w600,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '•••• ${card.lastDigits}',
+                      style: AppTextStyles.smalltextw600.copyWith(
+                        color: const Color(0xFF666666),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 3),
                 Text(
-                  'Vencimento ${_formatDueDate()}',
+                  _formatDueDate(),
                   style: AppTextStyles.smalltext13.copyWith(
                     color: const Color(0xFF666666),
                     fontWeight: FontWeight.w400,
@@ -86,7 +97,7 @@ class CreditCardItem extends StatelessWidget {
             children: [
               Text(
                 '- R\$ ${card.currentBalance.toStringAsFixed(2)}',
-                style: AppTextStyles.smalltextw400.copyWith(
+                style: AppTextStyles.mediumText16w600.copyWith(
                   color: AppColors.expense,
                 ),
               ),

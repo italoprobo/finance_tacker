@@ -345,7 +345,7 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
                 final card = state.cards[index];
                 return CreditCardItem(
                   card: card,
-                  isPending: true, // Você pode usar uma lógica para determinar se está pendente
+                  isPending: false,
                 );
               },
             ),
