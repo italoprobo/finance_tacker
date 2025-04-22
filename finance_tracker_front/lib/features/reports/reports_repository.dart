@@ -17,13 +17,13 @@ class ReportsRepository {
       print('=== Iniciando busca de relatórios ===');
       print('Token: ${token?.substring(0, 10)}...'); 
       print('UserId: $userId');
-
+      
       if (token == null || userId == null) {
         throw Exception('Usuário não autenticado');
       }
-
+      
       _apiClient.options.headers['Authorization'] = 'Bearer $token';
-
+      
       // Calcular datas baseado no período
       final now = DateTime.now();
       DateTime startDate;
