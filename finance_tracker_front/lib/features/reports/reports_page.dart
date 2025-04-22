@@ -350,17 +350,12 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
           return const SizedBox.shrink();
         }
 
-        print('Construindo lista de transações');
-        print('Número de reports: ${state.reports.length}');
-        
         // Filtrar reports com período válido
         final reportsWithTransactions = state.reports
           .where((report) => 
             report.periodStart != null && 
             (report.totalIncome > 0 || report.totalExpense > 0))
           .toList();
-        
-        print('Reports com transações válidas: ${reportsWithTransactions.length}');
 
         if (reportsWithTransactions.isEmpty) {
           return const Center(
@@ -368,30 +363,113 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
           );
         }
         
-        // Ordenar por data mais recente
-        reportsWithTransactions.sort((a, b) => 
-          b.periodStart!.compareTo(a.periodStart!));
+        // Processa os reports de acordo com o período selecionado
+        List<Map<String, dynamic>> groupedReports = [];
+        
+        switch (_reportsCubit!.selectedPeriod) {
+          case ReportPeriod.day:
+          case ReportPeriod.week:
+          case ReportPeriod.month:
+            // Para diário, semanal e mensal, seguimos com a lógica existente
+            // Ordenar por data mais recente
+            reportsWithTransactions.sort((a, b) => 
+              b.periodStart!.compareTo(a.periodStart!));
+            
+            // Formatação do título de acordo com o período
+            groupedReports = reportsWithTransactions.map((report) {
+              String title;
+              switch (_reportsCubit!.selectedPeriod) {
+                case ReportPeriod.day:
+                  title = _formatDate(report.periodStart!);
+                  break;
+                case ReportPeriod.week:
+                  final weekdayNames = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+                  final weekday = report.periodStart!.weekday - 1; // 0-6, onde 0 é segunda
+                  title = '${weekdayNames[weekday]} - ${_formatDate(report.periodStart!)}';
+                  break;
+                case ReportPeriod.month:
+                  title = 'Dia ${report.periodStart!.day} - ${_formatDate(report.periodStart!)}';
+                  break;
+                default:
+                  title = _formatDate(report.periodStart!);
+              }
+              
+              return {
+                'title': title,
+                'reports': [report],
+              };
+            }).toList();
+            break;
+            
+          case ReportPeriod.year:
+            // Para relatório anual, agrupamos por mês mas ainda mostramos as transações detalhadas
+            final Map<String, List<Report>> monthlyReports = {};
+            
+            // Agrupar reports por mês
+            for (var report in reportsWithTransactions) {
+              final monthYear = '${report.periodStart!.month.toString().padLeft(2, '0')}/${report.periodStart!.year}';
+              
+              if (!monthlyReports.containsKey(monthYear)) {
+                monthlyReports[monthYear] = [];
+              }
+              monthlyReports[monthYear]!.add(report);
+            }
+            
+            // Converter para o formato de groupedReports
+            for (var entry in monthlyReports.entries) {
+              final monthReports = entry.value;
+              final firstReport = monthReports.first;
+              final monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+              final monthName = monthNames[firstReport.periodStart!.month - 1];
+              
+              groupedReports.add({
+                'title': '${monthName} ${firstReport.periodStart!.year}',
+                'reports': monthReports,
+              });
+            }
+            
+            // Ordenar por data mais recente
+            groupedReports.sort((a, b) {
+              final aDate = (a['reports'] as List<Report>).first.periodStart!;
+              final bDate = (b['reports'] as List<Report>).first.periodStart!;
+              return bDate.compareTo(aDate);
+            });
+            break;
+        }
 
         return ListView.builder(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.symmetric(horizontal: 16.w),
-          itemCount: reportsWithTransactions.length,
+          itemCount: groupedReports.length,
           itemBuilder: (context, index) {
-            final report = reportsWithTransactions[index];
+            final group = groupedReports[index];
+            final reports = group['reports'] as List<Report>;
             
-            // Garantir que temos transações válidas
-            final List<Map<String, dynamic>> transactions = [];
+            // Título do grupo
+            final title = group['title'] as String;
             
-            if (report.details != null && 
-                report.details!['transactions'] is List) {
-              for (var item in report.details!['transactions']) {
-                if (item is Map<String, dynamic>) {
-                  transactions.add(item);
+            // Calcular totais do grupo
+            final totalIncome = reports.fold(0.0, (sum, report) => sum + report.totalIncome);
+            final totalExpense = reports.fold(0.0, (sum, report) => sum + report.totalExpense);
+            final balance = totalIncome - totalExpense;
+            
+            // Coletar todas as transações de todos os reports no grupo
+            final allTransactions = <Map<String, dynamic>>[];
+            for (var report in reports) {
+              final transactions = report.details?['transactions'] as List? ?? [];
+              for (var transaction in transactions) {
+                if (transaction is Map<String, dynamic>) {
+                  // Adicionar a data da transação para exibição nos modos mensais e anuais
+                  if (_reportsCubit!.selectedPeriod == ReportPeriod.month || 
+                      _reportsCubit!.selectedPeriod == ReportPeriod.year) {
+                    transaction = Map<String, dynamic>.from(transaction);
+                    transaction['date'] = report.periodStart;
+                  }
+                  allTransactions.add(transaction);
                 }
               }
             }
-            
-            print('Report $index: ${transactions.length} transações');
             
             return Container(
               margin: EdgeInsets.only(bottom: 8.h),
@@ -407,14 +485,26 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _formatDate(report.periodStart!),
+                    title,
                     style: AppTextStyles.mediumText16w500,
                   ),
                   const SizedBox(height: 8),
-                  ...transactions.map((transaction) {
+                  
+                  // Mostrar todas as transações em todos os modos
+                  ...allTransactions.map((transaction) {
                     final isIncome = transaction['type']?.toString().toLowerCase() == 'entrada';
                     final amount = (transaction['amount'] as num?) ?? 0;
                     final description = transaction['description'] as String? ?? 'Sem descrição';
+                    
+                    // Adicionar data nas descrições para modos mensal e anual
+                    String displayText = description;
+                    if (_reportsCubit!.selectedPeriod == ReportPeriod.month || 
+                        _reportsCubit!.selectedPeriod == ReportPeriod.year) {
+                      final date = transaction['date'] as DateTime?;
+                      if (date != null) {
+                        displayText = '$description (${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')})';
+                      }
+                    }
                     
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 4),
@@ -431,7 +521,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                           ),
                           Expanded(
                             child: Text(
-                              description,
+                              displayText,
                               style: AppTextStyles.smalltextw400,
                             ),
                           ),
@@ -445,16 +535,18 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                       ),
                     );
                   }).toList(),
-                  if (transactions.isNotEmpty) ...[
+                  
+                  // Divider e total
+                  if (allTransactions.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Divider(color: Colors.grey.withOpacity(0.2)),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Text(
-                          'Total: R\$ ${(report.totalIncome - report.totalExpense).toStringAsFixed(2)}',
+                          'Total: R\$ ${balance.toStringAsFixed(2)}',
                           style: AppTextStyles.mediumText16w600.copyWith(
-                            color: report.totalIncome >= report.totalExpense ? Colors.green : Colors.red,
+                            color: balance >= 0 ? Colors.green : Colors.red,
                           ),
                         ),
                       ],
