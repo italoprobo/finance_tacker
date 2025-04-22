@@ -109,46 +109,51 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
   Widget _buildPeriodTabs() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(ReportPeriod.values.length, (index) {
-          final period = ReportPeriod.values[index];
-          final isSelected = _periodTabController.index == index;
+      child: TabBar(
+        controller: _periodTabController,
+        onTap: (index) {
+          // Desativar a animação para pulos entre abas não adjacentes
+          final currentIndex = _periodTabController.index;
+          final distance = (currentIndex - index).abs();
           
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                // Atualizar índice sem animação
-                _periodTabController.index = index;
-              });
-              
-              _reportsCubit?.getReportsByPeriod(
-                period: period,
-              );
-            },
-            child: Container(
-              width: 90.w,
-              height: 40.h,
-              margin: EdgeInsets.symmetric(horizontal: 2.w),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.purple : Colors.transparent,
-                borderRadius: BorderRadius.circular(8.0),
-                border: Border.all(
-                  color: AppColors.purple,
-                  width: isSelected ? 0 : 1,
-                ),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                period.displayName,
-                style: AppTextStyles.smalltext13.copyWith(
-                  fontWeight: FontWeight.w400,
-                  color: isSelected ? Colors.white : AppColors.purple,
-                ),
+          if (distance > 1) {
+            // Para saltos maiores que 1, fazemos instantaneamente
+            // Use jumpToPage em vez de animateTo para evitar a animação
+            // A animação é o que causa o comportamento estranho
+            setState(() {
+              _periodTabController.index = index;
+            });
+          }
+          
+          _reportsCubit?.getReportsByPeriod(
+            period: ReportPeriod.values[index],
+          );
+        },
+        indicator: BoxDecoration(
+          borderRadius: BorderRadius.circular(8.0),
+          color: AppColors.purple,
+        ),
+        indicatorColor: Colors.transparent,
+        indicatorWeight: 0,
+        dividerColor: Colors.transparent,
+        splashBorderRadius: BorderRadius.circular(8.0),
+        labelColor: Colors.white,
+        unselectedLabelColor: AppColors.purple,
+        indicatorSize: TabBarIndicatorSize.tab,
+        physics: const NeverScrollableScrollPhysics(),
+        tabs: ReportPeriod.values.map((period) => 
+          Container(
+            width: 90.w,
+            height: 40.h,
+            alignment: Alignment.center,
+            child: Text(
+              period.displayName,
+              style: AppTextStyles.smalltext13.copyWith(
+                fontWeight: FontWeight.w400,
               ),
             ),
-          );
-        }),
+          ),
+        ).toList(),
       ),
     );
   }
