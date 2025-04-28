@@ -7,6 +7,7 @@ import { CreateTransactionDto } from "../dtos/create-transaction.dto";
 import { UpdateTransactionDto } from "../dtos/update-transaction.dto";
 import { User } from "src/modules/user/entities/user.entity";
 import { Category } from "src/modules/categories/entities/categories.entity";
+import { Between } from "typeorm";
 
 @Injectable()
 export class TransactionsService {
@@ -77,5 +78,27 @@ export class TransactionsService {
     async delete(id: string, userId: string): Promise<void> {
         const transaction = await this.findOne(id, userId);
         await this.transactionRepository.remove(transaction);
+    }
+
+    async findClientMonthlyPayment(
+        userId: string,
+        clientId: string,
+        month: number,
+        year: number
+    ): Promise<Transaction | null> {
+        // Criar datas de início e fim do mês
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 0);
+        
+        const transaction = await this.transactionRepository.findOne({
+            where: {
+                user: { id: userId },
+                client: { id: clientId },
+                type: 'entrada',
+                date: Between(startDate, endDate),
+            },
+        });
+        
+        return transaction;
     }
 }

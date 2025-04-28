@@ -11,6 +11,7 @@ import 'package:finance_tracker_front/common/extensions/sizes.dart';
 import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
 import 'package:finance_tracker_front/features/reports/chartconfig.dart';
 import 'package:go_router/go_router.dart';
+import 'package:finance_tracker_front/features/reports/reports_skeleton.dart';
 
 class ReportsPage extends StatefulWidget {
   const ReportsPage({super.key});
@@ -165,11 +166,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
     return BlocBuilder<ReportsCubit, ReportsState>(
       builder: (context, state) {
         if (state is ReportsLoading) {
-          return const Center(
-            child: CircularProgressIndicator(
-              color: AppColors.purple,
-            ),
-          );
+          return const ReportsPageSkeleton();
         }
 
         if (state is ReportsSuccess) {
@@ -209,7 +206,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
                   _buildLineBarData(state.valueSpots),
                 ],
                 extraLinesData: _buildExtraLinesData(),
-                clipData: FlClipData.none(),
+                clipData: const FlClipData.none(),
               ),
             ),
           );
@@ -440,7 +437,7 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
               final monthName = monthNames[firstReport.periodStart!.month - 1];
               
               groupedReports.add({
-                'title': '${monthName} ${firstReport.periodStart!.year}',
+                'title': '$monthName ${firstReport.periodStart!.year}',
                 'reports': monthReports,
               });
             }

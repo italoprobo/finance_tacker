@@ -207,8 +207,7 @@ class YearlyChartConfig extends ChartConfig {
           final balance = report.totalIncome - report.totalExpense;
           totals[i] = (totals[i] ?? 0) + balance;
           
-          print('Report de ${report.periodStart!.day}/${report.periodStart!.month}/${report.periodStart!.year} ' +
-                '(${YearlyChartConfig.monthNames[report.periodStart!.month-1]}): R\$ $balance adicionado ao índice $i (${YearlyChartConfig.monthNames[range.month-1]}/${range.year})');
+          print('Report de ${report.periodStart!.day}/${report.periodStart!.month}/${report.periodStart!.year} ' '(${YearlyChartConfig.monthNames[report.periodStart!.month-1]}): R\$ $balance adicionado ao índice $i (${YearlyChartConfig.monthNames[range.month-1]}/${range.year})');
         }
       }
     }

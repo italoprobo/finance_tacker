@@ -65,19 +65,19 @@ class ReportsCubit extends Cubit<ReportsState> {
       print('\n=== Reports Recebidos ===');
       print('Quantidade total: ${reports.length}');
       print('Detalhes dos reports:');
-      reports.forEach((report) {
+      for (var report in reports) {
         print('- Data: ${report.periodStart}, Receita: ${report.totalIncome}, Despesa: ${report.totalExpense}, Saldo: ${report.totalIncome - report.totalExpense}');
-      });
+      }
 
       _valueSpots = _processChartData(reports);
       
       print('\n=== Spots Processados ===');
       print('Quantidade de spots: ${_valueSpots.length}');
       print('Spots ordenados por X:');
-      _valueSpots.forEach((spot) {
+      for (var spot in _valueSpots) {
         String label = formatLabel(spot.x);
         print('- $label: (x: ${spot.x}, y: ${spot.y})');
-      });
+      }
 
       emit(ReportsSuccess(
         reports: reports,

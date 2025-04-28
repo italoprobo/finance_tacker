@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm";
 import { User } from "../../user/entities/user.entity";
 import { Category } from "../../categories/entities/categories.entity";
+import { Client } from "../../clients/entities/client.entity";
 
 @Entity('transactions')
 export class Transaction {
@@ -29,4 +30,11 @@ export class Transaction {
     @ManyToOne(() => Category, (category) => category.transactions)
     @JoinColumn({ name: 'category_id' })
     category: Category;
+
+    @ManyToOne(() => Client, (client) => client.transactions, { nullable: true })
+    @JoinColumn({ name: 'client_id' })
+    client: Client;
+
+    @Column({ nullable: true })
+    client_id: string;
 }

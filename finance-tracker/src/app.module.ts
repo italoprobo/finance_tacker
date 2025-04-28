@@ -12,7 +12,7 @@ import { CorsMiddleware } from './modules/middleware/middleware';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { UploadModule } from './modules/upload/upload.module';
-
+import { ClientModule } from './modules/clients/client.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot(databaseConfig),
@@ -22,6 +22,7 @@ import { UploadModule } from './modules/upload/upload.module';
     CategoriesModule,
     TransactionsModule,
     ReportsModule,
+    ClientModule,
     UploadModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),

@@ -6,7 +6,7 @@ import { Transaction } from "src/modules/transactions/entities/transaction.entit
 import { User } from "src/modules/user/entities/user.entity";
 import { DataSourceOptions } from "typeorm";
 import * as dotenv from 'dotenv';
-
+import { Client } from "src/modules/clients/entities/client.entity";
 dotenv.config()
 
 console.log('Database Configuration:', {
@@ -24,7 +24,7 @@ export const databaseConfig: DataSourceOptions = {
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
-  entities: [User, Transaction, Category, Card, Report],
+  entities: [User, Transaction, Category, Card, Report, Client],
   synchronize: true,
   logging: true,
 };
