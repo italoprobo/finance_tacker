@@ -25,6 +25,10 @@ export class CreateTransactionDto {
     @IsUUID()
     categoryId: string;
 
+    @IsOptional()
+    @IsUUID()
+    clientId?: string;
+
     @IsOptional() 
     @IsBoolean()
     isRecurring?: boolean = false;  // false por padrão

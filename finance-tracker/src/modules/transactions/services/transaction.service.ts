@@ -1,13 +1,13 @@
-import { Injectable} from "@nestjs/common";
+import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { NotFoundException } from "@nestjs/common";
 import { Transaction } from "../entities/transaction.entity";
 import { CreateTransactionDto } from "../dtos/create-transaction.dto";
 import { UpdateTransactionDto } from "../dtos/update-transaction.dto";
 import { User } from "src/modules/user/entities/user.entity";
 import { Category } from "src/modules/categories/entities/categories.entity";
 import { Between } from "typeorm";
+import { Client } from "src/modules/clients/entities/client.entity";
 
 @Injectable()
 export class TransactionsService {
@@ -17,12 +17,14 @@ export class TransactionsService {
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
         @InjectRepository(Category)
-        private readonly categoryRepository: Repository<Category>
+        private readonly categoryRepository: Repository<Category>,
+        @InjectRepository(Client)
+        private readonly clientRepository: Repository<Client>
     ) {}
 
     async create(createTransactionDto: CreateTransactionDto): Promise<Transaction> {
         console.log('Criando transação com dados:', createTransactionDto);
-        const { userId, categoryId, ...data } = createTransactionDto;
+        const { userId, categoryId, clientId, isRecurring, ...data } = createTransactionDto;
         console.log('UserId recebido:', userId);
 
         const user = await this.userRepository.findOne({ where: { id: userId } });
@@ -33,10 +35,31 @@ export class TransactionsService {
         console.log('Categoria encontrada:', category);
         if (!category) throw new NotFoundException('Categoria não encontrada');
 
+        let client = null;
+        if (clientId) {
+            client = await this.clientRepository.findOne({ where: { id: clientId } });
+            if (!client) throw new NotFoundException('Cliente não encontrado');
+
+            // Validação do valor para transações recorrentes
+            if (isRecurring && client.monthly_payment) {
+                const monthlyPayment = parseFloat(client.monthly_payment.toString());
+                const transactionAmount = parseFloat(data.amount.toString());
+
+                if (transactionAmount !== monthlyPayment) {
+                    throw new BadRequestException(
+                        `O valor da transação recorrente (${transactionAmount}) deve ser igual ao pagamento mensal do cliente (${monthlyPayment})`
+                    );
+                }
+            }
+        }
+
         const transaction = this.transactionRepository.create({
             ...data,
             user,
             category,
+            client,
+            client_id: clientId,
+            isRecurring
         });
         console.log('Transação criada:', transaction);
 
@@ -53,7 +76,7 @@ export class TransactionsService {
                     id: userId 
                 } 
             },
-            relations: ['user', 'category'],
+            relations: ['user', 'category', 'client'],
             order: { date: 'DESC' }
         });
         console.log('Transações encontradas:', transactions);
@@ -63,7 +86,7 @@ export class TransactionsService {
     async findOne(id: string, userId: string): Promise<Transaction> {
         const transaction = await this.transactionRepository.findOne({
             where: { id, user: { id: userId } },
-            relations: ['user', 'category'],
+            relations: ['user', 'category', 'client'],
         });
         if (!transaction) throw new NotFoundException('Transação não encontrada');
         return transaction;
@@ -100,5 +123,29 @@ export class TransactionsService {
         });
         
         return transaction;
+    }
+
+    async findByClient(userId: string, clientId: string): Promise<Transaction[]> {
+        const client = await this.clientRepository.findOne({ 
+            where: { 
+                id: clientId,
+                user: { id: userId }
+            }
+        });
+        
+        if (!client) {
+            throw new NotFoundException('Cliente não encontrado');
+        }
+
+        const transactions = await this.transactionRepository.find({
+            where: {
+                user: { id: userId },
+                client: { id: clientId }
+            },
+            relations: ['user', 'category', 'client'],
+            order: { date: 'DESC' }
+        });
+
+        return transactions;
     }
 }

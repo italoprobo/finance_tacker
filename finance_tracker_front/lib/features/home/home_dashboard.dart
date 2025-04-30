@@ -269,7 +269,7 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
                                                 width: double.infinity,
                                                 child: Column(
                                                   mainAxisAlignment: MainAxisAlignment.center,
-                                                  children: [
+                                              children: [
                                                     Text(
                                                       "O que deseja fazer?",
                                                       textAlign: TextAlign.center,
@@ -278,76 +278,76 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
                                                       ),
                                                     ),
                                                     const SizedBox(height: 32.0),
-                                                    Row(
-                                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                      children: [
-                                                        GestureDetector(
-                                                          onTap: () {
-                                                            context.pop();
-                                                            context.pushNamed(
-                                                              'edit-transaction',
-                                                              extra: transaction,
-                                                            );
-                                                          },
-                                                          child: Column(
-                                                            mainAxisSize: MainAxisSize.min,
-                                                            children: [
-                                                              Container(
-                                                                padding: const EdgeInsets.all(12),
-                                                                decoration: BoxDecoration(
-                                                                  color: AppColors.iceWhite,
-                                                                  borderRadius: BorderRadius.circular(12),
-                                                                ),
-                                                                child: const Icon(
-                                                                  Icons.edit,
-                                                                  color: AppColors.purple,
-                                                                  size: 24,
-                                                                ),
-                                                              ),
-                                                              const SizedBox(height: 8),
-                                                              Text(
-                                                                'Editar',
-                                                                style: AppTextStyles.smalltextw400.copyWith(
-                                                                  color: AppColors.purple,
-                                                                ),
-                                                              ),
-                                                            ],
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                  children: [
+                                                    GestureDetector(
+                                                      onTap: () {
+                                                        context.pop();
+                                                        context.pushNamed(
+                                                          'edit-transaction',
+                                                          extra: transaction,
+                                                        );
+                                                      },
+                                                      child: Column(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          Container(
+                                                            padding: const EdgeInsets.all(12),
+                                                            decoration: BoxDecoration(
+                                                              color: AppColors.iceWhite,
+                                                              borderRadius: BorderRadius.circular(12),
+                                                            ),
+                                                            child: const Icon(
+                                                              Icons.edit,
+                                                              color: AppColors.purple,
+                                                              size: 24,
+                                                            ),
                                                           ),
-                                                        ),
-                                                        GestureDetector(
-                                                          onTap: () {
-                                                            context.pop();
+                                                          const SizedBox(height: 8),
+                                                          Text(
+                                                            'Editar',
+                                                            style: AppTextStyles.smalltextw400.copyWith(
+                                                              color: AppColors.purple,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    GestureDetector(
+                                                      onTap: () {
+                                                        context.pop();
                                                             _showDeleteConfirmationDialog(context, transaction, context.read<AuthCubit>().state);
-                                                          },
-                                                          child: Column(
-                                                            mainAxisSize: MainAxisSize.min,
-                                                            children: [
-                                                              Container(
-                                                                padding: const EdgeInsets.all(12),
-                                                                decoration: BoxDecoration(
-                                                                  color: AppColors.iceWhite,
-                                                                  borderRadius: BorderRadius.circular(12),
-                                                                ),
-                                                                child: const Icon(
-                                                                  Icons.delete,
-                                                                  color: AppColors.expense,
-                                                                  size: 24,
-                                                                ),
-                                                              ),
-                                                              const SizedBox(height: 8),
-                                                              Text(
-                                                                'Excluir',
-                                                                style: AppTextStyles.smalltextw400.copyWith(
-                                                                  color: AppColors.expense,
-                                                                ),
-                                                              ),
-                                                            ],
+                                                      },
+                                                      child: Column(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          Container(
+                                                            padding: const EdgeInsets.all(12),
+                                                            decoration: BoxDecoration(
+                                                              color: AppColors.iceWhite,
+                                                              borderRadius: BorderRadius.circular(12),
+                                                            ),
+                                                            child: const Icon(
+                                                              Icons.delete,
+                                                              color: AppColors.expense,
+                                                              size: 24,
+                                                            ),
                                                           ),
-                                                        ),
-                                                      ],
+                                                          const SizedBox(height: 8),
+                                                          Text(
+                                                            'Excluir',
+                                                            style: AppTextStyles.smalltextw400.copyWith(
+                                                              color: AppColors.expense,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
                                                     ),
                                                   ],
                                                 ),
+                                              ],
+                                            ),
                                               );
                                             },
                                           );

@@ -120,183 +120,183 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
           extendBody: false,
           // Definir o próprio bottomNavigationBar como null para evitar que um widget pai aplique
           bottomNavigationBar: null,
-          body: Stack(
-            children: [
+      body: Stack(
+        children: [
               const AppHeader(
                 title: 'Adicionar Transação',
                 hideNavBar: true,
               ),
-              Positioned(
-                top: 164.h,
-                left: 28.w,
-                right: 28.w,
-                bottom: 140.h,
-                child: Container(
-                  width: 358.w,
-                  height: 500.h,
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(16.0),
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      child: Column(
-                        children: [
-                          TabBar(
-                            controller: _tabController,
-                            indicatorColor: Colors.transparent,
-                            dividerColor: Colors.transparent,
-                            labelPadding: const EdgeInsets.symmetric(horizontal: 8.0),
-                            padding: EdgeInsets.zero,
-                            onTap: (index) {
-                              setState(() {});
-                            },
-                            tabs: [
-                              Tab(
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                  alignment: Alignment.center,
-                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: _tabController.index == 0
-                                        ? AppColors.iceWhite
-                                        : AppColors.white,
-                                    borderRadius: const BorderRadius.all(
-                                      Radius.circular(24.0),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'Entradas',
-                                    style: AppTextStyles.mediumText16w500
-                                        .apply(color: AppColors.darkGrey),
-                                  ),
+          Positioned(
+            top: 164.h,
+            left: 28.w,
+            right: 28.w,
+            bottom: 140.h,
+            child: Container(
+              width: 358.w,
+              height: 500.h,
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              child: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    children: [
+                      TabBar(
+                        controller: _tabController,
+                        indicatorColor: Colors.transparent,
+                        dividerColor: Colors.transparent,
+                        labelPadding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        padding: EdgeInsets.zero,
+                        onTap: (index) {
+                          setState(() {});
+                        },
+                        tabs: [
+                          Tab(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: _tabController.index == 0
+                                    ? AppColors.iceWhite
+                                    : AppColors.white,
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(24.0),
                                 ),
                               ),
-                              Tab(
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                  alignment: Alignment.center,
-                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: _tabController.index == 1
-                                        ? AppColors.iceWhite
-                                        : AppColors.white,
-                                    borderRadius: const BorderRadius.all(
-                                      Radius.circular(24.0),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'Saídas',
-                                    style: AppTextStyles.mediumText16w500
-                                        .apply(color: AppColors.darkGrey),
-                                  ),
-                                ),
+                              child: Text(
+                                'Entradas',
+                                style: AppTextStyles.mediumText16w500
+                                    .apply(color: AppColors.darkGrey),
                               ),
-                            ],
+                            ),
                           ),
-                          const SizedBox(height: 16.0),
-                          Column(
-                            children: [
-                              CustomTextFormField(
-                                padding: EdgeInsets.zero,
-                                controller: _amountController,
-                                keyboardType: TextInputType.number,
-                                labelText: 'VALOR',
-                                hintText: 'Digite um valor',
-                                suffixIcon: Icon(
-                                  _tabController.index == 0 
-                                    ? Icons.thumb_up 
-                                    : Icons.thumb_down,
-                                  color: AppColors.purple,
+                          Tab(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: _tabController.index == 1
+                                    ? AppColors.iceWhite
+                                    : AppColors.white,
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(24.0),
                                 ),
-                                inputFormatters: [
-                                  MoneyInputFormatter(),
-                                ],
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Este campo não pode estar vazio';
-                                  }
-                                  return null;
-                                },
                               ),
-                              const SizedBox(height: 12.0),
-                              CustomTextFormField(
-                                padding: EdgeInsets.zero,
-                                controller: _descriptionController,
-                                labelText: 'DESCRIÇÃO',
-                                hintText: 'Adicione uma descrição',
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Este campo não pode estar vazio';
-                                  }
-                                  return null;
-                                },
+                              child: Text(
+                                'Saídas',
+                                style: AppTextStyles.mediumText16w500
+                                    .apply(color: AppColors.darkGrey),
                               ),
-                              const SizedBox(height: 12.0),
-                              BlocBuilder<CategoriesCubit, CategoriesState>(
-                                builder: (context, state) {
-                                  if (state is CategoriesLoading) {
-                                    return const CircularProgressIndicator();
-                                  }
-                                  
-                                  if (state is CategoriesSuccess) {
-                                    final categories = state.categories;
-                                    return CategoryFormField(
-                                      padding: EdgeInsets.zero,
-                                      controller: _categoryController,
-                                      labelText: 'CATEGORIA',
-                                      hintText: 'Selecione uma categoria',
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16.0),
+                      Column(
+                        children: [
+                          CustomTextFormField(
+                            padding: EdgeInsets.zero,
+                            controller: _amountController,
+                            keyboardType: TextInputType.number,
+                            labelText: 'VALOR',
+                            hintText: 'Digite um valor',
+                            suffixIcon: Icon(
+                              _tabController.index == 0 
+                                ? Icons.thumb_up 
+                                : Icons.thumb_down,
+                              color: AppColors.purple,
+                            ),
+                            inputFormatters: [
+                              MoneyInputFormatter(),
+                            ],
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Este campo não pode estar vazio';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12.0),
+                          CustomTextFormField(
+                            padding: EdgeInsets.zero,
+                            controller: _descriptionController,
+                            labelText: 'DESCRIÇÃO',
+                            hintText: 'Adicione uma descrição',
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Este campo não pode estar vazio';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12.0),
+                          BlocBuilder<CategoriesCubit, CategoriesState>(
+                            builder: (context, state) {
+                              if (state is CategoriesLoading) {
+                                return const CircularProgressIndicator();
+                              }
+                              
+                              if (state is CategoriesSuccess) {
+                                final categories = state.categories;
+                                return CategoryFormField(
+                                  padding: EdgeInsets.zero,
+                                  controller: _categoryController,
+                                  labelText: 'CATEGORIA',
+                                  hintText: 'Selecione uma categoria',
                                       cursor: SystemMouseCursors.click,
-                                      categories: categories
-                                          .map((category) => category.name)
-                                          .toList(),
-                                      onCategorySelected: (categoryName) {
-                                        final selectedCategory = categories.firstWhere(
-                                          (category) => category.name == categoryName,
-                                        );
-                                        setState(() {
-                                          _selectedCategoryId = selectedCategory.id;
-                                        });
-                                      },
-                                      validator: (value) {
-                                        if (value == null || value.isEmpty) {
-                                          return 'Selecione uma categoria';
-                                        }
-                                        return null;
-                                      },
+                                  categories: categories
+                                      .map((category) => category.name)
+                                      .toList(),
+                                  onCategorySelected: (categoryName) {
+                                    final selectedCategory = categories.firstWhere(
+                                      (category) => category.name == categoryName,
                                     );
-                                  }
-                                  
-                                  if (state is CategoriesFailure) {
-                                    return Text('Erro: ${state.message}');
-                                  }
-                                  
-                                  return const SizedBox.shrink();
-                                },
-                              ),
-                              const SizedBox(height: 12.0),
-                              CustomTextFormField(
-                                padding: EdgeInsets.zero,
-                                controller: _dateController,
-                                readOnly: true,
+                                    setState(() {
+                                      _selectedCategoryId = selectedCategory.id;
+                                    });
+                                  },
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Selecione uma categoria';
+                                    }
+                                    return null;
+                                  },
+                                );
+                              }
+                              
+                              if (state is CategoriesFailure) {
+                                return Text('Erro: ${state.message}');
+                              }
+                              
+                              return const SizedBox.shrink();
+                            },
+                          ),
+                          const SizedBox(height: 12.0),
+                          CustomTextFormField(
+                            padding: EdgeInsets.zero,
+                            controller: _dateController,
+                            readOnly: true,
                                 labelText: 'DATA E HORA',
                                 hintText: 'Selecione uma data e hora',
                                 cursor: SystemMouseCursors.click,
-                                suffixIcon: const Icon(Icons.calendar_month_outlined, color: AppColors.purple),
-                                onTap: () async {
-                                  final date = await showDatePicker(
-                                    context: context,
-                                    initialDate: DateTime.now(),
-                                    firstDate: DateTime(1970),
-                                    lastDate: DateTime(2030),
-                                  );
+                            suffixIcon: const Icon(Icons.calendar_month_outlined, color: AppColors.purple),
+                            onTap: () async {
+                              final date = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime.now(),
+                                firstDate: DateTime(1970),
+                                lastDate: DateTime(2030),
+                              );
                                   
-                                  if (date != null) {
+                              if (date != null) {
                                     // Após selecionar a data, mostrar seletor de hora
                                     final time = await showTimePicker(
                                       context: context,
@@ -304,7 +304,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                                     );
                                     
                                     if (time != null) {
-                                      setState(() {
+                                setState(() {
                                         _selectedTime = time;
                                         _selectedDate = DateTime(
                                           date.year,
@@ -314,89 +314,89 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                                           time.minute,
                                         );
                                         // Atualizar o texto do campo com data e hora
-                                        _dateController.text = 
+                                  _dateController.text = 
                                           '${date.day}/${date.month}/${date.year} ${time.format(context)}';
-                                      });
+                                });
                                     }
-                                  }
-                                },
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Este campo não pode estar vazio';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 26.0),
-                              BlocListener<TransactionCubit, TransactionState>(
-                                listener: (context, state) {
-                                  if (state is TransactionsSuccess) {
-                                    _showSuccessSnackBar();
-                                    context.pop();
-                                  } else if (state is TransactionsFailure) {
-                                    _showErrorSnackBar(state.message);
-                                  }
-                                },
-                                child: PrimaryButton(
-                                  text: 'Adicionar',
-                                  isLoading: _isLoading,
-                                  onPressed: () async {
-                                    if (_formKey.currentState!.validate()) {
-                                      setState(() => _isLoading = true);
-                                      
-                                      final authState = context.read<AuthCubit>().state;
-                                      if (authState is AuthSuccess) {
-                                        try {
-                                          if (authState.id.isEmpty) {
-                                            _showErrorSnackBar('Erro de autenticação. Por favor, faça login novamente.');
-                                            setState(() => _isLoading = false);
-                                            context.goNamed('login');
-                                            return;
-                                          }
-
-                                          final amount = double.parse(
-                                            _amountController.text
-                                                .replaceAll('R\$', '')
-                                                .replaceAll('.', '')
-                                                .replaceAll(',', '.')
-                                                .trim(),
-                                          );
-
-                                          final transactionData = {
-                                            'description': _descriptionController.text,
-                                            'amount': _tabController.index == 1 ? -amount : amount,
-                                            'type': _tabController.index == 0 ? 'entrada' : 'saida',
-                                            'date': _selectedDate?.toIso8601String() ?? 
-                                                DateTime.now().toIso8601String(),
-                                            'categoryId': _selectedCategoryId,
-                                            'userId': authState.id,
-                                          };
-
-                                          await context.read<TransactionCubit>().addTransaction(
-                                            authState.accessToken,
-                                            transactionData,
-                                          );
-                                        } catch (e) {
-                                          _showErrorSnackBar('Erro ao processar o valor');
-                                        }
-                                      } else {
-                                        _showErrorSnackBar('Usuário não autenticado');
+                              }
+                            },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Este campo não pode estar vazio';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 26.0),
+                          BlocListener<TransactionCubit, TransactionState>(
+                            listener: (context, state) {
+                              if (state is TransactionsSuccess) {
+                                _showSuccessSnackBar();
+                                context.pop();
+                              } else if (state is TransactionsFailure) {
+                                _showErrorSnackBar(state.message);
+                              }
+                            },
+                            child: PrimaryButton(
+                              text: 'Adicionar',
+                              isLoading: _isLoading,
+                              onPressed: () async {
+                                if (_formKey.currentState!.validate()) {
+                                  setState(() => _isLoading = true);
+                                  
+                                  final authState = context.read<AuthCubit>().state;
+                                  if (authState is AuthSuccess) {
+                                    try {
+                                      if (authState.id.isEmpty) {
+                                        _showErrorSnackBar('Erro de autenticação. Por favor, faça login novamente.');
+                                        setState(() => _isLoading = false);
+                                        context.goNamed('login');
+                                        return;
                                       }
-                                      
-                                      setState(() => _isLoading = false);
+
+                                      final amount = double.parse(
+                                        _amountController.text
+                                            .replaceAll('R\$', '')
+                                            .replaceAll('.', '')
+                                            .replaceAll(',', '.')
+                                            .trim(),
+                                      );
+
+                                      final transactionData = {
+                                        'description': _descriptionController.text,
+                                        'amount': _tabController.index == 1 ? -amount : amount,
+                                        'type': _tabController.index == 0 ? 'entrada' : 'saida',
+                                        'date': _selectedDate?.toIso8601String() ?? 
+                                            DateTime.now().toIso8601String(),
+                                        'categoryId': _selectedCategoryId,
+                                        'userId': authState.id,
+                                      };
+
+                                      await context.read<TransactionCubit>().addTransaction(
+                                        authState.accessToken,
+                                        transactionData,
+                                      );
+                                    } catch (e) {
+                                      _showErrorSnackBar('Erro ao processar o valor');
                                     }
-                                  },
-                                ),
-                              ),
-                            ],
+                                  } else {
+                                    _showErrorSnackBar('Usuário não autenticado');
+                                  }
+                                  
+                                  setState(() => _isLoading = false);
+                                }
+                              },
+                            ),
                           ),
                         ],
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ),
-            ],
+            ),
+          ),
+        ],
           ),
         ),
       ),

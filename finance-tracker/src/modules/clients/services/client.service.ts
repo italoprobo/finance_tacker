@@ -111,7 +111,8 @@ export class ClientService {
             date: paymentDate,
             description: `Pagamento mensal - ${client.name}`,
             categoryId: category.id,
-            isRecurring: true
+            isRecurring: true,
+            clientId: client.id
         });
     }
 

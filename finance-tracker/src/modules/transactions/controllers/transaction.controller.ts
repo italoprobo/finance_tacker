@@ -44,4 +44,12 @@ export class TransactionsController {
     async delete(@Request() req, @Param('id') id: string): Promise<void> {
         return this.transactionService.delete(id, req.user.id);
     }
+
+    @Get('by-client/:clientId')
+    async findByClient(
+        @Request() req,
+        @Param('clientId') clientId: string
+    ): Promise<Transaction[]> {
+        return this.transactionService.findByClient(req.user.id, clientId);
+    }
 }
