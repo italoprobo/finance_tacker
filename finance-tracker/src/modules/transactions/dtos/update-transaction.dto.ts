@@ -1,4 +1,4 @@
-import { IsOptional, IsNumber, IsString, IsEnum, IsDateString, IsUUID } from "class-validator";
+import { IsOptional, IsNumber, IsString, IsEnum, IsDateString, IsUUID, IsBoolean } from "class-validator";
 
 export class UpdateTransactionDto {
     @IsOptional()
@@ -24,4 +24,12 @@ export class UpdateTransactionDto {
     @IsOptional()
     @IsUUID()
     categoryId?: string;
+
+    @IsOptional()
+    @IsUUID()
+    clientId?: string;
+
+    @IsOptional()
+    @IsBoolean()
+    isRecurring?: boolean;
 }

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:finance_tracker_front/features/reports/reports_repository.dart';
 import 'package:finance_tracker_front/features/reports/reports_cubit.dart';
+import 'package:finance_tracker_front/features/clients/data/client_repository.dart';
 
 final getIt = GetIt.instance;
 
@@ -21,6 +22,10 @@ void setupDependencies() {
   // Repositories
   getIt.registerLazySingleton<ReportsRepository>(
     () => ReportsRepository(getIt<Dio>()),
+  );
+
+  getIt.registerLazySingleton<ClientRepository>(
+    () => ClientRepository(getIt<Dio>()),
   );
 
   // Cubits

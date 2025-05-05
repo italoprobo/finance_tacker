@@ -73,12 +73,15 @@ class _EditTransactionPageState extends State<EditTransactionPage> with SingleTi
   final _amountController = TextEditingController();
   final _dateController = TextEditingController();
   final _categoryController = TextEditingController();
+  final _clientController = TextEditingController();
   
   DateTime? _selectedDate;
   String? _selectedCategoryId;
   bool _isLoading = false;
   double? _originalAmount;
   late TabController _tabController;
+  String? _selectedClientId;
+  bool _isRecurring = false;
 
   @override
   void initState() {
@@ -117,6 +120,14 @@ class _EditTransactionPageState extends State<EditTransactionPage> with SingleTi
         }
       }
     });
+
+    // Inicializar campos de cliente
+    _selectedClientId = transaction.clientId;
+    _isRecurring = transaction.isRecurring;
+    
+    if (transaction.client != null) {
+      _clientController.text = transaction.client!.name;
+    }
   }
 
   @override
@@ -125,6 +136,7 @@ class _EditTransactionPageState extends State<EditTransactionPage> with SingleTi
     _amountController.dispose();
     _dateController.dispose();
     _categoryController.dispose();
+    _clientController.dispose();
     super.dispose();
   }
 

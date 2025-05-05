@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:finance_tracker_front/features/transactions/data/transactions_repository.dart';
+import 'package:finance_tracker_front/models/client.dart';
 
 class TransactionState extends Equatable {
   @override
@@ -35,6 +36,9 @@ class TransactionModel extends Equatable {
   final DateTime date;
   final String? categoryId;
   final String userId;
+  final bool isRecurring;
+  final String? clientId;
+  final Client? client;
 
   const TransactionModel({
     required this.id,
@@ -44,6 +48,9 @@ class TransactionModel extends Equatable {
     required this.date,
     this.categoryId,
     required this.userId,
+    this.isRecurring = false,
+    this.clientId,
+    this.client,
   });
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
@@ -57,11 +64,25 @@ class TransactionModel extends Equatable {
       date: DateTime.parse(json['date']),
       categoryId: json['category']?['id'],
       userId: userId,
+      isRecurring: json['isRecurring'] ?? false,
+      clientId: json['client_id'],
+      client: json['client'] != null ? Client.fromJson(json['client']) : null,
     );
   }
 
   @override
-  List<Object?> get props => [id, description, amount, type, date, categoryId, userId];
+  List<Object?> get props => [
+    id, 
+    description, 
+    amount, 
+    type, 
+    date, 
+    categoryId, 
+    userId,
+    isRecurring,
+    clientId,
+    client,
+  ];
 }
 
 class TransactionCubit extends Cubit<TransactionState> {
@@ -161,6 +182,9 @@ class TransactionCubit extends Cubit<TransactionState> {
               date: DateTime.parse(transactionData['date']),
               categoryId: transactionData['categoryId'],
               userId: t.userId,
+              isRecurring: t.isRecurring,
+              clientId: t.clientId,
+              client: t.client,
             );
           }
           return t;

@@ -14,10 +14,14 @@ import 'package:finance_tracker_front/features/transactions/presentation/edit_tr
 import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'features/auth/application/auth_cubit.dart';
 import 'features/splash/splash_page.dart';
 import 'features/onboarding/onboarding_page.dart';
 import 'features/home/home_dashboard.dart';
 import 'package:flutter/material.dart';
+import 'package:finance_tracker_front/features/clients/presentation/clients_page.dart';
+import 'package:finance_tracker_front/features/clients/application/client_cubit.dart';
+import 'package:finance_tracker_front/features/clients/data/client_repository.dart';
 
 // Chaves de navegação separadas
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -53,14 +57,28 @@ final GoRouter appRouter = GoRouter(
       name: 'add-transaction',
       path: '/add-transaction',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) => const AddTransactionPage(),
+      builder: (context, state) => BlocProvider(
+        create: (context) => ClientCubit(
+          getIt<ClientRepository>(),
+        )..loadClients(
+            (context.read<AuthCubit>().state as AuthSuccess).accessToken,
+          ),
+        child: const AddTransactionPage(),
+      ),
     ),
     GoRoute(
       name: 'edit-transaction',
       path: '/edit-transaction',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) => EditTransactionPage(
-        transaction: state.extra as TransactionModel,
+      builder: (context, state) => BlocProvider(
+        create: (context) => ClientCubit(
+          getIt<ClientRepository>(),
+        )..loadClients(
+            (context.read<AuthCubit>().state as AuthSuccess).accessToken,
+          ),
+        child: EditTransactionPage(
+          transaction: state.extra as TransactionModel,
+        ),
       ),
     ),
     GoRoute(
@@ -76,6 +94,18 @@ final GoRouter appRouter = GoRouter(
       path: '/edit-password',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const EditPasswordPage(),
+    ),
+    GoRoute(
+      path: '/clients',
+      name: 'clients',
+      builder: (context, state) => BlocProvider(
+        create: (context) => ClientCubit(
+          getIt<ClientRepository>(),
+        )..loadClients(
+            (context.read<AuthCubit>().state as AuthSuccess).accessToken,
+          ),
+        child: ClientsPage(),
+      ),
     ),
     
     // Rotas dentro do ShellRoute (com barra de navegação)

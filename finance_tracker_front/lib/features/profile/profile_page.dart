@@ -162,6 +162,15 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                               ListTile(
                                 contentPadding: EdgeInsets.zero,
+                                leading: const Icon(Icons.people_outline, color: AppColors.purple, size: 20),
+                                title: const Text('Meus Clientes', style: AppTextStyles.mediumText16w500),
+                                trailing: const Icon(Icons.arrow_forward_ios, color: AppColors.purple, size: 16),
+                                onTap: () {
+                                  context.pushNamed('clients');
+                                },
+                              ),
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
                                 leading: const Icon(Icons.logout, color: AppColors.expense, size: 20),
                                 title: Text('Sair', style: AppTextStyles.mediumText16w500.copyWith(color: AppColors.expense)),
                                 onTap: () {

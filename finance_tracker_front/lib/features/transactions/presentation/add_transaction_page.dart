@@ -1,3 +1,5 @@
+import 'package:finance_tracker_front/common/widgets/custom_checkbox_field.dart';
+import 'package:finance_tracker_front/features/clients/application/client_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,6 +15,7 @@ import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart'
 import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:finance_tracker_front/features/categories/application/categories_cubit.dart';
 import 'package:go_router/go_router.dart';
+import 'package:finance_tracker_front/common/widgets/client_form_field.dart';
 
 class MoneyInputFormatter extends TextInputFormatter {
   @override
@@ -60,12 +63,15 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
   final _amountController = TextEditingController();
   final _dateController = TextEditingController();
   final _categoryController = TextEditingController();
+  final _clientController = TextEditingController();
   
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   late TabController _tabController;
   String _selectedCategoryId = '';
   bool _isLoading = false;
+  String? _selectedClientId;
+  bool _isRecurring = false;
 
   @override
   void initState() {
@@ -85,6 +91,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
     _amountController.dispose();
     _dateController.dispose();
     _categoryController.dispose();
+    _clientController.dispose();
     super.dispose();
   }
 
@@ -127,10 +134,10 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                 hideNavBar: true,
               ),
           Positioned(
-            top: 164.h,
+            top: 150.h,
             left: 28.w,
             right: 28.w,
-            bottom: 140.h,
+            bottom: 0.5.h,
             child: Container(
               width: 358.w,
               height: 500.h,
@@ -280,6 +287,40 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                             },
                           ),
                           const SizedBox(height: 12.0),
+                          BlocBuilder<ClientCubit, ClientState>(
+                            builder: (context, state) {
+                              if (state is ClientLoading) {
+                                return const CircularProgressIndicator();
+                              }
+                              
+                              if (state is ClientSuccess) {
+                                final clients = state.clients;
+                                return ClientFormField(
+                                  padding: EdgeInsets.zero,
+                                  controller: _clientController,
+                                  labelText: 'CLIENTE',
+                                  hintText: 'Selecione um cliente (opcional)',
+                                  cursor: SystemMouseCursors.click,
+                                  clients: clients,
+                                  onClientSelected: (client) {
+                                    setState(() {
+                                      _selectedClientId = client?.id;
+                                      if (client != null) {
+                                        _isRecurring = true;
+                                      }
+                                    });
+                                  },
+                                );
+                              }
+                              
+                              if (state is ClientFailure) {
+                                return Text('Erro: ${state.message}');
+                              }
+                              
+                              return const SizedBox.shrink();
+                            },
+                          ),
+                          const SizedBox(height: 12.0),
                           CustomTextFormField(
                             padding: EdgeInsets.zero,
                             controller: _dateController,
@@ -327,6 +368,16 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                               return null;
                             },
                           ),
+                          const SizedBox(height: 12.0),
+                          CustomCheckboxField(
+                            labelText: 'Transação Recorrente',
+                            value: _isRecurring,
+                            onChanged: (value) {
+                              setState(() {
+                                _isRecurring = value ?? false;
+                              });
+                            },
+                          ),
                           const SizedBox(height: 26.0),
                           BlocListener<TransactionCubit, TransactionState>(
                             listener: (context, state) {
@@ -370,7 +421,25 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                                             DateTime.now().toIso8601String(),
                                         'categoryId': _selectedCategoryId,
                                         'userId': authState.id,
+                                        'clientId': _selectedClientId,
+                                        'isRecurring': _isRecurring,
                                       };
+
+                                      if (_selectedClientId != null && _isRecurring) {
+                                        final clientState = context.read<ClientCubit>().state;
+                                        if (clientState is ClientSuccess) {
+                                          final client = clientState.clients.firstWhere(
+                                            (c) => c.id == _selectedClientId,
+                                            orElse: () => throw Exception('Cliente não encontrado'),
+                                          );
+                                          
+                                          if (amount != client.monthly_payment) {
+                                            _showErrorSnackBar('O valor deve ser igual ao pagamento mensal do cliente');
+                                            setState(() => _isLoading = false);
+                                            return;
+                                          }
+                                        }
+                                      }
 
                                       await context.read<TransactionCubit>().addTransaction(
                                         authState.accessToken,
