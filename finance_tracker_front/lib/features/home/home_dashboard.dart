@@ -71,307 +71,248 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
   @override
   Widget build(BuildContext context) {
     Sizes.init(context);
-    return Scaffold(body: BlocBuilder<CardCubit, CardState>(
-      builder: (context, state) {
-        if (state is CardLoading || state is CardInitial) {
-          return Stack(
-            children: [
-              const AppHeader(),
-              Positioned(
-                left: 24.w,
-                right: 25.w,
-                top: 145.h,
-                child: const BalanceCardSkeleton(),
-              ),
-              Positioned(
-                top: 410.h,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: ListView.builder(
-                  physics: const BouncingScrollPhysics(),
-                  padding: EdgeInsets.zero,
-                  itemCount: 5,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: EdgeInsets.only(bottom: 8.h),
-                      child: const TransactionSkeleton(),
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        }
+    return Scaffold(
+      body: Stack(
+        children: [
+          const AppHeader(),
+          Positioned(
+            left: 24.w,
+            right: 25.w,
+            top: 145.h,
+            child: BlocBuilder<TransactionCubit, TransactionState>(
+              builder: (context, transactionState) {
+                if (transactionState is TransactionsLoading) {
+                  return const BalanceCardSkeleton();
+                }
 
-        if (state is CardFailure) {
-          return Center(child: Text(state.message));
-        }
+                double totalIncome = 0;
+                double totalExpense = 0;
 
-        if (state is CardSuccess) {
-        if (state.cards.isEmpty){
-          return const Center(child: Text("Nenhum cartão encontrado"));
-        } else {
-          return Stack(
-            children: [
-              const AppHeader(),
-              Positioned(
-                left: 24.w,
-                right: 25.w,
-                top: 145.h,
-                child: BlocBuilder<TransactionCubit, TransactionState>(
-                  builder: (context, transactionState) {
-                    if (transactionState is TransactionsLoading) {
-                      return const BalanceCardSkeleton();
-                    }
+                if (transactionState is TransactionsSuccess) {
+                  final filteredTransactions = _filterTransactions(transactionState.transactions);
+                  totalIncome = filteredTransactions
+                      .where((t) => t.type == 'entrada')
+                      .fold(0, (sum, t) => sum + t.amount);
+                  totalExpense = filteredTransactions
+                      .where((t) => t.type == 'saida')
+                      .fold(0, (sum, t) => sum + t.amount.abs());
+                }
 
-                    double totalIncome = 0;
-                    double totalExpense = 0;
+                double totalBalanceTransaction = totalIncome - totalExpense;
 
-                    if (transactionState is TransactionsSuccess) {
-                      final filteredTransactions = _filterTransactions(transactionState.transactions);
-                      totalIncome = filteredTransactions
-                          .where((t) => t.type == 'entrada')
-                          .fold(0, (sum, t) => sum + t.amount);
-                      totalExpense = filteredTransactions
-                          .where((t) => t.type == 'saida')
-                          .fold(0, (sum, t) => sum + t.amount.abs());
-                    }
+                return BalanceCard(
+                  totalBalance: totalBalanceTransaction,
+                  totalIncome: totalIncome,
+                  totalExpense: totalExpense,
+                  textScaleFactor: textScaleFactor,
+                  iconSize: iconSize,
+                );
+              },
+            ),
+          ),
+          Positioned(
+            top: 410.h,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: BlocBuilder<TransactionCubit, TransactionState>(
+              builder: (context, state) {
+                if (state is TransactionsInitial || state is TransactionsLoading) {
+                  return ListView.builder(
+                    physics: const BouncingScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    itemCount: 5,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: 8.h),
+                        child: const TransactionSkeleton(),
+                      );
+                    },
+                  );
+                }
 
-                    double totalBalanceTransaction = totalIncome - totalExpense;
+                if (state is TransactionsFailure) {
+                  return Center(child: Text(state.message));
+                }
 
-                    return BalanceCard(
-                      totalBalance: totalBalanceTransaction,
-                      totalIncome: totalIncome,
-                      totalExpense: totalExpense,
-                      textScaleFactor: textScaleFactor,
-                      iconSize: iconSize,
-                    );
-                  },
-                ),
-              ),
-              Positioned(
-                  top: 410.h,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: BlocBuilder<TransactionCubit, TransactionState>(
-                    builder: (context, state) {
-                      if (state is TransactionsInitial || state is TransactionsLoading) {
-                        return ListView.builder(
-                          physics: const BouncingScrollPhysics(),
-                          padding: EdgeInsets.zero,
-                          itemCount: 5,
-                          itemBuilder: (context, index) {
-                            return Padding(
-                              padding: EdgeInsets.only(bottom: 8.h),
-                              child: const TransactionSkeleton(),
-                            );
-                          },
-                        );
-                      }
-
-                      if (state is TransactionsFailure) {
-                        return Center(child: Text(state.message));
-                      }
-
-                      if (state is TransactionsSuccess) {
-                      if (state.transactions.isEmpty) {
-                        return const Center(child: Text("Nenhuma transação encontrada."));
-                      } else {
-                        return Column(
+                if (state is TransactionsSuccess) {
+                  if (state.transactions.isEmpty) {
+                    return const Center(child: Text("Nenhuma transação encontrada."));
+                  }
+                  
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 16.w),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "Histórico de Transações",
-                                    style: AppTextStyles.buttontext
-                                        .apply(color: AppColors.black),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () => context.goNamed('wallet'),
-                                    child: Text(
-                                      "Ver todas",
-                                      style: AppTextStyles.smalltextw400
-                                          .apply(color: AppColors.inputcolor),
-                                    ),
-                                  )
-                                ],
-                              ),
+                            Text(
+                              "Histórico de Transações",
+                              style: AppTextStyles.buttontext
+                                  .apply(color: AppColors.black),
                             ),
-                            const SizedBox(height: 8),
-                            // TransactionFilters(
-                            //   selectedCategory: _selectedCategory,
-                            //   selectedDate: _selectedDate,
-                            //   onCategoryChanged: (category) {
-                            //     setState(() {
-                            //       _selectedCategory = category;
-                            //     });
-                            //   },
-                            //   onDateChanged: (date) {
-                            //     setState(() {
-                            //       _selectedDate = date;
-                            //     });
-                            //   },
-                            // ),
-                            const SizedBox(height: 8),
-                            Expanded(
-                              child: RefreshIndicator(
-                                onRefresh: () async {
-                                  final authState = context.read<AuthCubit>().state;
-                                  if (authState is AuthSuccess) {
-                                    await context.read<TransactionCubit>().fetchUserTransactions(authState.accessToken);
-                                  }
-                                },
-                                child: ListView.builder(
-                                  physics: const AlwaysScrollableScrollPhysics(),
-                                  padding: EdgeInsets.symmetric(horizontal: 4.w),
-                                  itemCount: _filterTransactions(state.transactions).length,
-                                  itemBuilder: (context, index) {
-                                    final transaction = _filterTransactions(state.transactions)[index];
-                                    final bool isIncome = transaction.type == 'entrada';
-                                    final color = isIncome
-                                        ? AppColors.income
-                                        : AppColors.expense;
-                                    final value = isIncome
-                                        ? transaction.amount.toCurrencyWithSign()
-                                        : transaction.amount.abs().toCurrency();
-                                    return Padding(
-                                      padding: EdgeInsets.only(bottom: 8.h),
-                                      child: AnimatedTransactionTile(
-                                        transaction: Transaction.fromModel(transaction),
-                                        isIncome: isIncome,
-                                        value: value,
-                                        onLongPress: () {
-                                          showModalBottomSheet(
-                                            context: context,
-                                            shape: const RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.only(
-                                                topLeft: Radius.circular(38.0),
-                                                topRight: Radius.circular(38.0),
-                                              ),
-                                            ),
-                                            builder: (BuildContext context) {
-                                              return Container(
-                                                padding: const EdgeInsets.all(24.0),
-                                                decoration: const BoxDecoration(
-                                                  color: AppColors.white,
-                                                  borderRadius: BorderRadius.only(
-                                                    topLeft: Radius.circular(38.0),
-                                                    topRight: Radius.circular(38.0),
-                                                  ),
-                                                ),
-                                                height: 250,
-                                                width: double.infinity,
-                                                child: Column(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                    Text(
-                                                      "O que deseja fazer?",
-                                                      textAlign: TextAlign.center,
-                                                      style: AppTextStyles.mediumText20.copyWith(
-                                                        color: AppColors.purple,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 32.0),
-                                                Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                                  children: [
-                                                    GestureDetector(
-                                                      onTap: () {
-                                                        context.pop();
-                                                        context.pushNamed(
-                                                          'edit-transaction',
-                                                          extra: transaction,
-                                                        );
-                                                      },
-                                                      child: Column(
-                                                        mainAxisSize: MainAxisSize.min,
-                                                        children: [
-                                                          Container(
-                                                            padding: const EdgeInsets.all(12),
-                                                            decoration: BoxDecoration(
-                                                              color: AppColors.iceWhite,
-                                                              borderRadius: BorderRadius.circular(12),
-                                                            ),
-                                                            child: const Icon(
-                                                              Icons.edit,
-                                                              color: AppColors.purple,
-                                                              size: 24,
-                                                            ),
-                                                          ),
-                                                          const SizedBox(height: 8),
-                                                          Text(
-                                                            'Editar',
-                                                            style: AppTextStyles.smalltextw400.copyWith(
-                                                              color: AppColors.purple,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    GestureDetector(
-                                                      onTap: () {
-                                                        context.pop();
-                                                            _showDeleteConfirmationDialog(context, transaction, context.read<AuthCubit>().state);
-                                                      },
-                                                      child: Column(
-                                                        mainAxisSize: MainAxisSize.min,
-                                                        children: [
-                                                          Container(
-                                                            padding: const EdgeInsets.all(12),
-                                                            decoration: BoxDecoration(
-                                                              color: AppColors.iceWhite,
-                                                              borderRadius: BorderRadius.circular(12),
-                                                            ),
-                                                            child: const Icon(
-                                                              Icons.delete,
-                                                              color: AppColors.expense,
-                                                              size: 24,
-                                                            ),
-                                                          ),
-                                                          const SizedBox(height: 8),
-                                                          Text(
-                                                            'Excluir',
-                                                            style: AppTextStyles.smalltextw400.copyWith(
-                                                              color: AppColors.expense,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                              );
-                                            },
-                                          );
-                                        },
-                                      ),
-                                    );
-                                  },
-                                ),
+                            GestureDetector(
+                              onTap: () => context.goNamed('wallet'),
+                              child: Text(
+                                "Ver todas",
+                                style: AppTextStyles.smalltextw400
+                                    .apply(color: AppColors.inputcolor),
                               ),
                             )
                           ],
-                        );
-                      }
-                      }
-                    return const Center(child: Text("Erro desconhecido transaction"));
-                    },
-                  ))
-            ],
-          );
-        }
-      }
-    return const Center(child: Text("Erro desconhecido card"));
-    }
-    ));
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Expanded(
+                        child: RefreshIndicator(
+                          onRefresh: () async {
+                            final authState = context.read<AuthCubit>().state;
+                            if (authState is AuthSuccess) {
+                              await context.read<TransactionCubit>().fetchUserTransactions(authState.accessToken);
+                            }
+                          },
+                          child: ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: EdgeInsets.symmetric(horizontal: 4.w),
+                            itemCount: _filterTransactions(state.transactions).length,
+                            itemBuilder: (context, index) {
+                              final transaction = _filterTransactions(state.transactions)[index];
+                              final bool isIncome = transaction.type == 'entrada';
+                              final color = isIncome
+                                  ? AppColors.income
+                                  : AppColors.expense;
+                              final value = isIncome
+                                  ? transaction.amount.toCurrencyWithSign()
+                                  : transaction.amount.abs().toCurrency();
+                              return Padding(
+                                padding: EdgeInsets.only(bottom: 8.h),
+                                child: AnimatedTransactionTile(
+                                  transaction: Transaction.fromModel(transaction),
+                                  isIncome: isIncome,
+                                  value: value,
+                                  onLongPress: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      shape: const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(38.0),
+                                          topRight: Radius.circular(38.0),
+                                        ),
+                                      ),
+                                      builder: (BuildContext context) {
+                                        return Container(
+                                          padding: const EdgeInsets.all(24.0),
+                                          decoration: const BoxDecoration(
+                                            color: AppColors.white,
+                                            borderRadius: BorderRadius.only(
+                                              topLeft: Radius.circular(38.0),
+                                              topRight: Radius.circular(38.0),
+                                            ),
+                                          ),
+                                          height: 250,
+                                          width: double.infinity,
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                "O que deseja fazer?",
+                                                textAlign: TextAlign.center,
+                                                style: AppTextStyles.mediumText20.copyWith(
+                                                  color: AppColors.purple,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 32.0),
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                children: [
+                                                  GestureDetector(
+                                                    onTap: () {
+                                                      context.pop();
+                                                      context.pushNamed(
+                                                        'edit-transaction',
+                                                        extra: transaction,
+                                                      );
+                                                    },
+                                                    child: Column(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        Container(
+                                                          padding: const EdgeInsets.all(12),
+                                                          decoration: BoxDecoration(
+                                                            color: AppColors.iceWhite,
+                                                            borderRadius: BorderRadius.circular(12),
+                                                          ),
+                                                          child: const Icon(
+                                                            Icons.edit,
+                                                            color: AppColors.purple,
+                                                            size: 24,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(height: 8),
+                                                        Text(
+                                                          'Editar',
+                                                          style: AppTextStyles.smalltextw400.copyWith(
+                                                            color: AppColors.purple,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  GestureDetector(
+                                                    onTap: () {
+                                                      context.pop();
+                                                      _showDeleteConfirmationDialog(context, transaction, context.read<AuthCubit>().state);
+                                                    },
+                                                    child: Column(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        Container(
+                                                          padding: const EdgeInsets.all(12),
+                                                          decoration: BoxDecoration(
+                                                            color: AppColors.iceWhite,
+                                                            borderRadius: BorderRadius.circular(12),
+                                                          ),
+                                                          child: const Icon(
+                                                            Icons.delete,
+                                                            color: AppColors.expense,
+                                                            size: 24,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(height: 8),
+                                                        Text(
+                                                          'Excluir',
+                                                          style: AppTextStyles.smalltextw400.copyWith(
+                                                            color: AppColors.expense,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      )
+                    ],
+                  );
+                }
+                return const Center(child: Text("Erro desconhecido"));
+              },
+            ),
+          )
+        ],
+      ),
+    );
   }
 
   // Função auxiliar para mostrar o diálogo de confirmação de exclusão

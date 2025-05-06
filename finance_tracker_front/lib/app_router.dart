@@ -22,6 +22,7 @@ import 'package:flutter/material.dart';
 import 'package:finance_tracker_front/features/clients/presentation/clients_page.dart';
 import 'package:finance_tracker_front/features/clients/application/client_cubit.dart';
 import 'package:finance_tracker_front/features/clients/data/client_repository.dart';
+import 'package:finance_tracker_front/features/wallet/presentation/add_card_page.dart';
 
 // Chaves de navegação separadas
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -104,8 +105,14 @@ final GoRouter appRouter = GoRouter(
         )..loadClients(
             (context.read<AuthCubit>().state as AuthSuccess).accessToken,
           ),
-        child: ClientsPage(),
+        child: const ClientsPage(),
       ),
+    ),
+    GoRoute(
+      name: 'add-card',
+      path: '/add-card',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const AddCardPage(),
     ),
     
     // Rotas dentro do ShellRoute (com barra de navegação)

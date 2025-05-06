@@ -72,7 +72,7 @@ class CardCubit extends Cubit<CardState> {
     _initialize();
   }
 
-    Future<void> _initialize() async {
+  Future<void> _initialize() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('accessToken');
@@ -92,18 +92,47 @@ class CardCubit extends Cubit<CardState> {
     try {
       final response = await dio.get(
         '/card',
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
+        options: Options(
+          headers: {'Authorization': 'Bearer $token'},
+          validateStatus: (status) => status! < 500,
+        ),
       );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
         List<CardModel> cards = data.map((e) => CardModel.fromJson(e)).toList();
         emit(CardSuccess(cards: cards));
+      } else if (response.statusCode == 401) {
+        emit(CardFailure("Sessão expirada. Por favor, faça login novamente."));
       } else {
-        emit(CardFailure("Erro ao buscar cartões"));
+        emit(CardFailure("Erro ao buscar cartões: ${response.statusCode}"));
       }
     } catch (e) {
-      emit(CardFailure("Falha ao conectar com o servidor"));
+      emit(CardFailure("Falha ao conectar com o servidor: ${e.toString()}"));
+    }
+  }
+
+  Future<void> addCard(String token, Map<String, dynamic> cardData) async {
+    emit(CardLoading());
+    try {
+      final response = await dio.post(
+        '/card',
+        data: cardData,
+        options: Options(
+          headers: {'Authorization': 'Bearer $token'},
+          validateStatus: (status) => status! < 500,
+        ),
+      );
+
+      if (response.statusCode == 201) {
+        await fetchUserCards(token);
+      } else if (response.statusCode == 401) {
+        emit(CardFailure("Sessão expirada. Por favor, faça login novamente."));
+      } else {
+        emit(CardFailure("Erro ao adicionar cartão: ${response.statusCode}"));
+      }
+    } catch (e) {
+      emit(CardFailure("Falha ao conectar com o servidor: ${e.toString()}"));
     }
   }
 }

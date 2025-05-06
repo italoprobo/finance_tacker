@@ -310,7 +310,7 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      // Aqui poderia navegar para uma tela de cadastro de cartão
+                      context.pushNamed('add-card');
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.purple,
@@ -337,17 +337,53 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
                 await context.read<CardCubit>().fetchUserCards(authState.accessToken);
               }
             },
-            child: ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
-              itemCount: state.cards.length,
-              itemBuilder: (context, index) {
-                final card = state.cards[index];
-                return CreditCardItem(
-                  card: card,
-                  isPending: false,
-                );
-              },
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Meus Cartões',
+                        style: AppTextStyles.buttontext.apply(color: AppColors.black),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          context.pushNamed('add-card');
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.antiFlashWhite,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.add,
+                            color: AppColors.purple,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                Expanded(
+                  child: ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.symmetric(horizontal: 24.w),
+                    itemCount: state.cards.length,
+                    itemBuilder: (context, index) {
+                      final card = state.cards[index];
+                      return CreditCardItem(
+                        card: card,
+                        isPending: false,
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           );
         }

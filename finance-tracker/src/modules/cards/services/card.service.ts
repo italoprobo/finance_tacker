@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Card } from "../entities/card.entity";
@@ -27,35 +27,55 @@ export class CardService {
         return this.cardRepository.save(card);
     }
 
-    async findAll(): Promise<Card[]> {
-        return this.cardRepository.find({ relations: ['user'] });
+    async findAll(userId: string): Promise<Card[]> {
+        return this.cardRepository.find({ 
+            where: { user: { id: userId } },
+            relations: ['user']
+        });
     }
 
-    async findOne(id: string): Promise<Card> {
-        const card = await this.cardRepository.findOne({where: {id}, relations: ['user']});
+    async findOne(id: string, userId: string): Promise<Card> {
+        const card = await this.cardRepository.findOne({
+            where: { id, user: { id: userId } },
+            relations: ['user'],
+        });
+        
         if (!card) {
             throw new NotFoundException('Cartão não encontrado');
         }
+        
         return card;
     }
 
-    async update(id: string, updateCardDto: UpdateCardDto): Promise<Card> {
-        const card = await this.cardRepository.preload({
-          id,
-          ...updateCardDto,
-        });
-    
-        if (!card) {
-          throw new NotFoundException('Cartão não encontrado');
+    async update(id: string, updateCardDto: UpdateCardDto, userId: string): Promise<Card> {
+        const card = await this.findOne(id, userId);
+        
+        if (card.user.id !== userId) {
+            throw new UnauthorizedException('Você não tem permissão para atualizar este cartão');
         }
-    
-        return this.cardRepository.save(card);
+
+        const updatedCard = await this.cardRepository.preload({
+            id,
+            ...updateCardDto,
+        });
+
+        if (!updatedCard) {
+            throw new NotFoundException('Cartão não encontrado');
+        }
+
+        return this.cardRepository.save(updatedCard);
     }
 
-    async remove(id: string): Promise<void> {
+    async remove(id: string, userId: string): Promise<void> {
+        const card = await this.findOne(id, userId);
+        
+        if (card.user.id !== userId) {
+            throw new UnauthorizedException('Você não tem permissão para remover este cartão');
+        }
+
         const result = await this.cardRepository.delete(id);
         if (result.affected === 0) {
-          throw new NotFoundException('Card not found');
+            throw new NotFoundException('Cartão não encontrado');
         }
     }
 }
