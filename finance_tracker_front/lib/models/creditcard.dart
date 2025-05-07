@@ -1,7 +1,9 @@
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
 import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
+import 'package:finance_tracker_front/common/widgets/custom_modal_bottom_sheet.dart';
 import 'package:finance_tracker_front/models/card_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class CreditCardItem extends StatelessWidget {
   final CardModel card;
@@ -33,83 +35,190 @@ class CreditCardItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 9),
-      child: Row(
-        children: [
-          // Logo do cartão
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
-              _getCardIconPath(card.name),
-              width: 50,
-              height: 50,
-              errorBuilder: (context, error, stackTrace) {
-                // Fallback para um ícone genérico
-                return Container(
-                  width: 50,
-                  height: 50,
-                  color: AppColors.antiFlashWhite,
-                  child: const Icon(
-                    Icons.credit_card,
-                    color: AppColors.purple,
-                    size: 30,
+    return GestureDetector(
+      onTap: () {
+        context.pushNamed('card-details', extra: card);
+      },
+      onLongPress: () {
+        showCustomModalBottomSheet(
+          context: context,
+          title: 'O que deseja fazer?',
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      context.pop();
+                      context.pushNamed('edit-card', extra: card);
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.iceWhite,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.edit,
+                            color: AppColors.purple,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Editar',
+                          style: AppTextStyles.smalltextw400.copyWith(
+                            color: AppColors.purple,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                );
-              },
-            ),
+                  GestureDetector(
+                    onTap: () {
+                      context.pop();
+                      _showDeleteConfirmation(context);
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.iceWhite,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.delete,
+                            color: AppColors.expense,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Excluir',
+                          style: AppTextStyles.smalltextw400.copyWith(
+                            color: AppColors.expense,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          const SizedBox(width: 9),
-          // Detalhes do cartão
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      card.name,
-                      style: AppTextStyles.mediumText16w600,
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 9),
+        child: Row(
+          children: [
+            // Logo do cartão
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                _getCardIconPath(card.name),
+                width: 50,
+                height: 50,
+                errorBuilder: (context, error, stackTrace) {
+                  // Fallback para um ícone genérico
+                  return Container(
+                    width: 50,
+                    height: 50,
+                    color: AppColors.antiFlashWhite,
+                    child: const Icon(
+                      Icons.credit_card,
+                      color: AppColors.purple,
+                      size: 30,
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '•••• ${card.lastDigits}',
-                      style: AppTextStyles.smalltextw600.copyWith(
-                        color: const Color(0xFF666666),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 9),
+            // Detalhes do cartão
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        card.name,
+                        style: AppTextStyles.mediumText16w600,
                       ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '•••• ${card.lastDigits}',
+                        style: AppTextStyles.smalltextw600.copyWith(
+                          color: const Color(0xFF666666),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    _formatDueDate(),
+                    style: AppTextStyles.smalltext13.copyWith(
+                      color: const Color(0xFF666666),
+                      fontWeight: FontWeight.w400,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 3),
+                  ),
+                ],
+              ),
+            ),
+            // Valor da fatura
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
                 Text(
-                  _formatDueDate(),
-                  style: AppTextStyles.smalltext13.copyWith(
-                    color: const Color(0xFF666666),
-                    fontWeight: FontWeight.w400,
+                  '- R\$ ${card.currentBalance.toStringAsFixed(2)}',
+                  style: AppTextStyles.mediumText16w600.copyWith(
+                    color: AppColors.expense,
                   ),
                 ),
+                if (isPending)
+                  Text(
+                    'pendente',
+                    style: AppTextStyles.smalltextw400.copyWith(
+                      color: const Color(0xFF666666),
+                      fontSize: 12,
+                    ),
+                  ),
               ],
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir Cartão'),
+        content: const Text('Tem certeza que deseja excluir este cartão?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
           ),
-          // Valor da fatura
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '- R\$ ${card.currentBalance.toStringAsFixed(2)}',
-                style: AppTextStyles.mediumText16w600.copyWith(
-                  color: AppColors.expense,
-                ),
-              ),
-              if (isPending)
-                Text(
-                  'pendente',
-                  style: AppTextStyles.smalltextw400.copyWith(
-                    color: const Color(0xFF666666),
-                    fontSize: 12,
-                  ),
-                ),
-            ],
+          TextButton(
+            onPressed: () {
+              // Implementar lógica de exclusão
+              Navigator.pop(context);
+            },
+            child: const Text(
+              'Excluir',
+              style: TextStyle(color: AppColors.expense),
+            ),
           ),
         ],
       ),

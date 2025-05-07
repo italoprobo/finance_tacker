@@ -11,6 +11,7 @@ import 'package:finance_tracker_front/features/transactions/transactions_page.da
 import 'package:finance_tracker_front/features/wallet/wallet_page.dart';
 import 'package:finance_tracker_front/features/transactions/presentation/add_transaction_page.dart';
 import 'package:finance_tracker_front/features/transactions/presentation/edit_transaction_page.dart';
+import 'package:finance_tracker_front/models/card_cubit.dart';
 import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -23,6 +24,8 @@ import 'package:finance_tracker_front/features/clients/presentation/clients_page
 import 'package:finance_tracker_front/features/clients/application/client_cubit.dart';
 import 'package:finance_tracker_front/features/clients/data/client_repository.dart';
 import 'package:finance_tracker_front/features/wallet/presentation/add_card_page.dart';
+import 'package:finance_tracker_front/features/wallet/presentation/card_details_page.dart';
+import 'package:finance_tracker_front/features/wallet/presentation/edit_card_page.dart';
 
 // Chaves de navegação separadas
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -113,6 +116,20 @@ final GoRouter appRouter = GoRouter(
       path: '/add-card',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const AddCardPage(),
+    ),
+    GoRoute(
+      path: '/card-details',
+      name: 'card-details',
+      builder: (context, state) => CardDetailsPage(
+        card: state.extra as CardModel,
+      ),
+    ),
+    GoRoute(
+      path: '/edit-card',
+      name: 'edit-card',
+      builder: (context, state) => EditCardPage(
+        card: state.extra as CardModel,
+      ),
     ),
     
     // Rotas dentro do ShellRoute (com barra de navegação)

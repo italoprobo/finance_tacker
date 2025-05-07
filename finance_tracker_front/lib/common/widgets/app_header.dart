@@ -12,6 +12,7 @@ class AppHeader extends StatefulWidget {
   final bool hideNavBar;
   final bool isWhiteTheme;
   final VoidCallback? onBackPressed;
+  final VoidCallback? onOptionsPressed;
 
   const AppHeader({
     super.key, 
@@ -20,6 +21,7 @@ class AppHeader extends StatefulWidget {
     this.hideNavBar = false,
     this.isWhiteTheme = false,
     this.onBackPressed,
+    this.onOptionsPressed,
   });
 
   @override
@@ -46,9 +48,12 @@ class _AppHeaderState extends State<AppHeader> {
                 color: widget.isWhiteTheme ? Colors.black : AppColors.white,
               ),
             ),
-            widget.hasOptions ? Icon(
-              Icons.more_horiz,
-              color: widget.isWhiteTheme ? Colors.black : AppColors.white,
+            widget.hasOptions ? GestureDetector(
+              onTap: widget.onOptionsPressed,
+              child: Icon(
+                Icons.more_horiz,
+                color: widget.isWhiteTheme ? Colors.black : AppColors.white,
+              ),
             ) : const SizedBox.shrink(),
           ],
         ) : 

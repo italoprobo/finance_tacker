@@ -135,4 +135,51 @@ class CardCubit extends Cubit<CardState> {
       emit(CardFailure("Falha ao conectar com o servidor: ${e.toString()}"));
     }
   }
+
+  Future<void> updateCard(String token, String cardId, Map<String, dynamic> cardData) async {
+    emit(CardLoading());
+    try {
+      final response = await dio.patch(
+        '/card/$cardId',
+        data: cardData,
+        options: Options(
+          headers: {'Authorization': 'Bearer $token'},
+          validateStatus: (status) => status! < 500,
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        await fetchUserCards(token);
+      } else if (response.statusCode == 401) {
+        emit(CardFailure("Sessão expirada. Por favor, faça login novamente."));
+      } else {
+        emit(CardFailure("Erro ao atualizar cartão: ${response.statusCode}"));
+      }
+    } catch (e) {
+      emit(CardFailure("Falha ao conectar com o servidor: ${e.toString()}"));
+    }
+  }
+
+  Future<void> deleteCard(String token, String cardId) async {
+    emit(CardLoading());
+    try {
+      final response = await dio.delete(
+        '/card/$cardId',
+        options: Options(
+          headers: {'Authorization': 'Bearer $token'},
+          validateStatus: (status) => status! < 500,
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        await fetchUserCards(token);
+      } else if (response.statusCode == 401) {
+        emit(CardFailure("Sessão expirada. Por favor, faça login novamente."));
+      } else {
+        emit(CardFailure("Erro ao excluir cartão: ${response.statusCode}"));
+      }
+    } catch (e) {
+      emit(CardFailure("Falha ao conectar com o servidor: ${e.toString()}"));
+    }
+  }
 }

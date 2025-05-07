@@ -20,7 +20,7 @@ class CustomCheckboxField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: padding ?? EdgeInsets.symmetric(horizontal: 28.w, vertical: 12.h),
+      padding: padding ?? EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       child: Container(
         height: 56.h,
         width: 358.w,
@@ -34,7 +34,7 @@ class CustomCheckboxField extends StatelessWidget {
             onTap: () => onChanged(!value),
             borderRadius: BorderRadius.circular(8.0),
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 28.w),
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
               child: Row(
                 children: [
                   SizedBox(
@@ -54,7 +54,7 @@ class CustomCheckboxField extends StatelessWidget {
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
-                  SizedBox(width: 10.w),
+                  SizedBox(width: 8.w),
                   Expanded(
                     child: Text(
                       labelText,
