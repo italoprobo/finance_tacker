@@ -25,14 +25,14 @@ class _AddCardPageState extends State<AddCardPage> with CustomSnackBar, SingleTi
   final _nameController = TextEditingController();
   final _lastDigitsController = TextEditingController();
   final _limitController = TextEditingController();
-  final _closingDateController = TextEditingController();
-  final _dueDateController = TextEditingController();
+  final _closingDayController = TextEditingController();
+  final _dueDayController = TextEditingController();
   
   bool _isCredit = true;
   bool _isDebit = false;
   bool _isLoading = false;
-  DateTime? _selectedClosingDate;
-  DateTime? _selectedDueDate;
+  int? _selectedClosingDay;
+  int? _selectedDueDay;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -70,8 +70,8 @@ class _AddCardPageState extends State<AddCardPage> with CustomSnackBar, SingleTi
     _nameController.dispose();
     _lastDigitsController.dispose();
     _limitController.dispose();
-    _closingDateController.dispose();
-    _dueDateController.dispose();
+    _closingDayController.dispose();
+    _dueDayController.dispose();
     super.dispose();
   }
 
@@ -231,47 +231,45 @@ class _AddCardPageState extends State<AddCardPage> with CustomSnackBar, SingleTi
                             const SizedBox(height: 12.0),
                             CustomTextFormField(
                               padding: EdgeInsets.zero,
-                              controller: _closingDateController,
-                              labelText: 'DATA DE FECHAMENTO',
-                              hintText: 'Selecione a data',
-                              readOnly: true,
-                              onTap: () async {
-                                final date = await showDatePicker(
-                                  context: context,
-                                  initialDate: DateTime.now(),
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime(2100),
-                                );
-                                if (date != null) {
-                                  setState(() {
-                                    _selectedClosingDate = date;
-                                    _closingDateController.text = 
-                                        '${date.day}/${date.month}/${date.year}';
-                                  });
+                              controller: _closingDayController,
+                              labelText: 'DIA DE FECHAMENTO',
+                              hintText: 'Ex: 26',
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(2),
+                              ],
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Este campo não pode estar vazio';
                                 }
+                                final day = int.tryParse(value);
+                                if (day == null || day < 1 || day > 31) {
+                                  return 'Digite um dia válido (1-31)';
+                                }
+                                return null;
                               },
                             ),
                             const SizedBox(height: 12.0),
                             CustomTextFormField(
                               padding: EdgeInsets.zero,
-                              controller: _dueDateController,
-                              labelText: 'DATA DE VENCIMENTO',
-                              hintText: 'Selecione a data',
-                              readOnly: true,
-                              onTap: () async {
-                                final date = await showDatePicker(
-                                  context: context,
-                                  initialDate: DateTime.now(),
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime(2100),
-                                );
-                                if (date != null) {
-                                  setState(() {
-                                    _selectedDueDate = date;
-                                    _dueDateController.text = 
-                                        '${date.day}/${date.month}/${date.year}';
-                                  });
+                              controller: _dueDayController,
+                              labelText: 'DIA DE VENCIMENTO',
+                              hintText: 'Ex: 2',
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(2),
+                              ],
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Este campo não pode estar vazio';
                                 }
+                                final day = int.tryParse(value);
+                                if (day == null || day < 1 || day > 31) {
+                                  return 'Digite um dia válido (1-31)';
+                                }
+                                return null;
                               },
                             ),
                           ],
@@ -318,8 +316,8 @@ class _AddCardPageState extends State<AddCardPage> with CustomSnackBar, SingleTi
                                               .trim()
                                         ) : 0.0,
                                         'current_balance': 0.0,
-                                        'closingDate': _selectedClosingDate?.toIso8601String(),
-                                        'dueDate': _selectedDueDate?.toIso8601String(),
+                                        'closingDay': int.tryParse(_closingDayController.text),
+                                        'dueDay': int.tryParse(_dueDayController.text),
                                         'userId': authState.id,
                                       };
 
@@ -363,15 +361,15 @@ class _AddCardPageState extends State<AddCardPage> with CustomSnackBar, SingleTi
             color: AppColors.white,
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Column(
+          child: const Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.check_circle,
                 color: AppColors.purple,
                 size: 50,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Text(
                 'Cartão adicionado com sucesso!',
                 style: AppTextStyles.mediumText16w500,

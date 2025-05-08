@@ -17,13 +17,12 @@ export class CardService {
     ) {}
 
     async create(createCardDto: CreateCardDto): Promise<Card> {
-
-        const user = await this.userRepository.findOneBy({ id: createCardDto.userId });
-        if (!user) {
-            throw new NotFoundException('Usuário não encontrado');
-        }
-
-        const card = this.cardRepository.create({...createCardDto, user});
+        const card = this.cardRepository.create({
+            ...createCardDto,
+            closingDay: createCardDto.closingDay,
+            dueDay: createCardDto.dueDay,
+            user: { id: createCardDto.userId }
+        });
         return this.cardRepository.save(card);
     }
 
@@ -47,23 +46,26 @@ export class CardService {
         return card;
     }
 
-    async update(id: string, updateCardDto: UpdateCardDto, userId: string): Promise<Card> {
-        const card = await this.findOne(id, userId);
-        
-        if (card.user.id !== userId) {
-            throw new UnauthorizedException('Você não tem permissão para atualizar este cartão');
-        }
-
-        const updatedCard = await this.cardRepository.preload({
-            id,
-            ...updateCardDto,
+    async update(id: string, updateCardDto: UpdateCardDto): Promise<Card> {
+        const card = await this.cardRepository.findOne({ 
+            where: { 
+                id,
+                user: { id: updateCardDto.userId }
+            } 
         });
 
-        if (!updatedCard) {
-            throw new NotFoundException('Cartão não encontrado');
+        if (!card) {
+            throw new NotFoundException('Cartão não encontrado ou não pertence ao usuário');
         }
 
-        return this.cardRepository.save(updatedCard);
+        Object.assign(card, {
+            ...updateCardDto,
+            closingDay: updateCardDto.closingDay,
+            dueDay: updateCardDto.dueDay,
+            user: { id: updateCardDto.userId }
+        });
+
+        return this.cardRepository.save(card);
     }
 
     async remove(id: string, userId: string): Promise<void> {

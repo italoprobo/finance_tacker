@@ -35,8 +35,8 @@ class CardModel {
   final List<String> cardType;
   final double limit;
   final double currentBalance;
-  final DateTime? closingDate;
-  final DateTime? dueDate;
+  final int? closingDay;
+  final int? dueDay;
   final String lastDigits;
 
   CardModel({
@@ -45,8 +45,8 @@ class CardModel {
     required this.cardType,
     required this.limit,
     required this.currentBalance,
-    this.closingDate,
-    this.dueDate,
+    this.closingDay,
+    this.dueDay,
     required this.lastDigits,
   });
 
@@ -57,8 +57,8 @@ class CardModel {
       cardType: List<String>.from(json['cardType']),
       limit: (json['limit'] != null ? double.tryParse(json['limit'].toString()) : 0.0) ?? 0.0,
       currentBalance: json['current_balance'] != null ? double.tryParse(json['current_balance'].toString()) ?? 0.0 : 0.0,
-      closingDate: json['closingDate'] != null ? DateTime.parse(json['closingDate']) : null,
-      dueDate: json['dueDate'] != null ? DateTime.parse(json['dueDate']) : null,
+      closingDay: json['closingDay'],
+      dueDay: json['dueDay'],
       lastDigits: json['lastDigits'],
     );
   }

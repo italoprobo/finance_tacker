@@ -18,16 +18,16 @@ export class Card {
     @Column('decimal', { precision: 10, scale: 2 })
     current_balance: number;
 
-    @Column({ type: 'date' , nullable: true })
-    closingDate: Date; 
+    @Column({ type: 'int', nullable: true })
+    closingDay: number; 
 
-    @Column({ type: 'date' , nullable: true })
-    dueDate: Date; 
+    @Column({ type: 'int', nullable: true })
+    dueDay: number; 
 
     @Column()
     lastDigits: string;
 
-    @ManyToOne(() => User, (user) => user.transactions)
+    @ManyToOne(() => User)
     @JoinColumn({ name: 'user_id' })
     user: User;
 }

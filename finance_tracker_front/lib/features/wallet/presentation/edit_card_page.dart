@@ -31,14 +31,12 @@ class _EditCardPageState extends State<EditCardPage> with CustomSnackBar {
   late TextEditingController _nameController;
   late TextEditingController _lastDigitsController;
   late TextEditingController _limitController;
-  late TextEditingController _closingDateController;
-  late TextEditingController _dueDateController;
+  late TextEditingController _closingDayController;
+  late TextEditingController _dueDayController;
   
   bool _isCredit = false;
   bool _isDebit = false;
   bool _isLoading = false;
-  DateTime? _selectedClosingDate;
-  DateTime? _selectedDueDate;
 
   @override
   void initState() {
@@ -46,21 +44,15 @@ class _EditCardPageState extends State<EditCardPage> with CustomSnackBar {
     _nameController = TextEditingController(text: widget.card.name);
     _lastDigitsController = TextEditingController(text: widget.card.lastDigits);
     _limitController = TextEditingController(text: widget.card.limit.toString());
-    _closingDateController = TextEditingController(
-      text: widget.card.closingDate != null 
-        ? '${widget.card.closingDate!.day}/${widget.card.closingDate!.month}/${widget.card.closingDate!.year}'
-        : '',
+    _closingDayController = TextEditingController(
+      text: widget.card.closingDay?.toString() ?? '',
     );
-    _dueDateController = TextEditingController(
-      text: widget.card.dueDate != null 
-        ? '${widget.card.dueDate!.day}/${widget.card.dueDate!.month}/${widget.card.dueDate!.year}'
-        : '',
+    _dueDayController = TextEditingController(
+      text: widget.card.dueDay?.toString() ?? '',
     );
     
     _isCredit = widget.card.cardType.contains('credito');
     _isDebit = widget.card.cardType.contains('debito');
-    _selectedClosingDate = widget.card.closingDate;
-    _selectedDueDate = widget.card.dueDate;
   }
 
   @override
@@ -68,8 +60,8 @@ class _EditCardPageState extends State<EditCardPage> with CustomSnackBar {
     _nameController.dispose();
     _lastDigitsController.dispose();
     _limitController.dispose();
-    _closingDateController.dispose();
-    _dueDateController.dispose();
+    _closingDayController.dispose();
+    _dueDayController.dispose();
     super.dispose();
   }
 
@@ -225,47 +217,45 @@ class _EditCardPageState extends State<EditCardPage> with CustomSnackBar {
                         const SizedBox(height: 12.0),
                         CustomTextFormField(
                           padding: EdgeInsets.zero,
-                          controller: _closingDateController,
-                          labelText: 'DATA DE FECHAMENTO',
-                          hintText: 'Selecione a data',
-                          readOnly: true,
-                          onTap: () async {
-                            final date = await showDatePicker(
-                              context: context,
-                              initialDate: _selectedClosingDate ?? DateTime.now(),
-                              firstDate: DateTime(2000),
-                              lastDate: DateTime(2100),
-                            );
-                            if (date != null) {
-                              setState(() {
-                                _selectedClosingDate = date;
-                                _closingDateController.text = 
-                                    '${date.day}/${date.month}/${date.year}';
-                              });
+                          controller: _closingDayController,
+                          labelText: 'DIA DE FECHAMENTO',
+                          hintText: 'Ex: 26',
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(2),
+                          ],
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Este campo não pode estar vazio';
                             }
+                            final day = int.tryParse(value);
+                            if (day == null || day < 1 || day > 31) {
+                              return 'Digite um dia válido (1-31)';
+                            }
+                            return null;
                           },
                         ),
                         const SizedBox(height: 12.0),
                         CustomTextFormField(
                           padding: EdgeInsets.zero,
-                          controller: _dueDateController,
-                          labelText: 'DATA DE VENCIMENTO',
-                          hintText: 'Selecione a data',
-                          readOnly: true,
-                          onTap: () async {
-                            final date = await showDatePicker(
-                              context: context,
-                              initialDate: _selectedDueDate ?? DateTime.now(),
-                              firstDate: DateTime(2000),
-                              lastDate: DateTime(2100),
-                            );
-                            if (date != null) {
-                              setState(() {
-                                _selectedDueDate = date;
-                                _dueDateController.text = 
-                                    '${date.day}/${date.month}/${date.year}';
-                              });
+                          controller: _dueDayController,
+                          labelText: 'DIA DE VENCIMENTO',
+                          hintText: 'Ex: 2',
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(2),
+                          ],
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Este campo não pode estar vazio';
                             }
+                            final day = int.tryParse(value);
+                            if (day == null || day < 1 || day > 31) {
+                              return 'Digite um dia válido (1-31)';
+                            }
+                            return null;
                           },
                         ),
                       ],
@@ -310,8 +300,9 @@ class _EditCardPageState extends State<EditCardPage> with CustomSnackBar {
                                           .trim()
                                     ) : 0.0,
                                     'current_balance': widget.card.currentBalance,
-                                    'closingDate': _selectedClosingDate?.toIso8601String(),
-                                    'dueDate': _selectedDueDate?.toIso8601String(),
+                                    'closingDay': int.tryParse(_closingDayController.text),
+                                    'dueDay': int.tryParse(_dueDayController.text),
+                                    'userId': authState.id,
                                   };
 
                                   await context.read<CardCubit>().updateCard(

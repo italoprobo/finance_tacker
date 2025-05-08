@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsDateString, IsUUID, IsOptional, IsArray, ArrayNotEmpty, ArrayUnique, IsIn } from 'class-validator';
+import { IsString, IsNumber, IsUUID, IsOptional, IsArray, ArrayNotEmpty, ArrayUnique, IsIn, Min, Max } from 'class-validator';
 
 export class CreateCardDto {
     @IsString()
@@ -8,22 +8,26 @@ export class CreateCardDto {
     @ArrayNotEmpty()
     @ArrayUnique()
     @IsIn(['credito', 'debito'], { each: true }) 
-    cardType: string[]; // ["credito"], ["debito"], ou ambos ["credito", "debito"]
+    cardType: string[];
 
     @IsOptional()
     @IsNumber()
-    limit?: number; // Opcional para cartões que não são de crédito
+    limit?: number; 
 
     @IsNumber()
     current_balance: number;
 
     @IsOptional()
-    @IsDateString()
-    closingDate?: Date; 
+    @IsNumber()
+    @Min(1)
+    @Max(31)
+    closingDay?: number; 
 
     @IsOptional()
-    @IsDateString()
-    dueDate?: Date;
+    @IsNumber()
+    @Min(1)
+    @Max(31)
+    dueDay?: number; 
 
     @IsString()
     lastDigits: string;

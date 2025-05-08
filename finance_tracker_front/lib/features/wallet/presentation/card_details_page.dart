@@ -142,15 +142,15 @@ class CardDetailsPage extends StatelessWidget {
           'Tipo',
           card.cardType.map((type) => type.toUpperCase()).join(', '),
         ),
-        if (card.closingDate != null)
+        if (card.closingDay != null)
           _buildDetailItem(
-            'Data de Fechamento',
-            '${card.closingDate!.day}/${card.closingDate!.month}',
+            'Dia de Fechamento',
+            card.closingDay.toString(),
           ),
-        if (card.dueDate != null)
+        if (card.dueDay != null)
           _buildDetailItem(
-            'Data de Vencimento',
-            '${card.dueDate!.day}/${card.dueDate!.month}',
+            'Dia de Vencimento',
+            card.dueDay.toString(),
           ),
       ],
     );

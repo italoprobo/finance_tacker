@@ -1,4 +1,5 @@
 import 'package:finance_tracker_front/common/di/di.dart';
+import 'package:finance_tracker_front/features/clients/presentation/add_clients_page.dart';
 import 'package:finance_tracker_front/features/home/home_page.dart';
 import 'package:finance_tracker_front/features/login/login.dart';
 import 'package:finance_tracker_front/features/profile/edit_password_page.dart';
@@ -109,6 +110,16 @@ final GoRouter appRouter = GoRouter(
             (context.read<AuthCubit>().state as AuthSuccess).accessToken,
           ),
         child: const ClientsPage(),
+      ),
+    ),
+    GoRoute(
+      name: 'add-client',
+      path: '/add-client',
+      builder: (context, state) => BlocProvider(
+        create: (context) => ClientCubit(
+          getIt<ClientRepository>(),
+        ),
+        child: const AddClientPage(),
       ),
     ),
     GoRoute(

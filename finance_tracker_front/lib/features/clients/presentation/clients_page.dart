@@ -1,3 +1,4 @@
+import 'package:finance_tracker_front/common/widgets/custom_modal_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
@@ -48,7 +49,6 @@ class ClientsPage extends StatelessWidget {
                         ),
                         GestureDetector(
                           onTap: () {
-                            // Navegar para adicionar cliente
                             context.pushNamed('add-client');
                           },
                           child: Container(
@@ -116,63 +116,159 @@ class ClientsPage extends StatelessWidget {
                             itemCount: state.clients.length,
                             itemBuilder: (context, index) {
                               final client = state.clients[index];
-                              return Container(
-                                margin: EdgeInsets.only(bottom: 8.h),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
+                              return Material(
+                                color: Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
+                                child: InkWell(
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Colors.grey.withOpacity(0.2),
-                                  ),
-                                ),
-                                child: ListTile(
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 16.w,
-                                    vertical: 8.h,
-                                  ),
-                                  title: Text(
-                                    client.name,
-                                    style: AppTextStyles.mediumText16w500,
-                                  ),
-                                  subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      SizedBox(height: 4.h),
-                                      Text(
-                                        'Mensalidade: R\$ ${client.monthly_payment.toStringAsFixed(2)}',
-                                        style: AppTextStyles.smalltextw400,
+                                  onTap: () {
+                                    // Mostrar opções do cliente (editar, excluir, etc)
+                                  },
+                                  child: Container(
+                                    margin: EdgeInsets.only(bottom: 8.h),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: Colors.grey.withOpacity(0.2),
                                       ),
-                                      SizedBox(height: 4.h),
-                                      Container(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 8.w,
-                                          vertical: 2.h,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: client.status == 'ativo'
-                                              ? Colors.green.withOpacity(0.1)
-                                              : Colors.red.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          client.status == 'ativo' ? 'Ativo' : 'Inativo',
-                                          style: AppTextStyles.smalltext13.copyWith(
-                                            color: client.status == 'ativo'
-                                                ? Colors.green
-                                                : Colors.red,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  trailing: IconButton(
-                                    icon: const Icon(
-                                      Icons.more_vert,
-                                      color: AppColors.purple,
                                     ),
-                                    onPressed: () {
-                                      // Mostrar opções do cliente (editar, excluir, etc)
-                                    },
+                                    child: ListTile(
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 16.w,
+                                        vertical: 8.h,
+                                      ),
+                                      title: Text(
+                                        client.name,
+                                        style: AppTextStyles.mediumText16w500,
+                                      ),
+                                      subtitle: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          SizedBox(height: 4.h),
+                                          Text(
+                                            'Mensalidade: R\$ ${client.monthly_payment.toStringAsFixed(2)}',
+                                            style: AppTextStyles.smalltextw400,
+                                          ),
+                                          SizedBox(height: 4.h),
+                                          Container(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 8.w,
+                                              vertical: 2.h,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: client.status == 'ativo'
+                                                  ? Colors.green.withOpacity(0.1)
+                                                  : Colors.red.withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              client.status == 'ativo' ? 'Ativo' : 'Inativo',
+                                              style: AppTextStyles.smalltext13.copyWith(
+                                                color: client.status == 'ativo'
+                                                    ? Colors.green
+                                                    : Colors.red,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      trailing: IconButton(
+                                        icon: const Icon(
+                                          Icons.more_vert,
+                                          color: AppColors.purple,
+                                        ),
+                                        onPressed: () {
+                                          showCustomModalBottomSheet(
+                                            context: context,
+                                            title: 'O que deseja fazer?',
+                                            content: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                              children: [
+                                                // Botão Editar
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    context.pop();
+                                                    context.pushNamed('edit-client', extra: client);
+                                                  },
+                                                  child: Column(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Container(
+                                                        padding: const EdgeInsets.all(12),
+                                                        decoration: BoxDecoration(
+                                                          color: AppColors.iceWhite,
+                                                          borderRadius: BorderRadius.circular(12),
+                                                        ),
+                                                        child: const Icon(
+                                                          Icons.edit,
+                                                          color: AppColors.purple,
+                                                          size: 24,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 8),
+                                                      Text(
+                                                        'Editar',
+                                                        style: AppTextStyles.smalltextw400.copyWith(
+                                                          color: AppColors.purple,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                // Botão Excluir
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    context.pop();
+                                                    showCustomModalBottomSheet(
+                                                      context: context,
+                                                      title: 'Confirmar exclusão',
+                                                      content: const Text(
+                                                        'Tem certeza que deseja excluir este cliente?',
+                                                        style: AppTextStyles.smalltextw400,
+                                                        textAlign: TextAlign.center,
+                                                      ),
+                                                      buttonText: 'Excluir',
+                                                      buttonColor: AppColors.expense,
+                                                      onPressed: () async {
+                                                        // Aqui coloque a lógica para excluir o cliente
+                                                        // Exemplo:
+                                                        // await context.read<ClientCubit>().deleteClient(client.id);
+                                                        // context.pop();
+                                                      },
+                                                    );
+                                                  },
+                                                  child: Column(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Container(
+                                                        padding: const EdgeInsets.all(12),
+                                                        decoration: BoxDecoration(
+                                                          color: AppColors.iceWhite,
+                                                          borderRadius: BorderRadius.circular(12),
+                                                        ),
+                                                        child: const Icon(
+                                                          Icons.delete,
+                                                          color: AppColors.expense,
+                                                          size: 24,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 8),
+                                                      Text(
+                                                        'Excluir',
+                                                        style: AppTextStyles.smalltextw400.copyWith(
+                                                          color: AppColors.expense,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
                                   ),
                                 ),
                               );
