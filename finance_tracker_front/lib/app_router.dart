@@ -14,6 +14,7 @@ import 'package:finance_tracker_front/features/transactions/presentation/add_tra
 import 'package:finance_tracker_front/features/transactions/presentation/edit_transaction_page.dart';
 import 'package:finance_tracker_front/models/card_cubit.dart';
 import 'package:finance_tracker_front/models/client.dart';
+import 'package:finance_tracker_front/models/transaction.dart';
 import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -30,6 +31,7 @@ import 'package:finance_tracker_front/features/wallet/presentation/card_details_
 import 'package:finance_tracker_front/features/wallet/presentation/edit_card_page.dart';
 import 'package:finance_tracker_front/features/clients/presentation/client_details_page.dart';
 import 'package:finance_tracker_front/features/clients/presentation/edit_client_page.dart';
+import 'package:finance_tracker_front/features/transactions/presentation/transaction_details_page.dart';
 
 // Chaves de navegação separadas
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -167,6 +169,14 @@ final GoRouter appRouter = GoRouter(
         child: EditClientPage(
           client: state.extra as Client,
         ),
+      ),
+    ),
+    GoRoute(
+      name: 'transaction-details',
+      path: '/transaction-details',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => TransactionDetailsPage(
+        transaction: state.extra as Transaction,
       ),
     ),
     

@@ -81,4 +81,14 @@ class ClientCubit extends Cubit<ClientState> {
       emit(ClientFailure(e.toString()));
     }
   }
+
+  Future<void> activateClient(String token, String clientId) async {
+    try {
+      emit(ClientLoading());
+      await repository.activateClient(token, clientId);
+      await loadClients(token);
+    } catch (e) {
+      emit(ClientFailure(e.toString()));
+    }
+  }
 }

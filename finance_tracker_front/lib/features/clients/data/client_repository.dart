@@ -122,4 +122,22 @@ class ClientRepository {
       throw Exception('Falha ao inativar cliente');
     }
   }
+
+  Future<void> activateClient(String token, String clientId) async {
+  final response = await dio.patch(
+    '/clients/$clientId',
+    data: {
+      'status': 'ativo'
+    },
+    options: Options(
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    ),
+  );
+
+  if (response.statusCode != 200) {
+      throw Exception('Falha ao ativar cliente');
+    }
+  }
 }

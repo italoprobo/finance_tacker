@@ -79,12 +79,63 @@ class ClientsPage extends StatelessWidget {
                             padding: EdgeInsets.symmetric(horizontal: 24.w),
                             itemCount: 5,
                             itemBuilder: (context, index) {
-                              return Container(
-                                height: 70.h,
-                                margin: EdgeInsets.only(bottom: 8.h),
-                                decoration: BoxDecoration(
-                                  color: AppColors.antiFlashWhite,
-                                  borderRadius: BorderRadius.circular(12),
+                              return Material(
+                                color: Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  margin: EdgeInsets.only(bottom: 8.h),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.grey.withOpacity(0.2),
+                                    ),
+                                  ),
+                                  child: ListTile(
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 16.w,
+                                      vertical: 8.h,
+                                    ),
+                                    title: Container(
+                                      width: 120.w,
+                                      height: 20.h,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.antiFlashWhite,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                    ),
+                                    subtitle: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        SizedBox(height: 4.h),
+                                        Container(
+                                          width: 180.w,
+                                          height: 16.h,
+                                          decoration: BoxDecoration(
+                                            color: AppColors.antiFlashWhite,
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                        ),
+                                        SizedBox(height: 4.h),
+                                        Container(
+                                          width: 60.w,
+                                          height: 16.h,
+                                          decoration: BoxDecoration(
+                                            color: AppColors.antiFlashWhite,
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    trailing: Container(
+                                      width: 24.w,
+                                      height: 24.h,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.antiFlashWhite,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               );
                             },
@@ -218,44 +269,61 @@ class ClientsPage extends StatelessWidget {
                                                     ],
                                                   ),
                                                 ),
-                                                // Botão Excluir
+                                                // Botão Ativar/Inativar
                                                 GestureDetector(
                                                   onTap: () {
                                                     context.pop();
                                                     showCustomModalBottomSheet(
                                                       context: context,
-                                                      title: 'Inativar cliente?',
-                                                      content: const Text(
-                                                        'O cliente será marcado como inativo e não aparecerá em novas transações, mas seu histórico será mantido.',
+                                                      title: client.status == 'ativo' ? 'Inativar cliente?' : 'Ativar cliente?',
+                                                      content: Text(
+                                                        client.status == 'ativo' 
+                                                          ? 'O cliente será marcado como inativo e não aparecerá em novas transações, mas seu histórico será mantido.'
+                                                          : 'O cliente será reativado e poderá ser incluído em novas transações.',
                                                         style: AppTextStyles.smalltextw400,
                                                         textAlign: TextAlign.center,
                                                       ),
-                                                      buttonText: 'Inativar',
-                                                      buttonColor: AppColors.expense,
+                                                      buttonText: client.status == 'ativo' ? 'Inativar' : 'Ativar',
+                                                      buttonColor: client.status == 'ativo' ? AppColors.expense : AppColors.income,
                                                       onPressed: () async {
                                                         final authState = context.read<AuthCubit>().state;
                                                         if (authState is AuthSuccess) {
                                                           try {
-                                                            await context.read<ClientCubit>().inactivateClient(
-                                                              authState.accessToken,
-                                                              client.id,
-                                                            );
+                                                            if (client.status == 'ativo') {
+                                                              await context.read<ClientCubit>().inactivateClient(
+                                                                authState.accessToken,
+                                                                client.id,
+                                                              );
+                                                            } else {
+                                                              await context.read<ClientCubit>().activateClient(
+                                                                authState.accessToken,
+                                                                client.id,
+                                                              );
+                                                            }
                                                             
                                                             if (context.mounted) {
-                                                              context.pop();
+                                                              Navigator.of(context, rootNavigator: false).pop();
                                                               ScaffoldMessenger.of(context).showSnackBar(
-                                                                const SnackBar(
-                                                                  content: Text('Cliente inativado com sucesso!'),
+                                                                SnackBar(
+                                                                  content: Text(
+                                                                    client.status == 'ativo' 
+                                                                      ? 'Cliente inativado com sucesso!'
+                                                                      : 'Cliente ativado com sucesso!'
+                                                                  ),
                                                                   backgroundColor: AppColors.purple,
                                                                 ),
                                                               );
                                                             }
                                                           } catch (e) {
                                                             if (context.mounted) {
-                                                              context.pop();
+                                                              Navigator.of(context).pop();
                                                               ScaffoldMessenger.of(context).showSnackBar(
-                                                                const SnackBar(
-                                                                  content: Text('Erro ao inativar cliente'),
+                                                                SnackBar(
+                                                                  content: Text(
+                                                                    client.status == 'ativo' 
+                                                                      ? 'Erro ao inativar cliente'
+                                                                      : 'Erro ao ativar cliente'
+                                                                  ),
                                                                   backgroundColor: AppColors.expense,
                                                                 ),
                                                               );
@@ -274,17 +342,17 @@ class ClientsPage extends StatelessWidget {
                                                           color: AppColors.iceWhite,
                                                           borderRadius: BorderRadius.circular(12),
                                                         ),
-                                                        child: const Icon(
-                                                          Icons.person_off,
-                                                          color: AppColors.expense,
+                                                        child: Icon(
+                                                          client.status == 'ativo' ? Icons.person_off : Icons.person,
+                                                          color: client.status == 'ativo' ? AppColors.expense : AppColors.income,
                                                           size: 24,
                                                         ),
                                                       ),
                                                       const SizedBox(height: 8),
                                                       Text(
-                                                        'Inativar',
+                                                        client.status == 'ativo' ? 'Inativar' : 'Ativar',
                                                         style: AppTextStyles.smalltextw400.copyWith(
-                                                          color: AppColors.expense,
+                                                          color: client.status == 'ativo' ? AppColors.expense : AppColors.income,
                                                         ),
                                                       ),
                                                     ],

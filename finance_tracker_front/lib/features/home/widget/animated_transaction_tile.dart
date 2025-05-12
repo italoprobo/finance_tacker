@@ -6,17 +6,19 @@ import 'package:intl/intl.dart';
 
 class AnimatedTransactionTile extends StatelessWidget {
   final Transaction transaction;
-  final VoidCallback onLongPress;
   final bool isIncome;
   final String value;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   const AnimatedTransactionTile({
-    super.key,
+    Key? key,
     required this.transaction,
-    required this.onLongPress,
     required this.isIncome,
     required this.value,
-  });
+    this.onTap,
+    this.onLongPress,
+  }) : super(key: key);
 
   String _formatDate(DateTime date) {
     return DateFormat('dd/MM/yyyy').format(date);
@@ -24,49 +26,52 @@ class AnimatedTransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOut,
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(0, 50 * (1 - value)),
-          child: Opacity(
-            opacity: value,
-            child: child,
+    return InkWell(
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+        builder: (context, value, child) {
+          return Transform.translate(
+            offset: Offset(0, 50 * (1 - value)),
+            child: Opacity(
+              opacity: value,
+              child: child,
+            ),
+          );
+        },
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8.0),
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: isIncome ? AppColors.income.withOpacity(0.1) : AppColors.expense.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              isIncome ? Icons.arrow_upward : Icons.arrow_downward,
+              color: isIncome ? AppColors.income : AppColors.expense,
+              size: 20,
+            ),
           ),
-        );
-      },
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8.0),
-        onLongPress: onLongPress,
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: isIncome ? AppColors.income.withOpacity(0.1) : AppColors.expense.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+          title: Text(
+            transaction.description,
+            style: AppTextStyles.mediumText16w500,
           ),
-          child: Icon(
-            isIncome ? Icons.arrow_upward : Icons.arrow_downward,
-            color: isIncome ? AppColors.income : AppColors.expense,
-            size: 20,
+          subtitle: Text(
+            _formatDate(transaction.date),
+            style: AppTextStyles.smalltextw400.copyWith(
+              color: AppColors.inputcolor,
+            ),
           ),
-        ),
-        title: Text(
-          transaction.description,
-          style: AppTextStyles.mediumText16w500,
-        ),
-        subtitle: Text(
-          _formatDate(transaction.date),
-          style: AppTextStyles.smalltextw400.copyWith(
-            color: AppColors.inputcolor,
-          ),
-        ),
-        trailing: Text(
-          value,
-          style: AppTextStyles.mediumText16w600.copyWith(
-            color: isIncome ? AppColors.income : AppColors.expense,
+          trailing: Text(
+            value,
+            style: AppTextStyles.mediumText16w600.copyWith(
+              color: isIncome ? AppColors.income : AppColors.expense,
+            ),
           ),
         ),
       ),

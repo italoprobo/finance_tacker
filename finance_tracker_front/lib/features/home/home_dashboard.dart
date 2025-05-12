@@ -191,6 +191,12 @@ class _HomeDashboardState extends State<HomeDashboard> with CustomModalSheetMixi
                                   transaction: Transaction.fromModel(transaction),
                                   isIncome: isIncome,
                                   value: value,
+                                  onTap: () {
+                                    context.pushNamed(
+                                      'transaction-details',
+                                      extra: Transaction.fromModel(transaction),
+                                    );
+                                  },
                                   onLongPress: () {
                                     showModalBottomSheet(
                                       context: context,
