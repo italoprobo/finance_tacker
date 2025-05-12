@@ -51,4 +51,34 @@ class ClientCubit extends Cubit<ClientState> {
       emit(ClientFailure(e.toString()));
     }
   }
+
+  Future<void> updateClient(String token, String clientId, Map<String, dynamic> clientData) async {
+    try {
+      emit(ClientLoading());
+      await repository.updateClient(token, clientId, clientData);
+      await loadClients(token);
+    } catch (e) {
+      emit(ClientFailure(e.toString()));
+    }
+  }
+
+  Future<void> deleteClient(String token, String clientId) async {
+    try {
+      emit(ClientLoading());
+      await repository.deleteClient(token, clientId);
+      await loadClients(token);
+    } catch (e) {
+      emit(ClientFailure(e.toString()));
+    }
+  }
+
+  Future<void> inactivateClient(String token, String clientId) async {
+    try {
+      emit(ClientLoading());
+      await repository.inactivateClient(token, clientId);
+      await loadClients(token);
+    } catch (e) {
+      emit(ClientFailure(e.toString()));
+    }
+  }
 }

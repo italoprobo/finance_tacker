@@ -1,4 +1,5 @@
 import 'package:finance_tracker_front/common/widgets/custom_modal_bottom_sheet.dart';
+import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
@@ -7,6 +8,7 @@ import 'package:finance_tracker_front/common/extensions/sizes.dart';
 import 'package:finance_tracker_front/common/widgets/app_header.dart';
 import 'package:go_router/go_router.dart';
 import '../application/client_cubit.dart';
+
 
 class ClientsPage extends StatelessWidget {
   const ClientsPage({super.key});
@@ -122,7 +124,7 @@ class ClientsPage extends StatelessWidget {
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(12),
                                   onTap: () {
-                                    // Mostrar opções do cliente (editar, excluir, etc)
+                                    context.pushNamed('client-details', extra: client);
                                   },
                                   child: Container(
                                     margin: EdgeInsets.only(bottom: 8.h),
@@ -222,19 +224,44 @@ class ClientsPage extends StatelessWidget {
                                                     context.pop();
                                                     showCustomModalBottomSheet(
                                                       context: context,
-                                                      title: 'Confirmar exclusão',
+                                                      title: 'Inativar cliente?',
                                                       content: const Text(
-                                                        'Tem certeza que deseja excluir este cliente?',
+                                                        'O cliente será marcado como inativo e não aparecerá em novas transações, mas seu histórico será mantido.',
                                                         style: AppTextStyles.smalltextw400,
                                                         textAlign: TextAlign.center,
                                                       ),
-                                                      buttonText: 'Excluir',
+                                                      buttonText: 'Inativar',
                                                       buttonColor: AppColors.expense,
                                                       onPressed: () async {
-                                                        // Aqui coloque a lógica para excluir o cliente
-                                                        // Exemplo:
-                                                        // await context.read<ClientCubit>().deleteClient(client.id);
-                                                        // context.pop();
+                                                        final authState = context.read<AuthCubit>().state;
+                                                        if (authState is AuthSuccess) {
+                                                          try {
+                                                            await context.read<ClientCubit>().inactivateClient(
+                                                              authState.accessToken,
+                                                              client.id,
+                                                            );
+                                                            
+                                                            if (context.mounted) {
+                                                              context.pop();
+                                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                                const SnackBar(
+                                                                  content: Text('Cliente inativado com sucesso!'),
+                                                                  backgroundColor: AppColors.purple,
+                                                                ),
+                                                              );
+                                                            }
+                                                          } catch (e) {
+                                                            if (context.mounted) {
+                                                              context.pop();
+                                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                                const SnackBar(
+                                                                  content: Text('Erro ao inativar cliente'),
+                                                                  backgroundColor: AppColors.expense,
+                                                                ),
+                                                              );
+                                                            }
+                                                          }
+                                                        }
                                                       },
                                                     );
                                                   },
@@ -248,14 +275,14 @@ class ClientsPage extends StatelessWidget {
                                                           borderRadius: BorderRadius.circular(12),
                                                         ),
                                                         child: const Icon(
-                                                          Icons.delete,
+                                                          Icons.person_off,
                                                           color: AppColors.expense,
                                                           size: 24,
                                                         ),
                                                       ),
                                                       const SizedBox(height: 8),
                                                       Text(
-                                                        'Excluir',
+                                                        'Inativar',
                                                         style: AppTextStyles.smalltextw400.copyWith(
                                                           color: AppColors.expense,
                                                         ),

@@ -13,6 +13,7 @@ import 'package:finance_tracker_front/features/wallet/wallet_page.dart';
 import 'package:finance_tracker_front/features/transactions/presentation/add_transaction_page.dart';
 import 'package:finance_tracker_front/features/transactions/presentation/edit_transaction_page.dart';
 import 'package:finance_tracker_front/models/card_cubit.dart';
+import 'package:finance_tracker_front/models/client.dart';
 import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -27,6 +28,8 @@ import 'package:finance_tracker_front/features/clients/data/client_repository.da
 import 'package:finance_tracker_front/features/wallet/presentation/add_card_page.dart';
 import 'package:finance_tracker_front/features/wallet/presentation/card_details_page.dart';
 import 'package:finance_tracker_front/features/wallet/presentation/edit_card_page.dart';
+import 'package:finance_tracker_front/features/clients/presentation/client_details_page.dart';
+import 'package:finance_tracker_front/features/clients/presentation/edit_client_page.dart';
 
 // Chaves de navegação separadas
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -140,6 +143,30 @@ final GoRouter appRouter = GoRouter(
       name: 'edit-card',
       builder: (context, state) => EditCardPage(
         card: state.extra as CardModel,
+      ),
+    ),
+    GoRoute(
+      name: 'client-details',
+      path: '/client-details',
+      builder: (context, state) => BlocProvider(
+        create: (context) => ClientCubit(
+          getIt<ClientRepository>(),
+        ),
+        child: ClientDetailsPage(
+          client: state.extra as Client,
+        ),
+      ),
+    ),
+    GoRoute(
+      name: 'edit-client',
+      path: '/edit-client',
+      builder: (context, state) => BlocProvider(
+        create: (context) => ClientCubit(
+          getIt<ClientRepository>(),
+        ),
+        child: EditClientPage(
+          client: state.extra as Client,
+        ),
       ),
     ),
     

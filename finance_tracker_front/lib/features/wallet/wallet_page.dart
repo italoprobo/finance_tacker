@@ -370,17 +370,17 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
                 ),
                 SizedBox(height: 16.h),
                 Expanded(
-                  child: ListView.builder(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.symmetric(horizontal: 24.w),
-                    itemCount: state.cards.length,
-                    itemBuilder: (context, index) {
-                      final card = state.cards[index];
-                      return CreditCardItem(
-                        card: card,
-                        isPending: false,
-                      );
-                    },
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              itemCount: state.cards.length,
+              itemBuilder: (context, index) {
+                final card = state.cards[index];
+                return CreditCardItem(
+                  card: card,
+                  isPending: false,
+                );
+              },
                   ),
                 ),
               ],
@@ -472,119 +472,119 @@ class _TransactionsList extends StatelessWidget {
                       onTap: () {
                         // ação de clique, se quiser
                       },
-                      child: AnimatedTransactionTile(
-                        transaction: Transaction.fromModel(transaction),
-                        isIncome: isIncome,
-                        value: value,
-                        onLongPress: () {
-                          showCustomModalBottomSheet(
-                            context: context,
-                            title: 'O que deseja fazer?',
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
+                  child: AnimatedTransactionTile(
+                    transaction: Transaction.fromModel(transaction),
+                    isIncome: isIncome,
+                    value: value,
+                    onLongPress: () {
+                      showCustomModalBottomSheet(
+                        context: context,
+                        title: 'O que deseja fazer?',
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    GestureDetector(
-                                      onTap: () {
-                                        context.pop();
-                                        context.pushNamed(
-                                          'edit-transaction',
-                                          extra: transaction,
-                                        );
-                                      },
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(12),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.iceWhite,
-                                              borderRadius: BorderRadius.circular(12),
-                                            ),
-                                            child: const Icon(
-                                              Icons.edit,
-                                              color: AppColors.purple,
-                                              size: 24,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            'Editar',
-                                            style: AppTextStyles.smalltextw400.copyWith(
-                                              color: AppColors.purple,
-                                            ),
-                                          ),
-                                        ],
+                                GestureDetector(
+                                  onTap: () {
+                                    context.pop();
+                                    context.pushNamed(
+                                      'edit-transaction',
+                                      extra: transaction,
+                                    );
+                                  },
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.iceWhite,
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Icon(
+                                          Icons.edit,
+                                          color: AppColors.purple,
+                                          size: 24,
+                                        ),
                                       ),
-                                    ),
-                                    GestureDetector(
-                                      onTap: () {
-                                        context.pop();
-                                        showCustomModalBottomSheet(
-                                          context: context,
-                                            title: 'Confirmar exclusão',
-                                          content: const Text(
-                                            'Tem certeza que deseja excluir esta transação?',
-                                            style: AppTextStyles.smalltextw400,
-                                            textAlign: TextAlign.center,
-                                          ),
-                                          buttonText: 'Excluir',
-                                          buttonColor: AppColors.expense,
-                                          onPressed: () async {
-                                            try {
-                                              final authState = context.read<AuthCubit>().state;
-                                              if (authState is AuthSuccess) {
-                                                await context.read<TransactionCubit>().deleteTransaction(
-                                                  authState.accessToken,
-                                                  transaction.id,
-                                                );
-                                              }
-                                            } catch (e) {
-                                              if (context.mounted) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  const SnackBar(
-                                                    content: Text('Erro ao excluir transação'),
-                                                    backgroundColor: AppColors.expense,
-                                                  ),
-                                                );
-                                              }
-                                            }
-                                          },
-                                        );
-                                      },
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(12),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.iceWhite,
-                                              borderRadius: BorderRadius.circular(12),
-                                            ),
-                                            child: const Icon(
-                                              Icons.delete,
-                                              color: AppColors.expense,
-                                              size: 24,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            'Excluir',
-                                            style: AppTextStyles.smalltextw400.copyWith(
-                                              color: AppColors.expense,
-                                            ),
-                                          ),
-                                        ],
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Editar',
+                                        style: AppTextStyles.smalltextw400.copyWith(
+                                          color: AppColors.purple,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    context.pop();
+                                    showCustomModalBottomSheet(
+                                      context: context,
+                                        title: 'Confirmar exclusão',
+                                      content: const Text(
+                                        'Tem certeza que deseja excluir esta transação?',
+                                        style: AppTextStyles.smalltextw400,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      buttonText: 'Excluir',
+                                      buttonColor: AppColors.expense,
+                                      onPressed: () async {
+                                        try {
+                                          final authState = context.read<AuthCubit>().state;
+                                          if (authState is AuthSuccess) {
+                                            await context.read<TransactionCubit>().deleteTransaction(
+                                              authState.accessToken,
+                                              transaction.id,
+                                            );
+                                          }
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(
+                                                content: Text('Erro ao excluir transação'),
+                                                backgroundColor: AppColors.expense,
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
+                                    );
+                                  },
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.iceWhite,
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Icon(
+                                          Icons.delete,
+                                          color: AppColors.expense,
+                                          size: 24,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Excluir',
+                                        style: AppTextStyles.smalltextw400.copyWith(
+                                          color: AppColors.expense,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
-                          );
-                        },
+                          ],
+                        ),
+                      );
+                    },
                       ),
                     ),
                   ),
