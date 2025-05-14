@@ -52,13 +52,11 @@ class ClientDetailsPage extends StatelessWidget {
             },
           ),
           Positioned(
-            top: 150.h,
-            left: 28.w,
-            right: 28.w,
+            top: 164.h,
+            left: 0,
+            right: 0,
             bottom: 0.5.h,
             child: Container(
-              width: 358.w,
-              padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
                 color: AppColors.white,
                 borderRadius: BorderRadius.circular(16.0),
@@ -66,13 +64,21 @@ class ClientDetailsPage extends StatelessWidget {
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     _buildClientHeader(),
                     const SizedBox(height: 24),
-                    _buildClientDetails(),
-                    const SizedBox(height: 24),
-                    _buildContractDetails(),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildClientDetails(),
+                          const SizedBox(height: 24),
+                          _buildContractDetails(),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -84,38 +90,48 @@ class ClientDetailsPage extends StatelessWidget {
   }
 
   Widget _buildClientHeader() {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        const SizedBox(height: 24),
         Container(
-          width: 50,
-          height: 50,
+          width: 80,
+          height: 80,
           decoration: BoxDecoration(
-            color: AppColors.antiFlashWhite,
-            borderRadius: BorderRadius.circular(8),
+            color: AppColors.purple.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(40),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.person,
             color: AppColors.purple,
-            size: 30,
+            size: 40,
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                client.name,
-                style: AppTextStyles.mediumText16w600,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                client.company ?? 'Sem empresa',
-                style: AppTextStyles.smalltextw600.copyWith(
-                  color: const Color(0xFF666666),
-                ),
-              ),
-            ],
+        const SizedBox(height: 12),
+        Text(
+          client.name,
+          style: AppTextStyles.mediumText16w600,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+          decoration: BoxDecoration(
+            color: AppColors.purple.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Text(
+            client.company ?? 'Sem empresa',
+            style: AppTextStyles.smalltextw600.copyWith(
+              color: AppColors.purple,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'R\$ ${client.monthly_payment.toStringAsFixed(2)}',
+          style: AppTextStyles.mediumText24.copyWith(
+            color: AppColors.purple,
           ),
         ),
       ],

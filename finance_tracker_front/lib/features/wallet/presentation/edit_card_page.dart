@@ -94,21 +94,19 @@ class _EditCardPageState extends State<EditCardPage> with CustomSnackBar {
           ),
           Positioned(
             top: 150.h,
-            left: 28.w,
-            right: 28.w,
+            left: 0,
+            right: 0,
             bottom: 0.5.h,
             child: Container(
-              width: 358.w,
-              height: 500.h,
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
                 color: AppColors.white,
                 borderRadius: BorderRadius.circular(16.0),
               ),
-              child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

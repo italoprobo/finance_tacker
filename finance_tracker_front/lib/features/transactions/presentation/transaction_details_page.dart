@@ -53,13 +53,11 @@ class TransactionDetailsPage extends StatelessWidget {
             },
           ),
           Positioned(
-            top: 150.h,
-            left: 28.w,
-            right: 28.w,
+            top: 164.h,
+            left: 0,
+            right: 0,
             bottom: 0.5.h,
             child: Container(
-              width: 358.w,
-              padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
                 color: AppColors.white,
                 borderRadius: BorderRadius.circular(16.0),
@@ -67,13 +65,21 @@ class TransactionDetailsPage extends StatelessWidget {
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 24),
                     _buildTransactionHeader(),
                     const SizedBox(height: 24),
-                    _buildTransactionDetails(),
-                    const SizedBox(height: 24),
-                    if (transaction.client != null) _buildClientDetails(),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildTransactionDetails(),
+                          const SizedBox(height: 24),
+                          if (transaction.client != null) _buildClientDetails(),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -85,44 +91,55 @@ class TransactionDetailsPage extends StatelessWidget {
   }
 
   Widget _buildTransactionHeader() {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
-          width: 50,
-          height: 50,
+          width: 80,
+          height: 80,
           decoration: BoxDecoration(
             color: transaction.type == 'entrada' 
                 ? AppColors.income.withOpacity(0.1)
                 : AppColors.expense.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(40),
           ),
           child: Icon(
             transaction.type == 'entrada' ? Icons.arrow_upward : Icons.arrow_downward,
             color: transaction.type == 'entrada' ? AppColors.income : AppColors.expense,
-            size: 30,
+            size: 40,
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'R\$ ${transaction.amount.toStringAsFixed(2)}',
-                style: AppTextStyles.mediumText16w600.copyWith(
-                  color: transaction.type == 'entrada' 
-                      ? AppColors.income 
-                      : AppColors.expense,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                transaction.description,
-                style: AppTextStyles.smalltextw600.copyWith(
-                  color: const Color(0xFF666666),
-                ),
-              ),
-            ],
+        const SizedBox(height: 12),
+        Text(
+          transaction.description,
+          style: AppTextStyles.mediumText16w600,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+          decoration: BoxDecoration(
+            color: transaction.type == 'entrada' 
+                ? AppColors.income.withOpacity(0.1)
+                : AppColors.expense.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Text(
+            transaction.type == 'entrada' ? 'Entrada' : 'Saída',
+            style: AppTextStyles.smalltextw600.copyWith(
+              color: transaction.type == 'entrada' 
+                  ? AppColors.income 
+                  : AppColors.expense,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'R\$ ${transaction.amount.toStringAsFixed(2)}',
+          style: AppTextStyles.mediumText24.copyWith(
+            color: transaction.type == 'entrada' 
+                ? AppColors.income 
+                : AppColors.expense,
           ),
         ),
       ],
@@ -133,26 +150,58 @@ class TransactionDetailsPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Detalhes da Transação',
           style: AppTextStyles.mediumText16w600,
         ),
         const SizedBox(height: 16),
         _buildDetailItem(
+          'Status',
+          transaction.type == 'entrada' ? 'Entrada' : 'Saída',
+          color: transaction.type == 'entrada' ? AppColors.income : AppColors.expense,
+        ),
+        _buildDetailItem(
+          'Tempo',
+          DateFormat('HH:mm').format(transaction.date),
+        ),
+        _buildDetailItem(
           'Data',
           DateFormat('dd/MM/yyyy').format(transaction.date),
         ),
         _buildDetailItem(
-          'Tipo',
-          transaction.type == 'entrada' ? 'Receita' : 'Despesa',
+          'Gasto',
+          'R\$ ${transaction.amount.toStringAsFixed(2)}',
         ),
-        _buildDetailItem(
-          'Categoria',
-          transaction.category,
-        ),
-        _buildDetailItem(
-          'Recorrente',
-          transaction.isRecurring ? 'Sim' : 'Não',
+        const SizedBox(height: 24),
+        Container(
+          width: double.infinity,
+          height: 48,
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            border: Border.all(
+              color: const Color(0xFF611BF8),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(24),
+              onTap: () {
+                // Implementar download do recibo
+              },
+              child: Center(
+                child: Text(
+                  'Baixar Recibo (TESTE)',
+                  style: AppTextStyles.mediumText18.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF611BF8),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       ],
     );
@@ -184,7 +233,7 @@ class TransactionDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailItem(String label, String value) {
+  Widget _buildDetailItem(String label, String value, {Color? color}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -198,7 +247,9 @@ class TransactionDetailsPage extends StatelessWidget {
           ),
           Text(
             value,
-            style: AppTextStyles.smalltextw600,
+            style: AppTextStyles.smalltextw600.copyWith(
+              color: color,
+            ),
           ),
         ],
       ),

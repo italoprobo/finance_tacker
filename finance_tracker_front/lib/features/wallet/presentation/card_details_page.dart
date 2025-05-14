@@ -52,13 +52,11 @@ class CardDetailsPage extends StatelessWidget {
             },
           ),
           Positioned(
-            top: 150.h,
-            left: 28.w,
-            right: 28.w,
+            top: 164.h,
+            left: 0,
+            right: 0,
             bottom: 0.5.h,
             child: Container(
-              width: 358.w,
-              padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
                 color: AppColors.white,
                 borderRadius: BorderRadius.circular(16.0),
@@ -66,13 +64,21 @@ class CardDetailsPage extends StatelessWidget {
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     _buildCardHeader(),
                     const SizedBox(height: 24),
-                    _buildCardDetails(),
-                    const SizedBox(height: 24),
-                    _buildCardLimits(),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildCardDetails(),
+                          const SizedBox(height: 24),
+                          _buildCardLimits(),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -84,45 +90,58 @@ class CardDetailsPage extends StatelessWidget {
   }
 
   Widget _buildCardHeader() {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.asset(
-            _getCardIconPath(card.name),
-            width: 50,
-            height: 50,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                width: 50,
-                height: 50,
-                color: AppColors.antiFlashWhite,
-                child: const Icon(
+        const SizedBox(height: 24),
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: AppColors.purple.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(40),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(40),
+            child: Image.asset(
+              _getCardIconPath(card.name),
+              width: 80,
+              height: 80,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(
                   Icons.credit_card,
                   color: AppColors.purple,
-                  size: 30,
-                ),
-              );
-            },
+                  size: 40,
+                );
+              },
+            ),
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                card.name,
-                style: AppTextStyles.mediumText16w600,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '•••• ${card.lastDigits}',
-                style: AppTextStyles.smalltextw600.copyWith(
-                  color: const Color(0xFF666666),
-                ),
-              ),
-            ],
+        const SizedBox(height: 12),
+        Text(
+          card.name,
+          style: AppTextStyles.mediumText16w600,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+          decoration: BoxDecoration(
+            color: AppColors.purple.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Text(
+            '•••• ${card.lastDigits}',
+            style: AppTextStyles.smalltextw600.copyWith(
+              color: AppColors.purple,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'R\$ ${card.limit.toStringAsFixed(2)}',
+          style: AppTextStyles.mediumText24.copyWith(
+            color: AppColors.purple,
           ),
         ),
       ],
@@ -133,7 +152,7 @@ class CardDetailsPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Detalhes do Cartão',
           style: AppTextStyles.mediumText16w600,
         ),
@@ -160,7 +179,7 @@ class CardDetailsPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Limites',
           style: AppTextStyles.mediumText16w600,
         ),
