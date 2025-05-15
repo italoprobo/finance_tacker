@@ -65,15 +65,15 @@ class ClientsPage extends StatelessWidget {
                               size: 20,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
+          ),
+        ],
+      ),
                   ),
                   SizedBox(height: 16.h),
                   Expanded(
                     child: BlocBuilder<ClientCubit, ClientState>(
-                      builder: (context, state) {
-                        if (state is ClientLoading) {
+        builder: (context, state) {
+          if (state is ClientLoading) {
                           return ListView.builder(
                             physics: const BouncingScrollPhysics(),
                             padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -140,9 +140,9 @@ class ClientsPage extends StatelessWidget {
                               );
                             },
                           );
-                        }
-
-                        if (state is ClientSuccess) {
+          }
+          
+          if (state is ClientSuccess) {
                           if (state.clients.isEmpty) {
                             return Center(
                               child: Column(
@@ -163,29 +163,29 @@ class ClientsPage extends StatelessWidget {
                             );
                           }
 
-                          return ListView.builder(
+            return ListView.builder(
                             physics: const AlwaysScrollableScrollPhysics(),
                             padding: EdgeInsets.symmetric(horizontal: 24.w),
-                            itemCount: state.clients.length,
-                            itemBuilder: (context, index) {
-                              final client = state.clients[index];
-                              return Material(
-                                color: Colors.transparent,
-                                borderRadius: BorderRadius.circular(12),
-                                child: InkWell(
+              itemCount: state.clients.length,
+              itemBuilder: (context, index) {
+                final client = state.clients[index];
+                              return Container(
+                                margin: EdgeInsets.only(bottom: 8.h),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
                                   borderRadius: BorderRadius.circular(12),
-                                  onTap: () {
-                                    context.pushNamed('client-details', extra: client);
-                                  },
-                                  child: Container(
-                                    margin: EdgeInsets.only(bottom: 8.h),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: Colors.grey.withOpacity(0.2),
-                                      ),
-                                    ),
+                                  border: Border.all(
+                                    color: Colors.grey.withOpacity(0.2),
+                                  ),
+                                ),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(12),
+                                    onTap: () {
+                                      context.pushNamed('client-details', extra: client);
+                                    },
                                     child: ListTile(
                                       contentPadding: EdgeInsets.symmetric(
                                         horizontal: 16.w,
@@ -218,9 +218,9 @@ class ClientsPage extends StatelessWidget {
                                             child: Text(
                                               client.status == 'ativo' ? 'Ativo' : 'Inativo',
                                               style: AppTextStyles.smalltext13.copyWith(
-                                                color: client.status == 'ativo'
-                                                    ? Colors.green
-                                                    : Colors.red,
+                    color: client.status == 'ativo' 
+                        ? Colors.green 
+                        : Colors.red,
                                               ),
                                             ),
                                           ),
@@ -365,13 +365,13 @@ class ClientsPage extends StatelessWidget {
                                       ),
                                     ),
                                   ),
-                                ),
-                              );
-                            },
-                          );
-                        }
+                  ),
+                );
+              },
+            );
+          }
 
-                        if (state is ClientFailure) {
+          if (state is ClientFailure) {
                           return Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
