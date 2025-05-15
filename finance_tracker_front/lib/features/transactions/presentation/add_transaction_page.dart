@@ -1,4 +1,6 @@
+import 'package:finance_tracker_front/common/extensions/currency_extension.dart';
 import 'package:finance_tracker_front/common/widgets/custom_checkbox_field.dart';
+import 'package:finance_tracker_front/common/widgets/payment_form_field.dart';
 import 'package:finance_tracker_front/features/clients/application/client_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +18,8 @@ import 'package:finance_tracker_front/models/transaction_cubit.dart';
 import 'package:finance_tracker_front/features/categories/application/categories_cubit.dart';
 import 'package:go_router/go_router.dart';
 import 'package:finance_tracker_front/common/widgets/client_form_field.dart';
+import 'package:finance_tracker_front/models/card_cubit.dart';
+import 'package:finance_tracker_front/common/widgets/card_form_field.dart';
 
 class MoneyInputFormatter extends TextInputFormatter {
   @override
@@ -72,6 +76,11 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
   bool _isLoading = false;
   String? _selectedClientId;
   bool _isRecurring = false;
+
+  // Novas variáveis para cartões
+  String _paymentMethod = 'dinheiro'; // 'dinheiro', 'debito', 'credito'
+  String? _selectedCardId;
+  CardModel? _selectedCard;
 
   @override
   void initState() {
@@ -378,6 +387,62 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                               });
                             },
                           ),
+                          PaymentMethodFormField(
+                            value: _paymentMethod,
+                            onMethodSelected: (method) {
+                              setState(() {
+                                _paymentMethod = method;
+                                if (method == 'dinheiro') {
+                                  _selectedCard = null;
+                                  _selectedCardId = null;
+                                }
+                              });
+                            },
+                            padding: EdgeInsets.zero,
+                          ),
+                          if (_paymentMethod != 'dinheiro')
+                            BlocBuilder<CardCubit, CardState>(
+                              builder: (context, state) {
+                                if (state is CardLoading) {
+                                  return const CircularProgressIndicator();
+                                }
+
+                                if (state is CardSuccess) {
+                                  final cards = state.cards.where((card) => 
+                                    card.cardType.contains(_paymentMethod == 'credito' ? 'credito' : 'debito')
+                                  ).toList();
+
+                                  if (cards.isEmpty) {
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                      child: Text(
+                                        'Nenhum cartão ${_paymentMethod == 'credito' ? 'de crédito' : 'de débito'} cadastrado',
+                                        style: AppTextStyles.smalltextw400.copyWith(
+                                          color: AppColors.error,
+                                        ),
+                                      ),
+                                    );
+                                  }
+
+                                  return CardFormField(
+                                    selectedCardId: _selectedCardId,
+                                    cards: cards,
+                                    paymentMethod: _paymentMethod,
+                                    onCardSelected: (cardId) {
+                                      setState(() {
+                                        _selectedCardId = cardId;
+                                        _selectedCard = cardId != null 
+                                            ? cards.firstWhere((card) => card.id == cardId)
+                                            : null;
+                                      });
+                                    },
+                                    padding: EdgeInsets.zero,
+                                  );
+                                }
+
+                                return const SizedBox.shrink();
+                              },
+                            ),
                           const SizedBox(height: 26.0),
                           BlocListener<TransactionCubit, TransactionState>(
                             listener: (context, state) {
@@ -423,6 +488,8 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                                         'userId': authState.id,
                                         'clientId': _selectedClientId,
                                         'isRecurring': _isRecurring,
+                                        'cardId': _selectedCardId,
+                                        'paymentMethod': _paymentMethod,
                                       };
 
                                       if (_selectedClientId != null && _isRecurring) {
@@ -446,7 +513,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                                         transactionData,
                                       );
                                     } catch (e) {
-                                      _showErrorSnackBar('Erro ao processar o valor');
+                                      _showErrorSnackBar('Erro ao processar a transação');
                                     }
                                   } else {
                                     _showErrorSnackBar('Usuário não autenticado');

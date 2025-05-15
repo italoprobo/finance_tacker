@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 import 'package:finance_tracker_front/features/reports/reports_repository.dart';
 import 'package:finance_tracker_front/features/reports/reports_cubit.dart';
 import 'package:finance_tracker_front/features/clients/data/client_repository.dart';
+import 'package:finance_tracker_front/models/card_cubit.dart';
 
 final getIt = GetIt.instance;
 
@@ -31,5 +32,10 @@ void setupDependencies() {
   // Cubits
   getIt.registerFactory<ReportsCubit>(
     () => ReportsCubit(getIt<ReportsRepository>()),
+  );
+
+  // Novo registro do CardCubit
+  getIt.registerFactory<CardCubit>(
+    () => CardCubit(getIt<Dio>()),
   );
 }

@@ -19,6 +19,10 @@ export class CreateCardDto {
 
     @IsOptional()
     @IsNumber()
+    salary?: number;
+
+    @IsOptional()
+    @IsNumber()
     @Min(1)
     @Max(31)
     closingDay?: number; 
@@ -34,4 +38,12 @@ export class CreateCardDto {
 
     @IsUUID()
     userId: string;
+
+    @IsOptional()
+    @IsArray()
+    invoiceTransactions?: {
+        month: number;
+        year: number;
+        transactions: string[];
+    }[];
 }

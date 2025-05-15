@@ -52,4 +52,9 @@ export class TransactionsController {
     ): Promise<Transaction[]> {
         return this.transactionService.findByClient(req.user.id, clientId);
     }
+
+    @Get('card/:cardId')
+    findByCard(@Request() req, @Param('cardId') cardId: string) {
+        return this.transactionService.findByCard(req.user.id, cardId);
+    }
 }

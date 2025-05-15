@@ -67,12 +67,19 @@ final GoRouter appRouter = GoRouter(
       name: 'add-transaction',
       path: '/add-transaction',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) => BlocProvider(
-        create: (context) => ClientCubit(
-          getIt<ClientRepository>(),
-        )..loadClients(
-            (context.read<AuthCubit>().state as AuthSuccess).accessToken,
+      builder: (context, state) => MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => ClientCubit(
+              getIt<ClientRepository>(),
+            )..loadClients(
+                (context.read<AuthCubit>().state as AuthSuccess).accessToken,
+              ),
           ),
+          BlocProvider(
+            create: (context) => getIt<CardCubit>(),
+          ),
+        ],
         child: const AddTransactionPage(),
       ),
     ),

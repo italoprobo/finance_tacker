@@ -32,4 +32,12 @@ export class UpdateTransactionDto {
     @IsOptional()
     @IsBoolean()
     isRecurring?: boolean;
+
+    @IsOptional()
+    @IsEnum(['credit', 'debit'])
+    paymentMethod?: 'credit' | 'debit';
+
+    @IsOptional()
+    @IsUUID()
+    cardId?: string;
 }

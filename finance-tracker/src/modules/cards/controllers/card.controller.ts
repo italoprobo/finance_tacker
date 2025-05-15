@@ -35,4 +35,25 @@ export class CardController {
     remove(@Param('id') id: string, @Request() req) {
         return this.cardService.remove(id, req.user.id);
     }
+
+    @Get(':id/balance')
+    async getBalance(@Param('id') id: string, @Request() req) {
+        return {
+            balance: await this.cardService.getCardBalance(id, req.user.id)
+        };
+    }
+
+    @Get(':id/invoice')
+    getCurrentInvoice(@Param('id') id: string, @Request() req) {
+        return this.cardService.getCurrentInvoice(id, req.user.id);
+    }
+
+    @Post(':id/link-transaction/:transactionId')
+    linkTransaction(
+        @Param('id') id: string,
+        @Param('transactionId') transactionId: string,
+        @Request() req
+    ) {
+        return this.cardService.linkTransaction(id, transactionId, req.user.id);
+    }
 }

@@ -1,3 +1,4 @@
+import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
 import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
@@ -5,6 +6,7 @@ import 'package:finance_tracker_front/common/extensions/sizes.dart';
 import 'package:finance_tracker_front/common/widgets/app_header.dart';
 import 'package:finance_tracker_front/models/card_cubit.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CardDetailsPage extends StatelessWidget {
   final CardModel card;
@@ -137,13 +139,6 @@ class CardDetailsPage extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        Text(
-          'R\$ ${card.limit.toStringAsFixed(2)}',
-          style: AppTextStyles.mediumText24.copyWith(
-            color: AppColors.purple,
-          ),
-        ),
       ],
     );
   }
@@ -180,23 +175,114 @@ class CardDetailsPage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Limites',
+          'Limites e Saldos',
           style: AppTextStyles.mediumText16w600,
         ),
         const SizedBox(height: 16),
-        _buildDetailItem(
-          'Limite Total',
-          'R\$ ${card.limit.toStringAsFixed(2)}',
-        ),
-        _buildDetailItem(
-          'Saldo Atual',
-          'R\$ ${card.currentBalance.toStringAsFixed(2)}',
-        ),
-        _buildDetailItem(
-          'Limite Disponível',
-          'R\$ ${(card.limit - card.currentBalance).toStringAsFixed(2)}',
-        ),
+        if (card.cardType.contains('debito')) ...[
+          _buildDetailItem(
+            'Saldo em Conta',
+            'R\$ ${card.salary?.toStringAsFixed(2) ?? "0.00"}',
+          ),
+          BlocBuilder<AuthCubit, AuthState>(
+            builder: (context, authState) {
+              if (authState is! AuthSuccess) {
+                return const Text('Não autorizado');
+              }
+              
+              return BlocBuilder<CardCubit, CardState>(
+                builder: (context, state) {
+                  if (state is CardLoading) {
+                    return const CircularProgressIndicator();
+                  }
+                  return FutureBuilder<double>(
+                    future: context.read<CardCubit>().getCardBalance(
+                      authState.accessToken,
+                      card.id,
+                    ),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Text('Erro: ${snapshot.error}');
+                      }
+                      return _buildDetailItem(
+                        'Saldo Disponível',
+                        'R\$ ${snapshot.data?.toStringAsFixed(2) ?? "0.00"}',
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        ],
+        if (card.cardType.contains('credito')) ...[
+          _buildDetailItem(
+            'Limite Total',
+            'R\$ ${card.limit.toStringAsFixed(2)}',
+          ),
+          _buildDetailItem(
+            'Fatura Atual',
+            'R\$ ${card.currentBalance.toStringAsFixed(2)}',
+          ),
+          _buildDetailItem(
+            'Limite Disponível',
+            'R\$ ${(card.limit - card.currentBalance).toStringAsFixed(2)}',
+          ),
+          const SizedBox(height: 24),
+          _buildInvoiceSection(),
+        ],
       ],
+    );
+  }
+
+  Widget _buildInvoiceSection() {
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, authState) {
+        if (authState is! AuthSuccess) {
+          return const Text('Não autorizado');
+        }
+
+        return BlocBuilder<CardCubit, CardState>(
+          builder: (context, state) {
+            return FutureBuilder<Map<String, dynamic>>(
+              future: context.read<CardCubit>().getCurrentInvoice(
+                authState.accessToken,
+                card.id,
+              ),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Text('Erro: ${snapshot.error}');
+                }
+                if (!snapshot.hasData) {
+                  return const CircularProgressIndicator();
+                }
+
+                final invoice = snapshot.data!;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Fatura Atual',
+                      style: AppTextStyles.mediumText16w600,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildDetailItem(
+                      'Fechamento',
+                      _formatDate(invoice['closingDate']),
+                    ),
+                    _buildDetailItem(
+                      'Vencimento',
+                      _formatDate(invoice['dueDate']),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTransactionsList(invoice['transactions']),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 
@@ -245,9 +331,29 @@ class CardDetailsPage extends StatelessWidget {
             child: const Text('Cancelar'),
           ),
           TextButton(
-            onPressed: () {
-              // Implementar lógica de exclusão
-              Navigator.pop(context);
+            onPressed: () async {
+              try {
+                final authState = context.read<AuthCubit>().state;
+                if (authState is AuthSuccess) {
+                  await context.read<CardCubit>().deleteCard(
+                    authState.accessToken,
+                    card.id,
+                  );
+                  if (context.mounted) {
+                    context.pop(); // Fecha o dialog
+                    context.pop(); // Volta para a tela anterior
+                  }
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Erro ao excluir cartão'),
+                      backgroundColor: AppColors.expense,
+                    ),
+                  );
+                }
+              }
             },
             child: const Text(
               'Excluir',
@@ -256,6 +362,72 @@ class CardDetailsPage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  String _formatDate(String date) {
+    final DateTime dateTime = DateTime.parse(date);
+    return "${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}";
+  }
+
+  Widget _buildTransactionsList(List<dynamic> transactions) {
+    if (transactions.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Text(
+          'Nenhuma transação encontrada',
+          style: AppTextStyles.smalltextw400,
+        ),
+      );
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: transactions.length,
+      itemBuilder: (context, index) {
+        final transaction = transactions[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.antiFlashWhite,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        transaction['description'],
+                        style: AppTextStyles.smalltextw600,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _formatDate(transaction['date']),
+                        style: AppTextStyles.smalltextw400.copyWith(
+                          color: AppColors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  'R\$ ${double.parse(transaction['amount'].toString()).toStringAsFixed(2)}',
+                  style: AppTextStyles.smalltextw600.copyWith(
+                    color: transaction['type'] == 'entrada' 
+                        ? AppColors.income 
+                        : AppColors.expense,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

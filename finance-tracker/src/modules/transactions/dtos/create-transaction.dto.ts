@@ -17,6 +17,14 @@ export class CreateTransactionDto {
     @IsDateString()
     date: Date;
 
+    @IsOptional()
+    @IsEnum(['credit', 'debit'])
+    paymentMethod?: 'credit' | 'debit';
+
+    @IsOptional()
+    @IsUUID()
+    cardId?: string;
+
     @IsNotEmpty()
     @IsUUID()
     userId: string;
@@ -31,5 +39,5 @@ export class CreateTransactionDto {
 
     @IsOptional() 
     @IsBoolean()
-    isRecurring?: boolean = false;  // false por padrão
+    isRecurring?: boolean = false;  // padrão
 }
