@@ -193,7 +193,7 @@ class CreditCardItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '- R\$ ${card.currentBalance.toStringAsFixed(2)}',
+                      'R\$ ${card.currentBalance.toStringAsFixed(2)}',
                       style: AppTextStyles.mediumText16w600.copyWith(
                         color: AppColors.expense,
                       ),

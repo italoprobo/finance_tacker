@@ -55,7 +55,7 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
   }
 
   List<TransactionModel> _filterTransactions(List<TransactionModel> transactions) {
-    return transactions.where((transaction) {
+    final filtered = transactions.where((transaction) {
       bool matchesCategory = _selectedCategory == null || 
                            transaction.categoryId == _selectedCategory;
       bool matchesDate = _selectedDate == null ||
@@ -64,6 +64,9 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
                         transaction.date.day == _selectedDate!.day;
       return matchesCategory && matchesDate;
     }).toList();
+
+    filtered.sort((a, b) => b.date.compareTo(a.date));
+    return filtered;
   }
 
   @override
@@ -460,7 +463,7 @@ class _TransactionsList extends StatelessWidget {
                 final bool isIncome = transaction.type == 'entrada';
                 final value = isIncome
                     ? transaction.amount.toCurrencyWithSign()
-                    : transaction.amount.abs().toCurrency();
+                    : '- ${transaction.amount.abs().toCurrency()}';
 
                 return Padding(
                   padding: EdgeInsets.only(bottom: 8.h),

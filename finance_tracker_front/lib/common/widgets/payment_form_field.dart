@@ -44,6 +44,12 @@ class PaymentMethodFormField extends StatelessWidget {
   }
 
   Widget _buildOption(String label, String optionValue, IconData icon, BuildContext context) {
+    final backendValue = {
+      'dinheiro': null,
+      'debito': 'debit',
+      'credito': 'credit'
+    }[optionValue];
+
     final isSelected = value == optionValue;
     return Expanded(
       child: InkWell(

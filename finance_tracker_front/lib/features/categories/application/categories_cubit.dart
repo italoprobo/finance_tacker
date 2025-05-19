@@ -32,11 +32,13 @@ class CategoryModel extends Equatable {
   final String id;
   final String name;
   final String? description;
+  final String? type;
 
   const CategoryModel({
     required this.id,
     required this.name,
     this.description,
+    this.type,
   });
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
@@ -44,11 +46,12 @@ class CategoryModel extends Equatable {
       id: json['id'],
       name: json['name'],
       description: json['description'],
+      type: json['type'] ?? 'saida',
     );
   }
 
   @override
-  List<Object?> get props => [id, name, description];
+  List<Object?> get props => [id, name, description, type];
 }
 
 class CategoriesCubit extends Cubit<CategoriesState> {
@@ -65,13 +68,27 @@ class CategoriesCubit extends Cubit<CategoriesState> {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
+        print('Dados das categorias recebidos: $data'); // Debug
         List<CategoryModel> categories = data.map((e) => CategoryModel.fromJson(e)).toList();
+        print('Categorias processadas: ${categories.map((c) => '${c.name}:${c.type}').toList()}'); // Debug
         emit(CategoriesSuccess(categories: categories));
       } else {
-        emit(CategoriesFailure("Erro ao buscar categorias"));
+        emit(CategoriesFailure("Erro ao buscar categorias: Status ${response.statusCode}"));
       }
     } catch (e) {
-      emit(CategoriesFailure("Falha ao conectar com o servidor"));
+      // Melhorando a mensagem de erro
+      String errorMessage = "Falha ao conectar com o servidor";
+      if (e is DioException) {
+        if (e.type == DioExceptionType.connectionTimeout) {
+          errorMessage = "Tempo de conexão esgotado";
+        } else if (e.type == DioExceptionType.connectionError) {
+          errorMessage = "Erro de conexão: Verifique sua internet";
+        } else if (e.response != null) {
+          errorMessage = "Erro ${e.response?.statusCode}: ${e.response?.statusMessage}";
+        }
+      }
+      emit(CategoriesFailure(errorMessage));
+      print("Erro detalhado: $e"); // Para debug
     }
   }
 } 

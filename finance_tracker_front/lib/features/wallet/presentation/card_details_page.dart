@@ -226,7 +226,7 @@ class CardDetailsPage extends StatelessWidget {
           ),
           _buildDetailItem(
             'Limite Disponível',
-            'R\$ ${(card.limit - card.currentBalance).toStringAsFixed(2)}',
+            'R\$ ${(card.limit + card.currentBalance).toStringAsFixed(2)}',
           ),
           const SizedBox(height: 24),
           _buildInvoiceSection(),
