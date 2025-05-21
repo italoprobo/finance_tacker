@@ -233,22 +233,105 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
     return BlocBuilder<CardCubit, CardState>(
       builder: (context, state) {
         if (state is CardInitial || state is CardLoading) {
-          return ListView.builder(
-            physics: const BouncingScrollPhysics(),
-            padding: EdgeInsets.symmetric(horizontal: 24.w),
-            itemCount: 3,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: EdgeInsets.only(bottom: 9.h),
-                child: Container(
-                  height: 70,
-                  decoration: BoxDecoration(
-                    color: AppColors.antiFlashWhite,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+          return Column(
+            children: [
+              // Header
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Meus Cartões',
+                      style: AppTextStyles.buttontext.apply(color: AppColors.black),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.antiFlashWhite,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.add,
+                        color: AppColors.purple,
+                        size: 20,
+                      ),
+                    ),
+                  ],
                 ),
-              );
-            },
+              ),
+              SizedBox(height: 16.h),
+              // Lista de Cartões com Loading
+              Expanded(
+                child: ListView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  itemCount: 3,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      margin: EdgeInsets.only(bottom: 9.h),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.grey.withOpacity(0.1),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          // Logo do cartão
+                          Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: AppColors.antiFlashWhite,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.credit_card,
+                              color: AppColors.purple,
+                              size: 30,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // Detalhes do cartão
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Carregando...',
+                                  style: AppTextStyles.mediumText16w600,
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  '••••',
+                                  style: TextStyle(
+                                    color: Color(0xFF666666),
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Indicador de carregamento
+                          Container(
+                            width: 24,
+                            height: 24,
+                            margin: const EdgeInsets.only(left: 12),
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.expense),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           );
         }
 
@@ -373,17 +456,17 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
                 ),
                 SizedBox(height: 16.h),
                 Expanded(
-            child: ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
-              itemCount: state.cards.length,
-              itemBuilder: (context, index) {
-                final card = state.cards[index];
-                return CreditCardItem(
-                  card: card,
-                  isPending: false,
-                );
-              },
+                  child: ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.symmetric(horizontal: 24.w),
+                    itemCount: state.cards.length,
+                    itemBuilder: (context, index) {
+                      final card = state.cards[index];
+                      return CreditCardItem(
+                        card: card,
+                        isPending: false,
+                      );
+                    },
                   ),
                 ),
               ],
@@ -536,7 +619,7 @@ class _TransactionsList extends StatelessWidget {
                                         context.pop();
                                         showCustomModalBottomSheet(
                                           context: context,
-                                            title: 'Confirmar exclusão',
+                                          title: 'Confirmar exclusão',
                                           content: const Text(
                                             'Tem certeza que deseja excluir esta transação?',
                                             style: AppTextStyles.smalltextw400,

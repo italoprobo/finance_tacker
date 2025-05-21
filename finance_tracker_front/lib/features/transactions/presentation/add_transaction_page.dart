@@ -535,6 +535,23 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                                           return;
                                         }
 
+                                        if (_paymentMethod == 'credito' && _selectedCard != null) {
+                                            final amount = double.parse(
+                                                _amountController.text
+                                                    .replaceAll('R\$', '')
+                                                    .replaceAll('.', '')
+                                                    .replaceAll(',', '.')
+                                                    .trim(),
+                                            );
+
+                                            // Verifica se há limite disponível
+                                            if (amount > (_selectedCard!.limit - _selectedCard!.currentBalance)) {
+                                                _showErrorSnackBar('Limite do cartão insuficiente para esta transação');
+                                                setState(() => _isLoading = false);
+                                                return;
+                                            }
+                                        }
+
                                         setState(() => _isLoading = true);
                                         
                                         final authState = context.read<AuthCubit>().state;

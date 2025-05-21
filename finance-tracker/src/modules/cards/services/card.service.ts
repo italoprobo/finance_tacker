@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { Injectable, NotFoundException, UnauthorizedException, BadRequestException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Card } from "../entities/card.entity";
@@ -128,6 +128,12 @@ export class CardService {
             dueDate.setMonth(dueDate.getMonth() + 1);
         }
 
+        console.log('Buscando transações do cartão:', {
+            cardId: id,
+            periodoInicio: new Date(closingDate.getFullYear(), closingDate.getMonth() - 1, card.closingDay + 1),
+            periodoFim: closingDate
+        });
+
         const transactions = await this.transactionRepository.find({
             where: {
                 card: { id },
@@ -141,7 +147,22 @@ export class CardService {
             order: { date: 'DESC' }
         });
 
-        const total = transactions.reduce((sum, trans) => sum + trans.amount, 0);
+        console.log('Transações encontradas:', transactions.map(t => ({
+            id: t.id,
+            valor: t.amount,
+            data: t.date
+        })));
+
+        const total = transactions.reduce((sum, trans) => {
+            const amount = Number(trans.amount);
+            return sum + amount;
+        }, 0);
+        
+        console.log('Total calculado corretamente:', {
+            numeroTransacoes: transactions.length,
+            transacoes: transactions.map(t => Number(t.amount)),
+            total: total
+        });
 
         return {
             total,

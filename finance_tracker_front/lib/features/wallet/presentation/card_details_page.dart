@@ -220,13 +220,41 @@ class CardDetailsPage extends StatelessWidget {
             'Limite Total',
             'R\$ ${card.limit.toStringAsFixed(2)}',
           ),
-          _buildDetailItem(
-            'Fatura Atual',
-            'R\$ ${card.currentBalance.toStringAsFixed(2)}',
-          ),
-          _buildDetailItem(
-            'Limite Disponível',
-            'R\$ ${(card.limit + card.currentBalance).toStringAsFixed(2)}',
+          BlocBuilder<CardCubit, CardState>(
+            builder: (context, state) {
+              if (state is CardLoading) {
+                return const CircularProgressIndicator();
+              }
+              return FutureBuilder<Map<String, dynamic>>(
+                future: context.read<CardCubit>().getCurrentInvoice(
+                  context.read<AuthCubit>().state is AuthSuccess 
+                      ? (context.read<AuthCubit>().state as AuthSuccess).accessToken 
+                      : '',
+                  card.id,
+                ),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Text('Erro: ${snapshot.error}');
+                  }
+                  
+                  final faturaAtual = snapshot.data?['total'] ?? 0.0;
+                  final limiteDisponivel = card.limit + faturaAtual; // Como faturaAtual já é negativo, usamos +
+                  
+                  return Column(
+                    children: [
+                      _buildDetailItem(
+                        'Fatura Atual',
+                        'R\$ ${faturaAtual.abs().toStringAsFixed(2)}',
+                      ),
+                      _buildDetailItem(
+                        'Limite Disponível',
+                        'R\$ ${limiteDisponivel.toStringAsFixed(2)}',
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
           ),
           const SizedBox(height: 24),
           _buildInvoiceSection(),
@@ -258,6 +286,8 @@ class CardDetailsPage extends StatelessWidget {
                 }
 
                 final invoice = snapshot.data!;
+                final transactions = invoice['transactions'] as List;
+                
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -275,7 +305,57 @@ class CardDetailsPage extends StatelessWidget {
                       _formatDate(invoice['dueDate']),
                     ),
                     const SizedBox(height: 16),
-                    _buildTransactionsList(invoice['transactions']),
+                    if (transactions.isEmpty)
+                      const Text('Nenhuma transação encontrada')
+                    else
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: transactions.length,
+                        itemBuilder: (context, index) {
+                          final transaction = transactions[index];
+                          final amount = double.parse(transaction['amount'].toString());
+                          
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.antiFlashWhite,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          transaction['description'],
+                                          style: AppTextStyles.smalltextw600,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          _formatDate(transaction['date']),
+                                          style: AppTextStyles.smalltextw400.copyWith(
+                                            color: AppColors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Text(
+                                    'R\$ ${amount.abs().toStringAsFixed(2)}',
+                                    style: AppTextStyles.smalltextw600.copyWith(
+                                      color: AppColors.expense,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                   ],
                 );
               },
@@ -368,66 +448,5 @@ class CardDetailsPage extends StatelessWidget {
   String _formatDate(String date) {
     final DateTime dateTime = DateTime.parse(date);
     return "${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}";
-  }
-
-  Widget _buildTransactionsList(List<dynamic> transactions) {
-    if (transactions.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 16),
-        child: Text(
-          'Nenhuma transação encontrada',
-          style: AppTextStyles.smalltextw400,
-        ),
-      );
-    }
-
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: transactions.length,
-      itemBuilder: (context, index) {
-        final transaction = transactions[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.antiFlashWhite,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        transaction['description'],
-                        style: AppTextStyles.smalltextw600,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _formatDate(transaction['date']),
-                        style: AppTextStyles.smalltextw400.copyWith(
-                          color: AppColors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
-                  'R\$ ${double.parse(transaction['amount'].toString()).toStringAsFixed(2)}',
-                  style: AppTextStyles.smalltextw600.copyWith(
-                    color: transaction['type'] == 'entrada' 
-                        ? AppColors.income 
-                        : AppColors.expense,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
   }
 }

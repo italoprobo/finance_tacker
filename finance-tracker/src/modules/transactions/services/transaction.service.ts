@@ -30,21 +30,56 @@ export class TransactionsService {
     private async updateCardBalance(card: Card, transaction: Transaction): Promise<void> {
         if (!card || !transaction.paymentMethod) return;
 
-        if (transaction.paymentMethod === 'debit') {
-            // Atualiza o saldo do cartão de débito
-            const amount = transaction.type === 'entrada' 
-                ? transaction.amount 
-                : -transaction.amount;
-            
-            card.current_balance = Number(card.current_balance) + amount;
-            await this.cardRepository.save(card);
-        } else if (transaction.paymentMethod === 'credit') {
-            // Atualiza o saldo do cartão de crédito (fatura)
-            if (transaction.type === 'saida') {
-                card.current_balance = Number(card.current_balance) + transaction.amount;
-                await this.cardRepository.save(card);
+        const transactionAmount = Math.abs(Number(transaction.amount));
+        console.log('Atualizando cartão:', {
+            cardId: card.id,
+            cardName: card.name,
+            limitAtual: card.limit,
+            saldoAtual: card.current_balance,
+            transactionAmount,
+            paymentMethod: transaction.paymentMethod,
+            type: transaction.type
+        });
+
+        if (transaction.paymentMethod === 'credit') {
+            // Cartão de crédito só aceita saídas (compras)
+            if (transaction.type !== 'saida') {
+                throw new BadRequestException('Cartões de crédito não podem ter transações de entrada');
             }
+
+            const currentBalance = Number(card.current_balance || 0);
+            const newBalance = currentBalance + transactionAmount;
+            
+            console.log('Cálculo do novo saldo:', {
+                currentBalance,
+                transactionAmount,
+                newBalance
+            });
+
+            if (newBalance > card.limit) {
+                throw new BadRequestException('Limite do cartão insuficiente para esta transação');
+            }
+
+            card.current_balance = newBalance;
+            
+            console.log('Saldo atualizado:', {
+                cardId: card.id,
+                novoSaldo: card.current_balance,
+                limiteDisponivel: card.limit - card.current_balance
+            });
+        } else if (transaction.paymentMethod === 'debit') {
+            // Para débito, verificamos o saldo disponível
+            const currentBalance = Number(card.current_balance || 0);
+            if (transaction.type === 'saida' && Math.abs(transactionAmount) > currentBalance) {
+                throw new BadRequestException('Saldo insuficiente para esta transação');
+            }
+
+            // Atualiza o saldo
+            card.current_balance = currentBalance + transactionAmount;
         }
+
+        // Salva as alterações no cartão
+        await this.cardRepository.save(card);
     }
 
     async create(createTransactionDto: CreateTransactionDto): Promise<Transaction> {
@@ -92,6 +127,11 @@ export class TransactionsService {
                     throw new BadRequestException('Este cartão não aceita transações de crédito');
                 }
 
+                // Não permite entradas em cartão de crédito
+                if (data.type === 'entrada') {
+                    throw new BadRequestException('Não é possível realizar transações de entrada em cartões de crédito');
+                }
+
                 // Verifica limite disponível
                 const currentInvoice = await this.cardService.getCurrentInvoice(cardId, userId);
                 if (currentInvoice.total + data.amount > card.limit) {
@@ -122,11 +162,25 @@ export class TransactionsService {
         });
         console.log('Transação criada:', transaction);
 
+        if (card) {
+            console.log('Cartão encontrado para a transação:', {
+                cardId: card.id,
+                saldoAtual: card.current_balance,
+                limite: card.limit
+            });
+        }
+
         const savedTransaction = await this.transactionRepository.save(transaction);
-        console.log('Transação salva:', savedTransaction);
-        
+        console.log('Transação salva:', {
+            id: savedTransaction.id,
+            valor: savedTransaction.amount,
+            tipo: savedTransaction.type,
+            metodoPagamento: savedTransaction.paymentMethod
+        });
+
         // Atualiza o saldo do cartão após salvar a transação
         if (card) {
+            console.log('Atualizando saldo do cartão para transação:', savedTransaction.id);
             await this.updateCardBalance(card, savedTransaction);
         }
 

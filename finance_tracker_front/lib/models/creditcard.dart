@@ -189,24 +189,63 @@ class CreditCardItem extends StatelessWidget {
                   ),
                 ),
                 // Valor da fatura
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'R\$ ${card.currentBalance.toStringAsFixed(2)}',
-                      style: AppTextStyles.mediumText16w600.copyWith(
-                        color: AppColors.expense,
+                BlocBuilder<AuthCubit, AuthState>(
+                  builder: (context, authState) {
+                    if (authState is! AuthSuccess) {
+                      return const Text('...');
+                    }
+                    
+                    return FutureBuilder<Map<String, dynamic>>(
+                      future: context.read<CardCubit>().getCurrentInvoice(
+                        authState.accessToken,
+                        card.id,
                       ),
-                    ),
-                    if (isPending)
-                      Text(
-                        'pendente',
-                        style: AppTextStyles.smalltextw400.copyWith(
-                          color: const Color(0xFF666666),
-                          fontSize: 12,
-                        ),
-                      ),
-                  ],
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return Text(
+                            'Erro',
+                            style: AppTextStyles.mediumText16w600.copyWith(
+                              color: AppColors.expense,
+                            ),
+                          );
+                        }
+
+                        if (!snapshot.hasData) {
+                          return Container(
+                            width: 24,
+                            height: 24,
+                            padding: const EdgeInsets.all(2),
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.expense),
+                            ),
+                          );
+                        }
+
+                        final faturaAtual = snapshot.data!['total'] as double;
+                        
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              'R\$ ${faturaAtual.abs().toStringAsFixed(2)}',
+                              style: AppTextStyles.mediumText16w600.copyWith(
+                                color: AppColors.expense,
+                              ),
+                            ),
+                            if (isPending)
+                              Text(
+                                'pendente',
+                                style: AppTextStyles.smalltextw400.copyWith(
+                                  color: const Color(0xFF666666),
+                                  fontSize: 12,
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    );
+                  },
                 ),
               ],
             ),
