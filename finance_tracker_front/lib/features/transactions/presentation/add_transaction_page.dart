@@ -121,6 +121,51 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
     );
   }
 
+  Future<bool> _confirmHighValueTransaction(double amount) async {
+    bool? result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmação de Transação'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Atenção! Transação de alto valor detectada.',
+              style: AppTextStyles.mediumText16w600,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Valor: R\$ ${amount.toStringAsFixed(2)}',
+              style: AppTextStyles.mediumText16w500.copyWith(
+                color: AppColors.expense,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Tem certeza que deseja prosseguir com esta transação?',
+              style: AppTextStyles.smalltextw400,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.expense,
+            ),
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     // Impedir que widgets de sobreposição afetem esta página
@@ -204,7 +249,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                         if (state is CategoriesFailure) {
                           return Padding(
                             padding: EdgeInsets.zero,
-                            child: Column(
+                  child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Text(
@@ -226,220 +271,220 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                         }
 
                         return Column(
-                          children: [
-                            TabBar(
-                              controller: _tabController,
-                              indicatorColor: Colors.transparent,
-                              dividerColor: Colors.transparent,
-                              labelPadding: const EdgeInsets.symmetric(horizontal: 8.0),
-                              padding: EdgeInsets.zero,
-                              onTap: (index) {
-                                setState(() {});
-                              },
-                              tabs: [
-                                Tab(
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOut,
-                                    alignment: Alignment.center,
-                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                                    decoration: BoxDecoration(
-                                      color: _tabController.index == 0
-                                          ? AppColors.iceWhite
-                                          : AppColors.white,
-                                      borderRadius: const BorderRadius.all(
-                                        Radius.circular(24.0),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'Entradas',
-                                      style: AppTextStyles.mediumText16w500
-                                          .apply(color: AppColors.darkGrey),
-                                    ),
-                                  ),
+                    children: [
+                      TabBar(
+                        controller: _tabController,
+                        indicatorColor: Colors.transparent,
+                        dividerColor: Colors.transparent,
+                        labelPadding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        padding: EdgeInsets.zero,
+                        onTap: (index) {
+                          setState(() {});
+                        },
+                        tabs: [
+                          Tab(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: _tabController.index == 0
+                                    ? AppColors.iceWhite
+                                    : AppColors.white,
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(24.0),
                                 ),
-                                Tab(
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOut,
-                                    alignment: Alignment.center,
-                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                                    decoration: BoxDecoration(
-                                      color: _tabController.index == 1
-                                          ? AppColors.iceWhite
-                                          : AppColors.white,
-                                      borderRadius: const BorderRadius.all(
-                                        Radius.circular(24.0),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'Saídas',
-                                      style: AppTextStyles.mediumText16w500
-                                          .apply(color: AppColors.darkGrey),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
+                              child: Text(
+                                'Entradas',
+                                style: AppTextStyles.mediumText16w500
+                                    .apply(color: AppColors.darkGrey),
+                              ),
                             ),
-                            const SizedBox(height: 16.0),
-                            Column(
-                              children: [
-                                CustomTextFormField(
+                          ),
+                          Tab(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: _tabController.index == 1
+                                    ? AppColors.iceWhite
+                                    : AppColors.white,
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(24.0),
+                                ),
+                              ),
+                              child: Text(
+                                'Saídas',
+                                style: AppTextStyles.mediumText16w500
+                                    .apply(color: AppColors.darkGrey),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16.0),
+                      Column(
+                        children: [
+                          CustomTextFormField(
+                            padding: EdgeInsets.zero,
+                            controller: _amountController,
+                            keyboardType: TextInputType.number,
+                            labelText: 'VALOR',
+                            hintText: 'Digite um valor',
+                            suffixIcon: Icon(
+                              _tabController.index == 0 
+                                ? Icons.thumb_up 
+                                : Icons.thumb_down,
+                              color: AppColors.purple,
+                            ),
+                            inputFormatters: [
+                              MoneyInputFormatter(),
+                            ],
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Este campo não pode estar vazio';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12.0),
+                          CustomTextFormField(
+                            padding: EdgeInsets.zero,
+                            controller: _descriptionController,
+                            labelText: 'DESCRIÇÃO',
+                            hintText: 'Adicione uma descrição',
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Este campo não pode estar vazio';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12.0),
+                          BlocBuilder<CategoriesCubit, CategoriesState>(
+                            builder: (context, state) {
+                              if (state is CategoriesLoading) {
+                                return const CircularProgressIndicator();
+                              }
+                              
+                              if (state is CategoriesSuccess) {
+                                final categories = state.categories;
+                                return CategoryFormField(
                                   padding: EdgeInsets.zero,
-                                  controller: _amountController,
-                                  keyboardType: TextInputType.number,
-                                  labelText: 'VALOR',
-                                  hintText: 'Digite um valor',
-                                  suffixIcon: Icon(
-                                    _tabController.index == 0 
-                                      ? Icons.thumb_up 
-                                      : Icons.thumb_down,
-                                    color: AppColors.purple,
-                                  ),
-                                  inputFormatters: [
-                                    MoneyInputFormatter(),
-                                  ],
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Este campo não pode estar vazio';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 12.0),
-                                CustomTextFormField(
-                                  padding: EdgeInsets.zero,
-                                  controller: _descriptionController,
-                                  labelText: 'DESCRIÇÃO',
-                                  hintText: 'Adicione uma descrição',
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Este campo não pode estar vazio';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 12.0),
-                                BlocBuilder<CategoriesCubit, CategoriesState>(
-                                  builder: (context, state) {
-                                    if (state is CategoriesLoading) {
-                                      return const CircularProgressIndicator();
-                                    }
-                                    
-                                    if (state is CategoriesSuccess) {
-                                      final categories = state.categories;
-                                      return CategoryFormField(
-                                        padding: EdgeInsets.zero,
-                                        controller: _categoryController,
-                                        labelText: 'CATEGORIA',
-                                        hintText: 'Selecione uma categoria',
-                                        cursor: SystemMouseCursors.click,
-                                        categories: categories
-                                            .map((category) => category.name)
-                                            .toList(),
-                                        onCategorySelected: (categoryName) {
-                                          if (categoryName.isNotEmpty) {
-                                            final selectedCategory = categories.firstWhere(
-                                              (category) => category.name == categoryName,
-                                            );
-                                            setState(() {
-                                              _selectedCategoryId = selectedCategory.id;
-                                              _categoryController.text = categoryName;
-                                            });
-                                          }
-                                        },
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Selecione uma categoria';
-                                          }
-                                          return null;
-                                        },
-                                      );
-                                    }
-                                    
-                                    return const SizedBox.shrink();
-                                  },
-                                ),
-                                const SizedBox(height: 12.0),
-                                BlocBuilder<ClientCubit, ClientState>(
-                                  builder: (context, state) {
-                                    if (state is ClientLoading) {
-                                      return const CircularProgressIndicator();
-                                    }
-                                    
-                                    if (state is ClientSuccess) {
-                                      final clients = state.clients;
-                                      return ClientFormField(
-                                        padding: EdgeInsets.zero,
-                                        controller: _clientController,
-                                        labelText: 'CLIENTE',
-                                        hintText: 'Selecione um cliente (opcional)',
-                                        cursor: SystemMouseCursors.click,
-                                        clients: clients,
-                                        onClientSelected: (client) {
-                                          setState(() {
-                                            _selectedClientId = client?.id;
-                                            if (client != null) {
-                                              _isRecurring = true;
-                                            }
-                                          });
-                                        },
-                                      );
-                                    }
-                                    
-                                    if (state is ClientFailure) {
-                                      return Text('Erro: ${state.message}');
-                                    }
-                                    
-                                    return const SizedBox.shrink();
-                                  },
-                                ),
-                                const SizedBox(height: 12.0),
-                                CustomTextFormField(
-                                  padding: EdgeInsets.zero,
-                                  controller: _dateController,
-                                  readOnly: true,
-                                      labelText: 'DATA E HORA',
-                                      hintText: 'Selecione uma data e hora',
+                                  controller: _categoryController,
+                                  labelText: 'CATEGORIA',
+                                  hintText: 'Selecione uma categoria',
                                       cursor: SystemMouseCursors.click,
-                                  suffixIcon: const Icon(Icons.calendar_month_outlined, color: AppColors.purple),
-                                  onTap: () async {
-                                    final date = await showDatePicker(
-                                      context: context,
-                                      initialDate: DateTime.now(),
-                                      firstDate: DateTime(1970),
-                                      lastDate: DateTime(2030),
+                                  categories: categories
+                                      .map((category) => category.name)
+                                      .toList(),
+                                  onCategorySelected: (categoryName) {
+                                          if (categoryName.isNotEmpty) {
+                                    final selectedCategory = categories.firstWhere(
+                                      (category) => category.name == categoryName,
                                     );
-                                        
-                                    if (date != null) {
-                                          // Após selecionar a data, mostrar seletor de hora
-                                          final time = await showTimePicker(
-                                            context: context,
-                                            initialTime: TimeOfDay.now(),
-                                          );
-                                          
-                                          if (time != null) {
                                     setState(() {
-                                            _selectedTime = time;
-                                            _selectedDate = DateTime(
-                                              date.year,
-                                              date.month,
-                                              date.day,
-                                              time.hour,
-                                              time.minute,
-                                            );
-                                            // Atualizar o texto do campo com data e hora
-                                      _dateController.text = 
-                                              '${date.day}/${date.month}/${date.year} ${time.format(context)}';
+                                      _selectedCategoryId = selectedCategory.id;
+                                              _categoryController.text = categoryName;
                                     });
                                           }
-                                    }
                                   },
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'Este campo não pode estar vazio';
+                                      return 'Selecione uma categoria';
                                     }
                                     return null;
+                                  },
+                                );
+                              }
+                              
+                              return const SizedBox.shrink();
+                            },
+                          ),
+                          const SizedBox(height: 12.0),
+                          BlocBuilder<ClientCubit, ClientState>(
+                            builder: (context, state) {
+                              if (state is ClientLoading) {
+                                return const CircularProgressIndicator();
+                              }
+                              
+                              if (state is ClientSuccess) {
+                                final clients = state.clients;
+                                return ClientFormField(
+                                  padding: EdgeInsets.zero,
+                                  controller: _clientController,
+                                  labelText: 'CLIENTE',
+                                  hintText: 'Selecione um cliente (opcional)',
+                                  cursor: SystemMouseCursors.click,
+                                  clients: clients,
+                                  onClientSelected: (client) {
+                                    setState(() {
+                                      _selectedClientId = client?.id;
+                                      if (client != null) {
+                                        _isRecurring = true;
+                                      }
+                                    });
+                                  },
+                                );
+                              }
+                              
+                              if (state is ClientFailure) {
+                                return Text('Erro: ${state.message}');
+                              }
+                              
+                              return const SizedBox.shrink();
+                            },
+                          ),
+                          const SizedBox(height: 12.0),
+                          CustomTextFormField(
+                            padding: EdgeInsets.zero,
+                            controller: _dateController,
+                            readOnly: true,
+                                labelText: 'DATA E HORA',
+                                hintText: 'Selecione uma data e hora',
+                                cursor: SystemMouseCursors.click,
+                            suffixIcon: const Icon(Icons.calendar_month_outlined, color: AppColors.purple),
+                            onTap: () async {
+                              final date = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime.now(),
+                                firstDate: DateTime(1970),
+                                lastDate: DateTime(2030),
+                              );
+                                  
+                              if (date != null) {
+                                    // Após selecionar a data, mostrar seletor de hora
+                                    final time = await showTimePicker(
+                                      context: context,
+                                      initialTime: TimeOfDay.now(),
+                                    );
+                                    
+                                    if (time != null) {
+                                setState(() {
+                                        _selectedTime = time;
+                                        _selectedDate = DateTime(
+                                          date.year,
+                                          date.month,
+                                          date.day,
+                                          time.hour,
+                                          time.minute,
+                                        );
+                                        // Atualizar o texto do campo com data e hora
+                                  _dateController.text = 
+                                          '${date.day}/${date.month}/${date.year} ${time.format(context)}';
+                                });
+                                    }
+                              }
+                            },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Este campo não pode estar vazio';
+                              }
+                              return null;
                                   },
                                 ),
                                 const SizedBox(height: 12.0),
@@ -506,23 +551,23 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                                       }
 
                                       return const SizedBox.shrink();
-                                    },
-                                  ),
-                                const SizedBox(height: 26.0),
-                                BlocListener<TransactionCubit, TransactionState>(
-                                  listener: (context, state) {
-                                    if (state is TransactionsSuccess) {
-                                      _showSuccessSnackBar();
-                                      context.pop();
-                                    } else if (state is TransactionsFailure) {
-                                      _showErrorSnackBar(state.message);
-                                    }
-                                  },
-                                  child: PrimaryButton(
-                                    text: 'Adicionar',
-                                    isLoading: _isLoading,
-                                    onPressed: () async {
-                                      if (_formKey.currentState!.validate()) {
+                            },
+                          ),
+                          const SizedBox(height: 26.0),
+                          BlocListener<TransactionCubit, TransactionState>(
+                            listener: (context, state) {
+                              if (state is TransactionsSuccess) {
+                                _showSuccessSnackBar();
+                                context.pop();
+                              } else if (state is TransactionsFailure) {
+                                _showErrorSnackBar(state.message);
+                              }
+                            },
+                            child: PrimaryButton(
+                              text: 'Adicionar',
+                              isLoading: _isLoading,
+                              onPressed: () async {
+                                if (_formKey.currentState!.validate()) {
                                         // Validar categoria
                                         if (_selectedCategoryId.isEmpty) {
                                           _showErrorSnackBar('Por favor, selecione uma categoria');
@@ -532,24 +577,23 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                                         // Validar cartão quando método de pagamento não é dinheiro
                                         if (_paymentMethod != 'dinheiro' && _selectedCardId == null) {
                                           _showErrorSnackBar('Por favor, selecione um cartão');
-                                          return;
-                                        }
+                                        return;
+                                      }
 
-                                        if (_paymentMethod == 'credito' && _selectedCard != null) {
-                                            final amount = double.parse(
-                                                _amountController.text
-                                                    .replaceAll('R\$', '')
-                                                    .replaceAll('.', '')
-                                                    .replaceAll(',', '.')
-                                                    .trim(),
-                                            );
+                                      final amount = double.parse(
+                                        _amountController.text
+                                            .replaceAll('R\$', '')
+                                            .replaceAll('.', '')
+                                            .replaceAll(',', '.')
+                                            .trim(),
+                                      );
 
-                                            // Verifica se há limite disponível
-                                            if (amount > (_selectedCard!.limit - _selectedCard!.currentBalance)) {
-                                                _showErrorSnackBar('Limite do cartão insuficiente para esta transação');
-                                                setState(() => _isLoading = false);
-                                                return;
-                                            }
+                                        // Confirmar transação de alto valor
+                                        if (amount >= 1000) {
+                                          final confirmed = await _confirmHighValueTransaction(amount);
+                                          if (!confirmed) {
+                                            return;
+                                          }
                                         }
 
                                         setState(() => _isLoading = true);
@@ -557,74 +601,74 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                                         final authState = context.read<AuthCubit>().state;
                                         if (authState is AuthSuccess) {
                                           try {
-                                            if (authState.id.isEmpty) {
-                                              _showErrorSnackBar('Erro de autenticação. Por favor, faça login novamente.');
-                                              setState(() => _isLoading = false);
-                                              context.goNamed('login');
-                                              return;
-                                            }
-
-                                            final amount = double.parse(
-                                              _amountController.text
-                                                  .replaceAll('R\$', '')
-                                                  .replaceAll('.', '')
-                                                  .replaceAll(',', '.')
-                                                  .trim(),
-                                            );
-
-                                            final transactionData = {
-                                              'description': _descriptionController.text,
-                                              'amount': _tabController.index == 1 ? -amount : amount,
-                                              'type': _tabController.index == 0 ? 'entrada' : 'saida',
-                                              'date': _selectedDate?.toIso8601String() ?? 
-                                                  DateTime.now().toIso8601String(),
-                                              'categoryId': _selectedCategoryId,
-                                              'userId': authState.id,
-                                              'clientId': _selectedClientId,
-                                              'isRecurring': _isRecurring,
+                                      final transactionData = {
+                                        'description': _descriptionController.text,
+                                        'amount': _tabController.index == 1 ? -amount : amount,
+                                        'type': _tabController.index == 0 ? 'entrada' : 'saida',
+                                              'date': _selectedDate?.toIso8601String() ?? DateTime.now().toIso8601String(),
+                                        'categoryId': _selectedCategoryId,
+                                        'userId': authState.id,
+                                        'clientId': _selectedClientId,
+                                        'isRecurring': _isRecurring,
                                               'cardId': _selectedCardId,
-                                              'paymentMethod': _paymentMethod == 'dinheiro' 
-                                                ? null 
-                                                : _paymentMethod == 'credito' 
-                                                  ? 'credit' 
-                                                  : 'debit',
+                                              'paymentMethod': _paymentMethod == 'dinheiro' ? null : _paymentMethod == 'credito' ? 'credit' : 'debit',
                                             };
 
-                                            if (_selectedClientId != null && _isRecurring) {
-                                              final clientState = context.read<ClientCubit>().state;
-                                              if (clientState is ClientSuccess) {
-                                                final client = clientState.clients.firstWhere(
-                                                  (c) => c.id == _selectedClientId,
-                                                  orElse: () => throw Exception('Cliente não encontrado'),
-                                                );
-                                                
-                                                if (amount != client.monthly_payment) {
-                                                  _showErrorSnackBar('O valor deve ser igual ao pagamento mensal do cliente');
-                                                  setState(() => _isLoading = false);
-                                                  return;
-                                                }
-                                              }
-                                            }
+                                      await context.read<TransactionCubit>().addTransaction(
+                                        authState.accessToken,
+                                        transactionData,
+                                      );
+                                    } catch (e) {
+                                            if (e.toString().contains('transação similar detectada')) {
+                                              // Mostrar confirmação de duplicata
+                                              final confirmDuplicate = await showDialog<bool>(
+                                                context: context,
+                                                builder: (context) => AlertDialog(
+                                                  title: const Text('Possível Transação Duplicada'),
+                                                  content: const Text(
+                                                    'Uma transação similar foi detectada nos últimos 5 minutos. '
+                                                    'Deseja prosseguir mesmo assim?'
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () => Navigator.pop(context, false),
+                                                      child: const Text('Cancelar'),
+                                                    ),
+                                                    TextButton(
+                                                      onPressed: () => Navigator.pop(context, true),
+                                                      style: TextButton.styleFrom(
+                                                        foregroundColor: AppColors.expense,
+                                                      ),
+                                                      child: const Text('Prosseguir'),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
 
-                                            await context.read<TransactionCubit>().addTransaction(
-                                              authState.accessToken,
-                                              transactionData,
-                                            );
-                                          } catch (e) {
-                                            _showErrorSnackBar('Erro ao processar a transação');
-                                          }
-                                        } else {
-                                          _showErrorSnackBar('Usuário não autenticado');
-                                        }
-                                        
-                                        setState(() => _isLoading = false);
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ],
+                                              if (confirmDuplicate != true) {
+                                                setState(() => _isLoading = false);
+                                                return;
+                                              }
+                                            } else if (e.toString().contains('Limite diário')) {
+                                              _showErrorSnackBar('Você atingiu o limite diário de transações');
+                                              setState(() => _isLoading = false);
+                                              return;
+                                            } else {
+                                              _showErrorSnackBar('Erro ao processar a transação');
+                                            }
+                                    }
+                                  } else {
+                                    _showErrorSnackBar('Usuário não autenticado');
+                                  }
+                                  
+                                  setState(() => _isLoading = false);
+                                }
+                              },
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                    ],
                         );
                       },
                     ),

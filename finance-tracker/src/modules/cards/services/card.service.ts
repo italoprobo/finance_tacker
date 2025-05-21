@@ -10,6 +10,7 @@ import { Between } from "typeorm";
 
 @Injectable()
 export class CardService {
+    private readonly MAX_CARDS_PER_USER = 5; // Definindo limite máximo de cartões
 
     constructor(
         @InjectRepository(Card)
@@ -21,6 +22,15 @@ export class CardService {
     ) {}
 
     async create(createCardDto: CreateCardDto): Promise<Card> {
+        // Verifica número de cartões do usuário
+        const userCards = await this.cardRepository.find({
+            where: { user: { id: createCardDto.userId } }
+        });
+
+        if (userCards.length >= this.MAX_CARDS_PER_USER) {
+            throw new BadRequestException(`Você atingiu o limite máximo de ${this.MAX_CARDS_PER_USER} cartões`);
+        }
+
         const card = this.cardRepository.create({
             ...createCardDto,
             closingDay: createCardDto.closingDay,
@@ -62,6 +72,21 @@ export class CardService {
             throw new NotFoundException('Cartão não encontrado ou não pertence ao usuário');
         }
 
+        // Validações adicionais
+        if (updateCardDto.limit && updateCardDto.limit < card.current_balance) {
+            throw new BadRequestException(
+                'Não é possível definir um limite menor que o valor atual da fatura'
+            );
+        }
+
+        if (updateCardDto.closingDay && (updateCardDto.closingDay < 1 || updateCardDto.closingDay > 31)) {
+            throw new BadRequestException('Dia de fechamento deve estar entre 1 e 31');
+        }
+
+        if (updateCardDto.dueDay && (updateCardDto.dueDay < 1 || updateCardDto.dueDay > 31)) {
+            throw new BadRequestException('Dia de vencimento deve estar entre 1 e 31');
+        }
+
         Object.assign(card, {
             ...updateCardDto,
             closingDay: updateCardDto.closingDay,
@@ -75,6 +100,17 @@ export class CardService {
     async remove(id: string, userId: string): Promise<void> {
         const card = await this.findOne(id, userId);
         
+        // Verifica se existem transações vinculadas
+        const transactions = await this.transactionRepository.find({
+            where: { card: { id } }
+        });
+
+        if (transactions.length > 0) {
+            throw new BadRequestException(
+                'Não é possível excluir este cartão pois existem transações vinculadas a ele'
+            );
+        }
+
         if (card.user.id !== userId) {
             throw new UnauthorizedException('Você não tem permissão para remover este cartão');
         }

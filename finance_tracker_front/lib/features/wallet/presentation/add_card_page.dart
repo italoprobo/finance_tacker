@@ -276,10 +276,15 @@ class _AddCardPageState extends State<AddCardPage> with CustomSnackBar, SingleTi
                           const SizedBox(height: 26.0),
                           BlocListener<CardCubit, CardState>(
                             listener: (context, state) {
+                              setState(() => _isLoading = state is CardLoading);
+                              
                               if (state is CardSuccess) {
-                                _showSuccessSnackBar();
-                                _showSuccessAnimation();
-                                context.pop();
+                                showCustomSnackBar(
+                                  context: context,
+                                  text: 'Cartão adicionado com sucesso!',
+                                  type: SnackBarType.success,
+                                );
+                                context.goNamed('wallet');
                               } else if (state is CardFailure) {
                                 _showErrorSnackBar(state.message);
                                 _showErrorAnimation();
@@ -295,8 +300,6 @@ class _AddCardPageState extends State<AddCardPage> with CustomSnackBar, SingleTi
                                     return;
                                   }
 
-                                  setState(() => _isLoading = true);
-                                  
                                   final authState = context.read<AuthCubit>().state;
                                   if (authState is AuthSuccess) {
                                     try {
@@ -331,8 +334,6 @@ class _AddCardPageState extends State<AddCardPage> with CustomSnackBar, SingleTi
                                   } else {
                                     _showErrorSnackBar('Usuário não autenticado');
                                   }
-                                  
-                                  setState(() => _isLoading = false);
                                 }
                               },
                             ),
@@ -348,40 +349,6 @@ class _AddCardPageState extends State<AddCardPage> with CustomSnackBar, SingleTi
         ],
       ),
     );
-  }
-
-  void _showSuccessAnimation() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Center(
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: const Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.check_circle,
-                color: AppColors.purple,
-                size: 50,
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Cartão adicionado com sucesso!',
-                style: AppTextStyles.mediumText16w500,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.of(context).pop();
-    });
   }
 
   void _showErrorAnimation() {

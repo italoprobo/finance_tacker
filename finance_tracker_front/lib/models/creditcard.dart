@@ -1,6 +1,7 @@
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
 import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
 import 'package:finance_tracker_front/common/widgets/custom_modal_bottom_sheet.dart';
+import 'package:finance_tracker_front/common/widgets/custom_snackbar.dart';
 import 'package:finance_tracker_front/common/widgets/primary_button.dart';
 import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart';
 import 'package:finance_tracker_front/models/card_cubit.dart';
@@ -8,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-class CreditCardItem extends StatelessWidget {
+class CreditCardItem extends StatefulWidget {
   final CardModel card;
   final bool isPending;
 
@@ -18,6 +19,11 @@ class CreditCardItem extends StatelessWidget {
     this.isPending = true,
   }) : super(key: key);
 
+  @override
+  State<CreditCardItem> createState() => _CreditCardItemState();
+}
+
+class _CreditCardItemState extends State<CreditCardItem> with CustomSnackBar {
   String _getCardIconPath(String cardName) {
     cardName = cardName.toLowerCase();
     if (cardName.contains('nubank')) return 'images/nubank_logo.png';
@@ -27,12 +33,12 @@ class CreditCardItem extends StatelessWidget {
     //if (cardName.contains('bradesco')) return 'assets/images/bradesco_logo.png';
     //if (cardName.contains('caixa')) return 'assets/images/caixa_logo.png';
     //if (cardName.contains('bb')) return 'assets/images/bb_logo.png';
-    return 'assets/images/credit_card.png';
+    return "";
   }
 
   String _formatDueDay() {
-    if (card.dueDay == null) return 'Não definido';
-    return 'Vence dia ${card.dueDay.toString().padLeft(2, '0')}';
+    if (widget.card.dueDay == null) return 'Não definido';
+    return 'Vence dia ${widget.card.dueDay.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -52,7 +58,7 @@ class CreditCardItem extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () {
-            context.pushNamed('card-details', extra: card);
+            context.pushNamed('card-details', extra: widget.card);
           },
           onLongPress: () {
             showCustomModalBottomSheet(
@@ -67,7 +73,7 @@ class CreditCardItem extends StatelessWidget {
                       GestureDetector(
                         onTap: () {
                           context.pop();
-                          context.pushNamed('edit-card', extra: card);
+                          context.pushNamed('edit-card', extra: widget.card);
                         },
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -138,7 +144,7 @@ class CreditCardItem extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.asset(
-                    _getCardIconPath(card.name),
+                    _getCardIconPath(widget.card.name),
                     width: 50,
                     height: 50,
                     errorBuilder: (context, error, stackTrace) {
@@ -165,12 +171,12 @@ class CreditCardItem extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            card.name,
+                            widget.card.name,
                             style: AppTextStyles.mediumText16w600,
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '•••• ${card.lastDigits}',
+                            '•••• ${widget.card.lastDigits}',
                             style: AppTextStyles.smalltextw600.copyWith(
                               color: const Color(0xFF666666),
                             ),
@@ -198,7 +204,7 @@ class CreditCardItem extends StatelessWidget {
                     return FutureBuilder<Map<String, dynamic>>(
                       future: context.read<CardCubit>().getCurrentInvoice(
                         authState.accessToken,
-                        card.id,
+                        widget.card.id,
                       ),
                       builder: (context, snapshot) {
                         if (snapshot.hasError) {
@@ -233,7 +239,7 @@ class CreditCardItem extends StatelessWidget {
                                 color: AppColors.expense,
                               ),
                             ),
-                            if (isPending)
+                            if (widget.isPending)
                               Text(
                                 'pendente',
                                 style: AppTextStyles.smalltextw400.copyWith(
@@ -260,43 +266,42 @@ class CreditCardItem extends StatelessWidget {
       context: context,
       title: 'Confirmar exclusão',
       content: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             "Tem certeza que deseja excluir este cartão?",
             textAlign: TextAlign.center,
             style: AppTextStyles.smalltext.copyWith(color: AppColors.grey),
           ),
-          const SizedBox(height: 20.0),
-          SizedBox(
-            width: double.infinity,
-            child: PrimaryButton(
-              text: "Excluir",
-              backgroundColor: AppColors.expense,
-              onPressed: () async {
-                try {
-                  final authState = context.read<AuthCubit>().state;
-                  if (authState is AuthSuccess) {
-                    await context.read<CardCubit>().deleteCard(
-                      authState.accessToken,
-                      card.id,
-                    );
-                    if (context.mounted) {
-                      context.pop();
-                    }
-                  }
-                } catch (e) {
+          const SizedBox(height: 24),
+          PrimaryButton(
+            text: 'Excluir',
+            onPressed: () async {
+              try {
+                final authState = context.read<AuthCubit>().state;
+                if (authState is AuthSuccess) {
+                  await context.read<CardCubit>().deleteCard(
+                    authState.accessToken,
+                    widget.card.id,
+                  );
+                  
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Erro ao excluir cartão'),
-                        backgroundColor: AppColors.expense,
-                      ),
-                    );
+                    Navigator.pop(context);
+                    context.goNamed('wallet');
                   }
                 }
-              },
-            ),
+              } catch (e) {
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  showCustomSnackBar(
+                    context: context,
+                    text: 'Erro ao excluir cartão',
+                    type: SnackBarType.error,
+                  );
+                }
+              }
+            },
+            backgroundColor: AppColors.expense,
           ),
         ],
       ),

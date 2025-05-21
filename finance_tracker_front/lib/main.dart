@@ -10,6 +10,7 @@ import 'app_router.dart';
 import 'features/categories/application/categories_cubit.dart';
 import 'common/extensions/sizes.dart';
 import 'package:finance_tracker_front/common/di/di.dart';
+import 'common/widgets/keyboard_shortcuts_wrapper.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,7 +39,9 @@ Future<void> main() async {
           create: (context) => CategoriesCubit(apiClient.dio),
         ),
       ],
-      child: MyApp(apiClient: apiClient, transactionsRepository: transactionsRepository),
+      child: KeyboardShortcutsWrapper(
+        child: MyApp(apiClient: apiClient, transactionsRepository: transactionsRepository),
+      ),
     ),
   );
 }

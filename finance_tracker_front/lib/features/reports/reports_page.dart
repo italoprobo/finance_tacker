@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
+import 'package:finance_tracker_front/common/mixin/swipeable_page_mixin.dart';
 import 'package:finance_tracker_front/common/widgets/app_header.dart';
 import 'package:finance_tracker_front/features/reports/reports_cubit.dart';
 import 'package:finance_tracker_front/features/reports/reports_state.dart';
@@ -12,6 +13,7 @@ import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
 import 'package:finance_tracker_front/features/reports/chartconfig.dart';
 import 'package:go_router/go_router.dart';
 import 'package:finance_tracker_front/features/reports/reports_skeleton.dart';
+import 'package:finance_tracker_front/common/widgets/quick_actions_sheet.dart';
 
 class ReportsPage extends StatefulWidget {
   const ReportsPage({super.key});
@@ -20,7 +22,7 @@ class ReportsPage extends StatefulWidget {
   State<ReportsPage> createState() => _ReportsPageState();
 }
 
-class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStateMixin {
+class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStateMixin, SwipeablePageMixin {
   late final TabController _periodTabController;
   ReportsCubit? _reportsCubit;
 
@@ -48,63 +50,75 @@ class _ReportsPageState extends State<ReportsPage> with SingleTickerProviderStat
     super.dispose();
   }
 
+  void _showQuickActions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => const QuickActionsSheet(),
+      backgroundColor: Colors.transparent,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Sizes.init(context);
     return Scaffold(
-      body: Stack(
-        children: [
-          AppHeader(
-            title: "Estatísticas", 
-            hasOptions: false,
-            isWhiteTheme: true,
-            onBackPressed: () => context.goNamed('home'),
-          ),
-          Positioned(
-            top: 150.h,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w),
-                  child: _buildPeriodTabs(),
-                ),
-                SizedBox(height: 9.h),
-                SizedBox(
-                  height: 280.h,
-                  child: _buildChartArea(),
-                ),
-                SizedBox(height: 16.h),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Principais Transações',
-                        style: AppTextStyles.buttontext.apply(color: AppColors.black),
-                      ),
-                      GestureDetector(
-                        onTap: () {},
-                        child: const Icon(
-                          Icons.sort,
-                          color: AppColors.purple,
-                          size: 20,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Expanded(
-                  child: _buildTransactionsList(),
-                ),
-              ],
+      body: GestureDetector(
+        onHorizontalDragEnd: handleSwipe,
+        child: Stack(
+          children: [
+            AppHeader(
+              title: "Estatísticas",
+              hasOptions: true,
+              onOptionsPressed: _showQuickActions,
+              isWhiteTheme: true,
+              onBackPressed: () => context.goNamed('home'),
             ),
-          ),
-        ],
+            Positioned(
+              top: 150.h,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w),
+                    child: _buildPeriodTabs(),
+                  ),
+                  SizedBox(height: 9.h),
+                  SizedBox(
+                    height: 280.h,
+                    child: _buildChartArea(),
+                  ),
+                  SizedBox(height: 16.h),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Principais Transações',
+                          style: AppTextStyles.buttontext.apply(color: AppColors.black),
+                        ),
+                        GestureDetector(
+                          onTap: () {},
+                          child: const Icon(
+                            Icons.sort,
+                            color: AppColors.purple,
+                            size: 20,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Expanded(
+                    child: _buildTransactionsList(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

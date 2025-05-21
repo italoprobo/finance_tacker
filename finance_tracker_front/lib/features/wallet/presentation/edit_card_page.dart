@@ -107,103 +107,18 @@ class _EditCardPageState extends State<EditCardPage> with CustomSnackBar {
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 24.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Tooltip(
-                        message: 'Digite o nome do banco ou bandeira do cartão',
-                        child: CustomTextFormField(
-                          padding: EdgeInsets.zero,
-                          controller: _nameController,
-                          labelText: 'NOME DO CARTÃO',
-                          hintText: 'Ex: Nubank, Inter',
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Este campo não pode estar vazio';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 12.0),
-                      Tooltip(
-                        message: 'Os últimos 4 dígitos do seu cartão',
-                        child: CustomTextFormField(
-                          padding: EdgeInsets.zero,
-                          controller: _lastDigitsController,
-                          labelText: 'ÚLTIMOS 4 DÍGITOS',
-                          hintText: 'Ex: 1234',
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(4),
-                          ],
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Este campo não pode estar vazio';
-                            }
-                            if (value.length != 4) {
-                              return 'Digite os 4 dígitos';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 12.0),
-                      Text(
-                        'TIPO DE CARTÃO',
-                        style: AppTextStyles.smalltext13.copyWith(
-                          color: AppColors.darkGrey,
-                        ),
-                      ),
-                      const SizedBox(height: 8.0),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Tooltip(
-                              message: 'Selecione se o cartão é de crédito',
-                              child: CustomCheckboxField(
-                                labelText: 'Crédito',
-                                value: _isCredit,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _isCredit = value ?? false;
-                                  });
-                                },
-                                padding: EdgeInsets.zero,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Tooltip(
-                              message: 'Selecione se o cartão é de débito',
-                              child: CustomCheckboxField(
-                                labelText: 'Débito',
-                                value: _isDebit,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _isDebit = value ?? false;
-                                  });
-                                },
-                                padding: EdgeInsets.zero,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (_isCredit) ...[
-                        const SizedBox(height: 12.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Tooltip(
-                          message: 'Limite total disponível no cartão',
+                          message: 'Digite o nome do banco ou bandeira do cartão',
                           child: CustomTextFormField(
                             padding: EdgeInsets.zero,
-                            controller: _limitController,
-                            labelText: 'LIMITE',
-                            hintText: 'R\$ 0,00',
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              MoneyInputFormatter(),
-                            ],
+                            controller: _nameController,
+                            labelText: 'NOME DO CARTÃO',
+                            hintText: 'Ex: Nubank, Inter',
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Este campo não pode estar vazio';
@@ -213,114 +128,240 @@ class _EditCardPageState extends State<EditCardPage> with CustomSnackBar {
                           ),
                         ),
                         const SizedBox(height: 12.0),
-                        CustomTextFormField(
-                          padding: EdgeInsets.zero,
-                          controller: _closingDayController,
-                          labelText: 'DIA DE FECHAMENTO',
-                          hintText: 'Ex: 26',
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(2),
-                          ],
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Este campo não pode estar vazio';
-                            }
-                            final day = int.tryParse(value);
-                            if (day == null || day < 1 || day > 31) {
-                              return 'Digite um dia válido (1-31)';
-                            }
-                            return null;
-                          },
+                        Tooltip(
+                          message: 'Os últimos 4 dígitos do seu cartão',
+                          child: CustomTextFormField(
+                            padding: EdgeInsets.zero,
+                            controller: _lastDigitsController,
+                            labelText: 'ÚLTIMOS 4 DÍGITOS',
+                            hintText: 'Ex: 1234',
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(4),
+                            ],
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Este campo não pode estar vazio';
+                              }
+                              if (value.length != 4) {
+                                return 'Digite os 4 dígitos';
+                              }
+                              return null;
+                            },
+                          ),
                         ),
                         const SizedBox(height: 12.0),
-                        CustomTextFormField(
-                          padding: EdgeInsets.zero,
-                          controller: _dueDayController,
-                          labelText: 'DIA DE VENCIMENTO',
-                          hintText: 'Ex: 2',
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(2),
-                          ],
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Este campo não pode estar vazio';
-                            }
-                            final day = int.tryParse(value);
-                            if (day == null || day < 1 || day > 31) {
-                              return 'Digite um dia válido (1-31)';
-                            }
-                            return null;
-                          },
+                        Text(
+                          'TIPO DE CARTÃO',
+                          style: AppTextStyles.smalltext13.copyWith(
+                            color: AppColors.darkGrey,
+                          ),
                         ),
-                      ],
-                      const SizedBox(height: 26.0),
-                      BlocListener<CardCubit, CardState>(
-                        listener: (context, state) {
-                          if (state is CardSuccess) {
-                            _showSuccessSnackBar();
-                            context.pop();
-                          } else if (state is CardFailure) {
-                            _showErrorSnackBar(state.message);
-                          }
-                        },
-                        child: PrimaryButton(
-                          text: 'Salvar',
-                          isLoading: _isLoading,
-                          onPressed: () async {
-                            if (_formKey.currentState!.validate()) {
-                              if (!_isCredit && !_isDebit) {
-                                _showErrorSnackBar('Selecione pelo menos um tipo de cartão');
-                                return;
+                        const SizedBox(height: 8.0),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Tooltip(
+                                message: 'Selecione se o cartão é de crédito',
+                                child: CustomCheckboxField(
+                                  labelText: 'Crédito',
+                                  value: _isCredit,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _isCredit = value ?? false;
+                                    });
+                                  },
+                                  padding: EdgeInsets.zero,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Tooltip(
+                                message: 'Selecione se o cartão é de débito',
+                                child: CustomCheckboxField(
+                                  labelText: 'Débito',
+                                  value: _isDebit,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _isDebit = value ?? false;
+                                    });
+                                  },
+                                  padding: EdgeInsets.zero,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_isCredit) ...[
+                          const SizedBox(height: 12.0),
+                          Tooltip(
+                            message: 'Limite total disponível no cartão',
+                            child: CustomTextFormField(
+                              padding: EdgeInsets.zero,
+                              controller: _limitController,
+                              labelText: 'LIMITE',
+                              hintText: 'R\$ 0,00',
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                MoneyInputFormatter(),
+                              ],
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Este campo não pode estar vazio';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 12.0),
+                          CustomTextFormField(
+                            padding: EdgeInsets.zero,
+                            controller: _closingDayController,
+                            labelText: 'DIA DE FECHAMENTO',
+                            hintText: 'Ex: 26',
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(2),
+                            ],
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Este campo não pode estar vazio';
                               }
-
-                              setState(() => _isLoading = true);
+                              final day = int.tryParse(value);
+                              if (day == null || day < 1 || day > 31) {
+                                return 'Digite um dia válido (1-31)';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12.0),
+                          CustomTextFormField(
+                            padding: EdgeInsets.zero,
+                            controller: _dueDayController,
+                            labelText: 'DIA DE VENCIMENTO',
+                            hintText: 'Ex: 2',
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(2),
+                            ],
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Este campo não pode estar vazio';
+                              }
+                              final day = int.tryParse(value);
+                              if (day == null || day < 1 || day > 31) {
+                                return 'Digite um dia válido (1-31)';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
+                        const SizedBox(height: 26.0),
+                        BlocListener<CardCubit, CardState>(
+                          listener: (context, state) {
+                            setState(() => _isLoading = state is CardLoading);
+                            
+                            if (state is CardSuccess && state.message != null) {
+                              showCustomSnackBar(
+                                context: context,
+                                text: state.message!,
+                                type: SnackBarType.success,
+                              );
                               
-                              final authState = context.read<AuthCubit>().state;
-                              if (authState is AuthSuccess) {
-                                try {
-                                  final cardTypes = <String>[];
-                                  if (_isCredit) cardTypes.add('credito');
-                                  if (_isDebit) cardTypes.add('debito');
-
-                                  final cardData = {
-                                    'name': _nameController.text,
-                                    'lastDigits': _lastDigitsController.text,
-                                    'cardType': cardTypes,
-                                    'limit': _isCredit ? double.parse(
-                                      _limitController.text
-                                          .replaceAll('R\$', '')
-                                          .replaceAll('.', '')
-                                          .replaceAll(',', '.')
-                                          .trim()
-                                    ) : 0.0,
-                                    'current_balance': widget.card.currentBalance,
-                                    'closingDay': int.tryParse(_closingDayController.text),
-                                    'dueDay': int.tryParse(_dueDayController.text),
-                                    'userId': authState.id,
-                                  };
-
-                                  await context.read<CardCubit>().updateCard(
-                                    authState.accessToken,
-                                    widget.card.id,
-                                    cardData,
+                              if (context.mounted) {
+                                context.goNamed('wallet');
+                              }
+                            } else if (state is CardFailure) {
+                              showCustomSnackBar(
+                                context: context,
+                                text: state.message,
+                                type: SnackBarType.error,
+                              );
+                            }
+                          },
+                          child: PrimaryButton(
+                            text: 'Salvar',
+                            isLoading: _isLoading,
+                            onPressed: () async {
+                              if (_formKey.currentState!.validate()) {
+                                if (!_isCredit && !_isDebit) {
+                                  showCustomSnackBar(
+                                    context: context,
+                                    text: 'Selecione pelo menos um tipo de cartão',
+                                    type: SnackBarType.error,
                                   );
+                                  return;
+                                }
+
+                                try {
+                                  final limit = _isCredit ? double.tryParse(
+                                    _limitController.text
+                                        .replaceAll('R\$', '')
+                                        .replaceAll('.', '')
+                                        .replaceAll(',', '.')
+                                        .trim()
+                                  ) : 0.0;
+
+                                  if (_isCredit && (limit == null || limit <= 0)) {
+                                    showCustomSnackBar(
+                                      context: context,
+                                      text: 'Digite um limite válido',
+                                      type: SnackBarType.error,
+                                    );
+                                    return;
+                                  }
+
+                                  setState(() => _isLoading = true);
+                                  
+                                  final authState = context.read<AuthCubit>().state;
+                                  if (authState is AuthSuccess) {
+                                    try {
+                                      final cardTypes = <String>[];
+                                      if (_isCredit) cardTypes.add('credito');
+                                      if (_isDebit) cardTypes.add('debito');
+
+                                      final cardData = {
+                                        'name': _nameController.text,
+                                        'lastDigits': _lastDigitsController.text,
+                                        'cardType': cardTypes,
+                                        'limit': _isCredit ? double.parse(
+                                          _limitController.text
+                                              .replaceAll('R\$', '')
+                                              .replaceAll('.', '')
+                                              .replaceAll(',', '.')
+                                              .trim()
+                                        ) : 0.0,
+                                        'current_balance': widget.card.currentBalance,
+                                        'closingDay': int.tryParse(_closingDayController.text),
+                                        'dueDay': int.tryParse(_dueDayController.text),
+                                        'userId': authState.id,
+                                      };
+
+                                      await context.read<CardCubit>().updateCard(
+                                        authState.accessToken,
+                                        widget.card.id,
+                                        cardData,
+                                      );
+                                    } catch (e) {
+                                      _showErrorSnackBar('Erro ao processar os dados');
+                                    }
+                                  } else {
+                                    _showErrorSnackBar('Usuário não autenticado');
+                                  }
+                                  
+                                  setState(() => _isLoading = false);
                                 } catch (e) {
                                   _showErrorSnackBar('Erro ao processar os dados');
                                 }
-                              } else {
-                                _showErrorSnackBar('Usuário não autenticado');
                               }
-                              
-                              setState(() => _isLoading = false);
-                            }
-                          },
+                            },
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

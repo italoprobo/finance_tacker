@@ -15,11 +15,15 @@ class CardLoading extends CardState {}
 
 class CardSuccess extends CardState {
   final List<CardModel> cards;
+  final String? message;
 
-  CardSuccess({required this.cards});
+  CardSuccess({
+    required this.cards,
+    this.message,
+  });
 
   @override
-  List<Object> get props => [cards];
+  List<Object> get props => [cards, message ?? ''];
 }
 
 class CardFailure extends CardState {
@@ -172,6 +176,31 @@ class CardCubit extends Cubit<CardState> {
   Future<void> updateCard(String token, String cardId, Map<String, dynamic> cardData) async {
     emit(CardLoading());
     try {
+      // Validações no frontend
+      if (cardData.containsKey('limit')) {
+        final double limit = double.parse(cardData['limit'].toString());
+        if (limit <= 0) {
+          emit(CardFailure('O limite do cartão deve ser maior que zero'));
+          return;
+        }
+      }
+
+      if (cardData.containsKey('closingDay')) {
+        final int closingDay = int.parse(cardData['closingDay'].toString());
+        if (closingDay < 1 || closingDay > 31) {
+          emit(CardFailure('Dia de fechamento deve estar entre 1 e 31'));
+          return;
+        }
+      }
+
+      if (cardData.containsKey('dueDay')) {
+        final int dueDay = int.parse(cardData['dueDay'].toString());
+        if (dueDay < 1 || dueDay > 31) {
+          emit(CardFailure('Dia de vencimento deve estar entre 1 e 31'));
+          return;
+        }
+      }
+
       final response = await dio.patch(
         '/card/$cardId',
         data: cardData,
@@ -183,13 +212,21 @@ class CardCubit extends Cubit<CardState> {
 
       if (response.statusCode == 200) {
         await fetchUserCards(token);
+        emit(CardSuccess(
+          cards: (state as CardSuccess).cards,
+          message: 'Cartão atualizado com sucesso!'
+        ));
       } else if (response.statusCode == 401) {
-        emit(CardFailure("Sessão expirada. Por favor, faça login novamente."));
+        emit(CardFailure('Sessão expirada. Por favor, faça login novamente.'));
       } else {
-        emit(CardFailure("Erro ao atualizar cartão: ${response.statusCode}"));
+        emit(CardFailure(response.data['message'] ?? 'Erro ao atualizar cartão'));
       }
     } catch (e) {
-      emit(CardFailure("Falha ao conectar com o servidor: ${e.toString()}"));
+      if (e is DioException) {
+        emit(CardFailure(e.response?.data['message'] ?? 'Erro ao atualizar cartão'));
+      } else {
+        emit(CardFailure(e.toString()));
+      }
     }
   }
 

@@ -1,3 +1,5 @@
+import 'package:finance_tracker_front/common/widgets/custom_modal_bottom_sheet.dart';
+import 'package:finance_tracker_front/common/widgets/custom_snackbar.dart';
 import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
@@ -7,8 +9,9 @@ import 'package:finance_tracker_front/common/widgets/app_header.dart';
 import 'package:finance_tracker_front/models/card_cubit.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finance_tracker_front/common/widgets/primary_button.dart';
 
-class CardDetailsPage extends StatelessWidget {
+class CardDetailsPage extends StatefulWidget {
   final CardModel card;
 
   const CardDetailsPage({
@@ -16,6 +19,11 @@ class CardDetailsPage extends StatelessWidget {
     required this.card,
   });
 
+  @override
+  State<CardDetailsPage> createState() => _CardDetailsPageState();
+}
+
+class _CardDetailsPageState extends State<CardDetailsPage> with CustomSnackBar {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,7 +45,7 @@ class CardDetailsPage extends StatelessWidget {
                       title: const Text('Editar cartão'),
                       onTap: () {
                         context.pop();
-                        context.pushNamed('edit-card', extra: card);
+                        context.pushNamed('edit-card', extra: widget.card);
                       },
                     ),
                     ListTile(
@@ -106,7 +114,7 @@ class CardDetailsPage extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(40),
             child: Image.asset(
-              _getCardIconPath(card.name),
+              _getCardIconPath(widget.card.name),
               width: 80,
               height: 80,
               errorBuilder: (context, error, stackTrace) {
@@ -121,7 +129,7 @@ class CardDetailsPage extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          card.name,
+          widget.card.name,
           style: AppTextStyles.mediumText16w600,
           textAlign: TextAlign.center,
         ),
@@ -133,7 +141,7 @@ class CardDetailsPage extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
           ),
           child: Text(
-            '•••• ${card.lastDigits}',
+            '•••• ${widget.card.lastDigits}',
             style: AppTextStyles.smalltextw600.copyWith(
               color: AppColors.purple,
             ),
@@ -154,17 +162,17 @@ class CardDetailsPage extends StatelessWidget {
         const SizedBox(height: 16),
         _buildDetailItem(
           'Tipo',
-          card.cardType.map((type) => type.toUpperCase()).join(', '),
+          widget.card.cardType.map((type) => type.toUpperCase()).join(', '),
         ),
-        if (card.closingDay != null)
+        if (widget.card.closingDay != null)
           _buildDetailItem(
             'Dia de Fechamento',
-            card.closingDay.toString(),
+            widget.card.closingDay.toString(),
           ),
-        if (card.dueDay != null)
+        if (widget.card.dueDay != null)
           _buildDetailItem(
             'Dia de Vencimento',
-            card.dueDay.toString(),
+            widget.card.dueDay.toString(),
           ),
       ],
     );
@@ -179,10 +187,10 @@ class CardDetailsPage extends StatelessWidget {
           style: AppTextStyles.mediumText16w600,
         ),
         const SizedBox(height: 16),
-        if (card.cardType.contains('debito')) ...[
+        if (widget.card.cardType.contains('debito')) ...[
           _buildDetailItem(
             'Saldo em Conta',
-            'R\$ ${card.salary?.toStringAsFixed(2) ?? "0.00"}',
+            'R\$ ${widget.card.salary?.toStringAsFixed(2) ?? "0.00"}',
           ),
           BlocBuilder<AuthCubit, AuthState>(
             builder: (context, authState) {
@@ -198,7 +206,7 @@ class CardDetailsPage extends StatelessWidget {
                   return FutureBuilder<double>(
                     future: context.read<CardCubit>().getCardBalance(
                       authState.accessToken,
-                      card.id,
+                      widget.card.id,
                     ),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
@@ -215,10 +223,10 @@ class CardDetailsPage extends StatelessWidget {
             },
           ),
         ],
-        if (card.cardType.contains('credito')) ...[
+        if (widget.card.cardType.contains('credito')) ...[
           _buildDetailItem(
             'Limite Total',
-            'R\$ ${card.limit.toStringAsFixed(2)}',
+            'R\$ ${widget.card.limit.toStringAsFixed(2)}',
           ),
           BlocBuilder<CardCubit, CardState>(
             builder: (context, state) {
@@ -230,7 +238,7 @@ class CardDetailsPage extends StatelessWidget {
                   context.read<AuthCubit>().state is AuthSuccess 
                       ? (context.read<AuthCubit>().state as AuthSuccess).accessToken 
                       : '',
-                  card.id,
+                  widget.card.id,
                 ),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
@@ -238,7 +246,7 @@ class CardDetailsPage extends StatelessWidget {
                   }
                   
                   final faturaAtual = snapshot.data?['total'] ?? 0.0;
-                  final limiteDisponivel = card.limit + faturaAtual; // Como faturaAtual já é negativo, usamos +
+                  final limiteDisponivel = widget.card.limit + faturaAtual; // Como faturaAtual já é negativo, usamos +
                   
                   return Column(
                     children: [
@@ -275,7 +283,7 @@ class CardDetailsPage extends StatelessWidget {
             return FutureBuilder<Map<String, dynamic>>(
               future: context.read<CardCubit>().getCurrentInvoice(
                 authState.accessToken,
-                card.id,
+                widget.card.id,
               ),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
@@ -400,44 +408,61 @@ class CardDetailsPage extends StatelessWidget {
   }
 
   void _showDeleteConfirmation(BuildContext context) {
-    showDialog(
+    showCustomModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Excluir Cartão'),
-        content: const Text('Tem certeza que deseja excluir este cartão?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+      title: 'Confirmar exclusão',
+      content: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            "Tem certeza que deseja excluir este cartão?",
+            textAlign: TextAlign.center,
+            style: AppTextStyles.smalltext.copyWith(color: AppColors.grey),
           ),
-          TextButton(
-            onPressed: () async {
-              try {
-                final authState = context.read<AuthCubit>().state;
-                if (authState is AuthSuccess) {
-                  await context.read<CardCubit>().deleteCard(
-                    authState.accessToken,
-                    card.id,
-                  );
+          const SizedBox(height: 20.0),
+          SizedBox(
+            width: double.infinity,
+            child: PrimaryButton(
+              text: "Excluir",
+              backgroundColor: AppColors.expense,
+              onPressed: () async {
+                try {
+                  final authState = context.read<AuthCubit>().state;
+                  if (authState is AuthSuccess) {
+                    // Primeiro fecha o modal
+                    Navigator.pop(context);
+                    
+                    // Depois deleta o cartão
+                    await context.read<CardCubit>().deleteCard(
+                      authState.accessToken,
+                      widget.card.id,
+                    );
+                    
+                    if (context.mounted) {
+                      // Mostra mensagem de sucesso
+                      showCustomSnackBar(
+                        context: context,
+                        text: 'Cartão excluído com sucesso!',
+                        type: SnackBarType.success,
+                      );
+                      
+                      // Por fim, navega para a wallet
+                      context.goNamed('wallet');
+                    }
+                  }
+                } catch (e) {
                   if (context.mounted) {
-                    context.pop(); // Fecha o dialog
-                    context.pop(); // Volta para a tela anterior
+                    // Mostra mensagem de erro
+                    showCustomSnackBar(
+                      context: context,
+                      text: e.toString().contains('transações vinculadas')
+                          ? 'Não é possível excluir este cartão pois existem transações vinculadas a ele'
+                          : 'Erro ao excluir cartão',
+                      type: SnackBarType.error,
+                    );
                   }
                 }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Erro ao excluir cartão'),
-                      backgroundColor: AppColors.expense,
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text(
-              'Excluir',
-              style: TextStyle(color: AppColors.expense),
+              },
             ),
           ),
         ],

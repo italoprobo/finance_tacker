@@ -6,13 +6,17 @@ import { CreateTransactionDto } from "../dtos/create-transaction.dto";
 import { UpdateTransactionDto } from "../dtos/update-transaction.dto";
 import { User } from "src/modules/user/entities/user.entity";
 import { Category } from "src/modules/categories/entities/categories.entity";
-import { Between } from "typeorm";
+import { Between, MoreThan } from "typeorm";
 import { Client } from "src/modules/clients/entities/client.entity";
 import { Card } from "src/modules/cards/entities/card.entity";
 import { CardService } from "src/modules/cards/services/card.service";
 
 @Injectable()
 export class TransactionsService {
+    private readonly HIGH_VALUE_THRESHOLD = 3000; // Valor considerado alto
+    private readonly MAX_TRANSACTIONS_PER_DAY = 20; // Limite diário de transações
+    private readonly DUPLICATE_TIME_WINDOW = 5; // Minutos para considerar duplicata
+
     constructor(
         @InjectRepository(Transaction)
         private readonly transactionRepository: Repository<Transaction>,
@@ -83,6 +87,47 @@ export class TransactionsService {
     }
 
     async create(createTransactionDto: CreateTransactionDto): Promise<Transaction> {
+        // Validar transação de alto valor
+        if (Math.abs(createTransactionDto.amount) >= this.HIGH_VALUE_THRESHOLD) {
+            console.log(`Transação de alto valor detectada: ${createTransactionDto.amount}`);
+        }
+
+        // Verificar limite diário de transações
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const dailyTransactions = await this.transactionRepository.count({
+            where: {
+                user: { id: createTransactionDto.userId },
+                date: Between(today, tomorrow)
+            }
+        });
+
+        if (dailyTransactions >= this.MAX_TRANSACTIONS_PER_DAY) {
+            throw new BadRequestException(
+                `Limite diário de ${this.MAX_TRANSACTIONS_PER_DAY} transações atingido`
+            );
+        }
+
+        // Verificar transações duplicadas
+        const fiveMinutesAgo = new Date(new Date().getTime() - this.DUPLICATE_TIME_WINDOW * 60000);
+        const possibleDuplicates = await this.transactionRepository.find({
+            where: {
+                user: { id: createTransactionDto.userId },
+                amount: createTransactionDto.amount,
+                type: createTransactionDto.type,
+                date: MoreThan(fiveMinutesAgo)
+            }
+        });
+
+        if (possibleDuplicates.length > 0) {
+            throw new BadRequestException(
+                'Transação similar detectada nos últimos 5 minutos. Confirme se não é uma duplicata.'
+            );
+        }
+
         console.log('Criando transação com dados:', createTransactionDto);
         const { userId, categoryId, clientId, cardId, paymentMethod, isRecurring, ...data } = createTransactionDto;
         console.log('UserId recebido:', userId);

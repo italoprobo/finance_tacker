@@ -1,3 +1,4 @@
+import 'package:finance_tracker_front/common/mixin/swipeable_page_mixin.dart';
 import 'package:finance_tracker_front/models/card_cubit.dart';
 import 'package:finance_tracker_front/models/creditcard.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +15,7 @@ import 'package:finance_tracker_front/features/home/widget/animated_transaction_
 import 'package:finance_tracker_front/models/transaction.dart';
 import 'package:go_router/go_router.dart';
 import 'package:finance_tracker_front/common/widgets/custom_modal_bottom_sheet.dart';
-import 'package:finance_tracker_front/common/widgets/loading_overlay.dart';
+import 'package:finance_tracker_front/common/widgets/quick_actions_sheet.dart';
 
 class WalletPage extends StatefulWidget {
   const WalletPage({super.key});
@@ -23,7 +24,7 @@ class WalletPage extends StatefulWidget {
   State<WalletPage> createState() => _WalletPageState();
 }
 
-class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateMixin {
+class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateMixin, SwipeablePageMixin {
   late TabController _tabController;
   String? _selectedCategory;
   DateTime? _selectedDate;
@@ -69,162 +70,169 @@ class _WalletPageState extends State<WalletPage> with SingleTickerProviderStateM
     return filtered;
   }
 
+  void _showQuickActions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => const QuickActionsSheet(),
+      backgroundColor: Colors.transparent,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.purple,
-      body: Stack(
-        children: [
-          AppHeader(
-            title: 'Carteira',
-            onBackPressed: () => context.goNamed('home'),
-          ),
-          Positioned(
-            top: 164.h,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              decoration: const BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(32),
-                  topRight: Radius.circular(32),
+      body: GestureDetector(
+        onHorizontalDragEnd: handleSwipe,
+        child: Stack(
+          children: [
+            AppHeader(
+              title: 'Carteira',
+              hasOptions: true,
+              onOptionsPressed: _showQuickActions,
+              onBackPressed: () => context.goNamed('home'),
+            ),
+            Positioned(
+              top: 164.h,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
+                  ),
                 ),
-              ),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(16.w, 32.h, 16.w, 0),
-                    child: Column(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Valor Total',
-                              style: AppTextStyles.mediumText16w500.copyWith(
-                                color: const Color(0xFF666666),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(16.w, 32.h, 16.w, 0),
+                      child: Column(
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Valor Total',
+                                style: AppTextStyles.mediumText16w500.copyWith(
+                                  color: const Color(0xFF666666),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            BlocBuilder<TransactionCubit, TransactionState>(
-                              builder: (context, state) {
-                                if (state is TransactionsLoading) {
-                                  return Container(
-                                    width: 200.w,
-                                    height: 40.h,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.antiFlashWhite,
-                                      borderRadius: BorderRadius.circular(8),
+                              const SizedBox(height: 4),
+                              BlocBuilder<TransactionCubit, TransactionState>(
+                                builder: (context, state) {
+                                  if (state is TransactionsLoading) {
+                                    return Container(
+                                      width: 200.w,
+                                      height: 40.h,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.antiFlashWhite,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    );
+                                  }
+
+                                  double totalBalance = 0;
+                                  if (state is TransactionsSuccess) {
+                                    final filteredTransactions = _filterTransactions(state.transactions);
+                                    totalBalance = filteredTransactions.fold(
+                                      0,
+                                      (sum, t) {
+                                        return sum + (t.type == 'entrada' ? t.amount : -t.amount.abs());
+                                      },
+                                    );
+                                    // Arredonda para 2 casas decimais para evitar problemas de precisão
+                                    totalBalance = double.parse(totalBalance.toStringAsFixed(2));
+                                  }
+                                  return Text(
+                                    totalBalance.toCurrency(),
+                                    style: AppTextStyles.mediumText30.copyWith(
+                                      color: const Color(0xFF222222),
                                     ),
                                   );
-                                }
-
-                                double totalBalance = 0;
-                                if (state is TransactionsSuccess) {
-                                  final filteredTransactions = _filterTransactions(state.transactions);
-                                  totalBalance = filteredTransactions.fold(
-                                    0,
-                                    (sum, t) {
-                                      return sum + (t.type == 'entrada' ? t.amount : -t.amount.abs());
-                                    },
-                                  );
-                                  // Arredonda para 2 casas decimais para evitar problemas de precisão
-                                  totalBalance = double.parse(totalBalance.toStringAsFixed(2));
-                                }
-                                return Text(
-                                  totalBalance.toCurrency(),
-                                  style: AppTextStyles.mediumText30.copyWith(
-                                    color: const Color(0xFF222222),
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.white,
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: TabBar(
-                            controller: _tabController,
-                            indicatorColor: Colors.transparent,
-                            dividerColor: Colors.transparent,
-                            labelColor: AppColors.darkGrey,
-                            unselectedLabelColor: AppColors.darkGrey,
-                            tabs: [
-                              Tab(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: _tabController.index == 0
-                                        ? AppColors.antiFlashWhite
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(24),
-                                  ),
-                                  child: const Text('Transações'),
-                                ),
-                              ),
-                              Tab(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: _tabController.index == 1
-                                        ? AppColors.antiFlashWhite
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(24),
-                                  ),
-                                  child: const Text('Cartões de Crédito'),
-                                ),
+                                },
                               ),
                             ],
                           ),
-                        ),
-                        //const SizedBox(height: 4),
-                        // TransactionFilters(
-                        //   selectedCategory: _selectedCategory,
-                        //   selectedDate: _selectedDate,
-                        //   onCategoryChanged: (category) {
-                        //     setState(() {
-                        //       _selectedCategory = category;
-                        //     });
-                        //   },
-                        //   onDateChanged: (date) {
-                        //     setState(() {
-                        //       _selectedDate = date;
-                        //     });
-                        //   },
-                        // ),
-                        //const SizedBox(height: 16),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: [
-                        LoadingOverlay(
-                          isLoading: _isLoading,
-                          message: 'Carregando...',
-                          child: _TransactionsList(
-                            selectedCategory: _selectedCategory,
-                            selectedDate: _selectedDate,
+                          const SizedBox(height: 16),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.white,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: TabBar(
+                              controller: _tabController,
+                              indicatorColor: Colors.transparent,
+                              dividerColor: Colors.transparent,
+                              labelColor: AppColors.darkGrey,
+                              unselectedLabelColor: AppColors.darkGrey,
+                              tabs: [
+                                Tab(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: _tabController.index == 0
+                                          ? AppColors.antiFlashWhite
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
+                                    child: const Text('Transações'),
+                                  ),
+                                ),
+                                Tab(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: _tabController.index == 1
+                                          ? AppColors.antiFlashWhite
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
+                                    child: const Text('Cartões de Crédito'),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        _buildCreditCardsList(),
-                      ],
+                          //const SizedBox(height: 4),
+                          // TransactionFilters(
+                          //   selectedCategory: _selectedCategory,
+                          //   selectedDate: _selectedDate,
+                          //   onCategoryChanged: (category) {
+                          //     setState(() {
+                          //       _selectedCategory = category;
+                          //     });
+                          //   },
+                          //   onDateChanged: (date) {
+                          //     setState(() {
+                          //       _selectedDate = date;
+                          //     });
+                          //   },
+                          // ),
+                          //const SizedBox(height: 16),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        physics: const BouncingScrollPhysics(),
+                        children: [
+                          const _TransactionsList(),
+                          _buildCreditCardsList(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
