@@ -11,6 +11,7 @@ import 'features/categories/application/categories_cubit.dart';
 import 'common/extensions/sizes.dart';
 import 'package:finance_tracker_front/common/di/di.dart';
 import 'common/widgets/keyboard_shortcuts_wrapper.dart';
+import 'common/widgets/app_wrapper.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,7 +61,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
         Sizes.init(context);
-        return child!;
+        return AppWrapper(child: child!);
       },
     );
   }
