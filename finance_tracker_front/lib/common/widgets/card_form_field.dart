@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
 import 'package:finance_tracker_front/common/constants/app_text_styles.dart';
 import 'package:finance_tracker_front/models/card_cubit.dart';
 import 'package:finance_tracker_front/common/extensions/currency_extension.dart';
+import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart';
 
 class CardFormField extends StatelessWidget {
   final String? selectedCardId;
@@ -70,35 +72,7 @@ class CardFormField extends StatelessWidget {
                 ),
                 const Divider(),
                 ...cards.map(
-                  (card) => TextButton(
-                    onPressed: () {
-                      onCardSelected(card.id);
-                      Navigator.pop(context);
-                    },
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                      alignment: Alignment.centerLeft,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${card.name} (*${card.lastDigits})',
-                          style: AppTextStyles.mediumText16w500.copyWith(
-                            color: AppColors.darkGrey,
-                          ),
-                        ),
-                        Text(
-                          paymentMethod == 'credito'
-                              ? 'Limite disponível: ${(card.limit - card.currentBalance).toCurrency()}'
-                              : 'Saldo disponível: ${card.currentBalance.toCurrency()}',
-                          style: AppTextStyles.smalltext.copyWith(
-                            color: AppColors.darkGrey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  (card) => _buildCardOption(context, card),
                 ),
                 const SizedBox(height: 8),
               ],
@@ -108,16 +82,129 @@ class CardFormField extends StatelessWidget {
         ),
         if (selectedCard != null) ...[
           const SizedBox(height: 8.0),
-          Text(
-            paymentMethod == 'credito'
-                ? 'Limite disponível: ${(selectedCard.limit - selectedCard.currentBalance).toCurrency()}'
-                : 'Saldo disponível: ${selectedCard.currentBalance.toCurrency()}',
-            style: AppTextStyles.smalltextw400.copyWith(
-              color: AppColors.inputcolor,
-            ),
-          ),
+          _buildSelectedCardInfo(context, selectedCard),
         ],
       ],
+    );
+  }
+
+  Widget _buildCardOption(BuildContext context, CardModel card) {
+    return Builder(
+      builder: (context) {
+        final authState = context.watch<AuthCubit>().state;
+        if (authState is! AuthSuccess) {
+          return Text('${card.name} (*${card.lastDigits})');
+        }
+
+        if (paymentMethod == 'credito') {
+          return FutureBuilder<Map<String, dynamic>>(
+            future: context.read<CardCubit>().getCurrentInvoice(
+              authState.accessToken,
+              card.id,
+            ),
+            builder: (context, snapshot) {
+              double faturaAtual = 0.0;
+              if (snapshot.hasData) {
+                faturaAtual = snapshot.data!['total'] as double;
+              }
+              final limiteDisponivel = card.limit + faturaAtual;
+
+              return TextButton(
+                onPressed: () {
+                  onCardSelected(card.id);
+                  Navigator.pop(context);
+                },
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                  alignment: Alignment.centerLeft,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${card.name} (*${card.lastDigits})',
+                      style: AppTextStyles.mediumText16w500.copyWith(
+                        color: AppColors.darkGrey,
+                      ),
+                    ),
+                    Text(
+                      'Limite disponível: ${limiteDisponivel.toCurrency()}',
+                      style: AppTextStyles.smalltext.copyWith(
+                        color: AppColors.darkGrey,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        } else {
+          return TextButton(
+            onPressed: () {
+              onCardSelected(card.id);
+              Navigator.pop(context);
+            },
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+              alignment: Alignment.centerLeft,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${card.name} (*${card.lastDigits})',
+                  style: AppTextStyles.mediumText16w500.copyWith(
+                    color: AppColors.darkGrey,
+                  ),
+                ),
+                Text(
+                  'Saldo disponível: ${card.currentBalance.toCurrency()}',
+                  style: AppTextStyles.smalltext.copyWith(
+                    color: AppColors.darkGrey,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildSelectedCardInfo(BuildContext context, CardModel selectedCard) {
+    if (paymentMethod != 'credito') {
+      return Text(
+        'Saldo disponível: ${selectedCard.currentBalance.toCurrency()}',
+        style: AppTextStyles.smalltextw400.copyWith(
+          color: AppColors.inputcolor,
+        ),
+      );
+    }
+
+    final authState = context.watch<AuthCubit>().state;
+    if (authState is! AuthSuccess) {
+      return const SizedBox.shrink();
+    }
+
+    return FutureBuilder<Map<String, dynamic>>(
+      future: context.read<CardCubit>().getCurrentInvoice(
+        authState.accessToken,
+        selectedCard.id,
+      ),
+      builder: (context, snapshot) {
+        double faturaAtual = 0.0;
+        if (snapshot.hasData) {
+          faturaAtual = snapshot.data!['total'] as double;
+        }
+        final limiteDisponivel = selectedCard.limit + faturaAtual;
+
+        return Text(
+          'Limite disponível: ${limiteDisponivel.toCurrency()}',
+          style: AppTextStyles.smalltextw400.copyWith(
+            color: AppColors.inputcolor,
+          ),
+        );
+      },
     );
   }
 }

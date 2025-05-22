@@ -568,94 +568,117 @@ class _AddTransactionPageState extends State<AddTransactionPage> with SingleTick
                               isLoading: _isLoading,
                               onPressed: () async {
                                 if (_formKey.currentState!.validate()) {
-                                        // Validar categoria
-                                        if (_selectedCategoryId.isEmpty) {
-                                          _showErrorSnackBar('Por favor, selecione uma categoria');
-                                          return;
-                                        }
+                                  // Validar categoria
+                                  if (_selectedCategoryId.isEmpty) {
+                                    _showErrorSnackBar('Por favor, selecione uma categoria');
+                                    return;
+                                  }
 
-                                        // Validar cartão quando método de pagamento não é dinheiro
-                                        if (_paymentMethod != 'dinheiro' && _selectedCardId == null) {
-                                          _showErrorSnackBar('Por favor, selecione um cartão');
+                                  // Validar cartão quando método de pagamento não é dinheiro
+                                  if (_paymentMethod != 'dinheiro' && _selectedCardId == null) {
+                                    _showErrorSnackBar('Por favor, selecione um cartão');
+                                    return;
+                                  }
+
+                                  final amount = double.parse(
+                                    _amountController.text
+                                        .replaceAll('R\$', '')
+                                        .replaceAll('.', '')
+                                        .replaceAll(',', '.')
+                                        .trim(),
+                                  );
+
+                                  // Validar limite do cartão de crédito
+                                  if (_paymentMethod == 'credito' && _selectedCard != null) {
+                                    final authState = context.read<AuthCubit>().state;
+                                    if (authState is AuthSuccess) {
+                                      // Busca a fatura atual do cartão
+                                      final invoice = await context.read<CardCubit>().getCurrentInvoice(
+                                        authState.accessToken,
+                                        _selectedCard!.id,
+                                      );
+                                      
+                                      final faturaAtual = invoice['total'] as double;
+                                      final limiteDisponivel = _selectedCard!.limit + faturaAtual;
+
+                                      // Verifica se há limite disponível
+                                      if (amount > limiteDisponivel) {
+                                        _showErrorSnackBar(
+                                          'Limite insuficiente. Disponível: R\$ ${limiteDisponivel.toStringAsFixed(2)}'
+                                        );
                                         return;
                                       }
+                                    }
+                                  }
 
-                                      final amount = double.parse(
-                                        _amountController.text
-                                            .replaceAll('R\$', '')
-                                            .replaceAll('.', '')
-                                            .replaceAll(',', '.')
-                                            .trim(),
-                                      );
+                                  // Confirmar transação de alto valor
+                                  if (amount >= 1000) {
+                                    final confirmed = await _confirmHighValueTransaction(amount);
+                                    if (!confirmed) {
+                                      return;
+                                    }
+                                  }
 
-                                        // Confirmar transação de alto valor
-                                        if (amount >= 1000) {
-                                          final confirmed = await _confirmHighValueTransaction(amount);
-                                          if (!confirmed) {
-                                            return;
-                                          }
-                                        }
-
-                                        setState(() => _isLoading = true);
-                                        
-                                        final authState = context.read<AuthCubit>().state;
-                                        if (authState is AuthSuccess) {
-                                          try {
+                                  setState(() => _isLoading = true);
+                                  
+                                  final authState = context.read<AuthCubit>().state;
+                                  if (authState is AuthSuccess) {
+                                    try {
                                       final transactionData = {
                                         'description': _descriptionController.text,
                                         'amount': _tabController.index == 1 ? -amount : amount,
                                         'type': _tabController.index == 0 ? 'entrada' : 'saida',
-                                              'date': _selectedDate?.toIso8601String() ?? DateTime.now().toIso8601String(),
+                                        'date': _selectedDate?.toIso8601String() ?? DateTime.now().toIso8601String(),
                                         'categoryId': _selectedCategoryId,
                                         'userId': authState.id,
                                         'clientId': _selectedClientId,
                                         'isRecurring': _isRecurring,
-                                              'cardId': _selectedCardId,
-                                              'paymentMethod': _paymentMethod == 'dinheiro' ? null : _paymentMethod == 'credito' ? 'credit' : 'debit',
-                                            };
+                                        'cardId': _selectedCardId,
+                                        'paymentMethod': _paymentMethod == 'dinheiro' ? null : _paymentMethod == 'credito' ? 'credit' : 'debit',
+                                      };
 
                                       await context.read<TransactionCubit>().addTransaction(
                                         authState.accessToken,
                                         transactionData,
                                       );
                                     } catch (e) {
-                                            if (e.toString().contains('transação similar detectada')) {
-                                              // Mostrar confirmação de duplicata
-                                              final confirmDuplicate = await showDialog<bool>(
-                                                context: context,
-                                                builder: (context) => AlertDialog(
-                                                  title: const Text('Possível Transação Duplicada'),
-                                                  content: const Text(
-                                                    'Uma transação similar foi detectada nos últimos 5 minutos. '
-                                                    'Deseja prosseguir mesmo assim?'
-                                                  ),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () => Navigator.pop(context, false),
-                                                      child: const Text('Cancelar'),
-                                                    ),
-                                                    TextButton(
-                                                      onPressed: () => Navigator.pop(context, true),
-                                                      style: TextButton.styleFrom(
-                                                        foregroundColor: AppColors.expense,
-                                                      ),
-                                                      child: const Text('Prosseguir'),
-                                                    ),
-                                                  ],
+                                      if (e.toString().contains('transação similar detectada')) {
+                                        // Mostrar confirmação de duplicata
+                                        final confirmDuplicate = await showDialog<bool>(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: const Text('Possível Transação Duplicada'),
+                                            content: const Text(
+                                              'Uma transação similar foi detectada nos últimos 5 minutos. '
+                                              'Deseja prosseguir mesmo assim?'
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(context, false),
+                                                child: const Text('Cancelar'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(context, true),
+                                                style: TextButton.styleFrom(
+                                                  foregroundColor: AppColors.expense,
                                                 ),
-                                              );
+                                                child: const Text('Prosseguir'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
 
-                                              if (confirmDuplicate != true) {
-                                                setState(() => _isLoading = false);
-                                                return;
-                                              }
-                                            } else if (e.toString().contains('Limite diário')) {
-                                              _showErrorSnackBar('Você atingiu o limite diário de transações');
-                                              setState(() => _isLoading = false);
-                                              return;
-                                            } else {
-                                              _showErrorSnackBar('Erro ao processar a transação');
-                                            }
+                                        if (confirmDuplicate != true) {
+                                          setState(() => _isLoading = false);
+                                          return;
+                                        }
+                                      } else if (e.toString().contains('Limite diário')) {
+                                        _showErrorSnackBar('Você atingiu o limite diário de transações');
+                                        setState(() => _isLoading = false);
+                                        return;
+                                      } else {
+                                        _showErrorSnackBar('Erro ao processar a transação');
+                                      }
                                     }
                                   } else {
                                     _showErrorSnackBar('Usuário não autenticado');
