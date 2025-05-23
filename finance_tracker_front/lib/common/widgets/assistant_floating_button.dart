@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:finance_tracker_front/common/extensions/sizes.dart';
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
-import 'package:finance_tracker_front/features/assistant/presentation/assistant_page.dart';
+import 'package:finance_tracker_front/app_router.dart';
 
 class AssistantFloatingButton extends StatefulWidget {
   const AssistantFloatingButton({Key? key}) : super(key: key);
@@ -25,7 +25,7 @@ class _AssistantFloatingButtonState extends State<AssistantFloatingButton>
     );
 
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0.7, 0), // Ajustado para mostrar apenas a seta
+      begin: const Offset(0.7, 0),
       end: Offset.zero,
     ).animate(CurvedAnimation(
       parent: _controller,
@@ -33,19 +33,11 @@ class _AssistantFloatingButtonState extends State<AssistantFloatingButton>
     ));
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
   void _toggleExpand() {
     if (_isExpanded) {
-      // Navega para a página do assistente
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const AssistantPage()),
-      );
+      // Usando a função do app_router que tem acesso direto ao navigator
+      navigateToAssistant(context);
+      
       // Recolhe o botão após navegar
       setState(() {
         _isExpanded = false;
@@ -59,50 +51,8 @@ class _AssistantFloatingButtonState extends State<AssistantFloatingButton>
     }
   }
 
-  Widget _buildSuggestionButton(String text) {
-    return InkWell(
-      onTap: () {
-        // Aqui implementaremos a lógica de cada sugestão
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(8.w),
-          border: Border.all(color: AppColors.purple.withOpacity(0.3)),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.chat_bubble_outline,
-              size: 20.w,
-              color: AppColors.purple,
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Text(
-                text,
-                style: TextStyle(
-                  fontSize: 14.w,
-                  color: AppColors.purple,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final showButton = ModalRoute.of(context)?.settings.name != '/home' && 
-                      ModalRoute.of(context)?.settings.name != '/';
-
-    if (!showButton) {
-      return const SizedBox.shrink();
-    }
-
     return Positioned(
       right: -10.w,
       bottom: 150.h,
@@ -184,5 +134,11 @@ class _AssistantFloatingButtonState extends State<AssistantFloatingButton>
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 }

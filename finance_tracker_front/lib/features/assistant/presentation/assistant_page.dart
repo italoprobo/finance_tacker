@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:finance_tracker_front/common/extensions/sizes.dart';
 import 'package:finance_tracker_front/common/constants/app_colors.dart';
+import 'package:finance_tracker_front/features/assistant/data/gemini_service.dart';
+import 'package:finance_tracker_front/features/assistant/data/user_data_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finance_tracker_front/features/auth/application/auth_cubit.dart';
+import 'package:finance_tracker_front/models/card_cubit.dart';
+import 'package:finance_tracker_front/models/transaction_cubit.dart';
 
 class AssistantPage extends StatefulWidget {
   const AssistantPage({Key? key}) : super(key: key);
@@ -13,37 +19,80 @@ class _AssistantPageState extends State<AssistantPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
+  final GeminiService _geminiService = GeminiService();
+  bool _isLoading = false;
 
   @override
-  void dispose() {
-    _messageController.dispose();
-    _scrollController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _addWelcomeMessage();
   }
 
-  void _sendMessage(String text) {
-    if (text.trim().isEmpty) return;
+  void _addWelcomeMessage() {
+    setState(() {
+      _messages.add(ChatMessage(
+        text: 'Olá! Sou seu assistente financeiro IA. Posso analisar seus dados financeiros e te ajudar com:\n\n• Análise de gastos\n• Planejamento financeiro\n• Dicas de economia\n• Controle de cartões\n• E muito mais!\n\nO que você gostaria de saber?',
+        isUser: false,
+      ));
+    });
+  }
+
+  String _getUserContext() {
+    try {
+      final authState = context.read<AuthCubit>().state;
+      final cardState = context.read<CardCubit>().state;
+      final transactionState = context.read<TransactionCubit>().state;
+
+      return UserDataService.getUserFinancialContext(
+        authState: authState,
+        cardState: cardState,
+        transactionState: transactionState,
+      );
+    } catch (e) {
+      print('Erro ao obter contexto do usuário: $e');
+      return 'Dados não disponíveis no momento.';
+    }
+  }
+
+  void _sendMessage(String text) async {
+    if (text.trim().isEmpty || _isLoading) return;
 
     setState(() {
       _messages.add(ChatMessage(
         text: text,
         isUser: true,
       ));
+      _isLoading = true;
     });
 
     _messageController.clear();
     _scrollToBottom();
 
-    // Simular resposta do assistente (depois implementaremos a IA)
-    Future.delayed(const Duration(seconds: 1), () {
+    try {
+      // Obter contexto atualizado do usuário
+      final freshContext = _getUserContext();
+      
+      // Enviar mensagem para o Gemini com contexto do usuário
+      final response = await _geminiService.sendMessage(text, userContext: freshContext);
+      
       setState(() {
         _messages.add(ChatMessage(
-          text: "Estou analisando sua pergunta...",
+          text: response,
           isUser: false,
         ));
+        _isLoading = false;
       });
-      _scrollToBottom();
-    });
+    } catch (e) {
+      setState(() {
+        _messages.add(ChatMessage(
+          text: 'Desculpe, houve um erro ao processar sua mensagem.',
+          isUser: false,
+        ));
+        _isLoading = false;
+      });
+    }
+
+    _scrollToBottom();
   }
 
   void _scrollToBottom() {
@@ -70,7 +119,7 @@ class _AssistantPageState extends State<AssistantPage> {
           ),
         ),
         title: const Text(
-          'Assistente Financeiro',
+          'Assistente Financeiro IA',
           style: TextStyle(color: AppColors.white),
         ),
         leading: IconButton(
@@ -86,8 +135,11 @@ class _AssistantPageState extends State<AssistantPage> {
               child: ListView.builder(
                 controller: _scrollController,
                 padding: EdgeInsets.all(16.w),
-                itemCount: _messages.length,
+                itemCount: _messages.length + (_isLoading ? 1 : 0),
                 itemBuilder: (context, index) {
+                  if (index == _messages.length && _isLoading) {
+                    return _buildLoadingIndicator();
+                  }
                   return _buildMessage(_messages[index]);
                 },
               ),
@@ -95,6 +147,49 @@ class _AssistantPageState extends State<AssistantPage> {
           ),
           _buildMessageInput(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: EdgeInsets.only(bottom: 8.h, right: 50.w),
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(12.w),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 20.w,
+              height: 20.w,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.purple),
+              ),
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              'Pensando...',
+              style: TextStyle(
+                color: AppColors.grey,
+                fontSize: 14.w,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:finance_tracker_front/common/di/di.dart';
+import 'package:finance_tracker_front/features/assistant/presentation/assistant_page.dart';
 import 'package:finance_tracker_front/features/clients/presentation/add_clients_page.dart';
 import 'package:finance_tracker_front/features/home/home_page.dart';
 import 'package:finance_tracker_front/features/login/login.dart';
@@ -186,6 +187,12 @@ final GoRouter appRouter = GoRouter(
         transaction: state.extra as Transaction,
       ),
     ),
+    GoRoute(
+      name: 'assistant',
+      path: '/assistant',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const AssistantPage(),
+    ),
     
     // Rotas dentro do ShellRoute (com barra de navegação)
     ShellRoute(
@@ -224,3 +231,19 @@ final GoRouter appRouter = GoRouter(
     ),
   ],
 );
+
+void navigateToAssistant(BuildContext context) {
+  _rootNavigatorKey.currentState?.push(
+    MaterialPageRoute(
+      builder: (contextNav) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: context.read<AuthCubit>()),
+          BlocProvider.value(value: context.read<CardCubit>()),
+          BlocProvider.value(value: context.read<TransactionCubit>()),
+        ],
+        child: const AssistantPage(),
+      ),
+      fullscreenDialog: true,
+    ),
+  );
+}
